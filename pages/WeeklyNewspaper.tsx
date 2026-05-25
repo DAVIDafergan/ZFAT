@@ -32,7 +32,7 @@ export const WeeklyNewspaper: React.FC = () => {
         description="המערכת יכולה להעלות PDF מלא של העיתון, והקוראים יכולים לחפש לפי שבוע, לעיין אונליין ולהוריד למחשב."
         accent="from-[#111827] via-[#1f2937] to-red-800"
       >
-        <div className="max-w-xl rounded-[2rem] border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+        <div className="max-w-xl rounded-[1.5rem] border border-white/15 bg-white/10 p-3 backdrop-blur-sm sm:rounded-[2rem] sm:p-4">
           <label htmlFor="weekly-paper-search" className="mb-2 block text-sm font-bold text-white/80">חיפוש לפי שבוע או כותרת</label>
           <div className="flex items-center gap-3 rounded-full bg-white px-4 py-3 text-gray-800 shadow-lg">
             <Search size={18} className="text-red-700" />
@@ -53,14 +53,14 @@ export const WeeklyNewspaper: React.FC = () => {
         </div>
 
         {selectedPaper && (
-          <div className="mb-10 overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-xl">
-            <div className="flex flex-col gap-4 border-b border-gray-100 px-6 py-5 md:flex-row md:items-center md:justify-between">
+          <div className="mb-10 overflow-hidden rounded-[1.5rem] border border-gray-200 bg-white shadow-xl sm:rounded-[2rem]">
+            <div className="flex flex-col gap-4 border-b border-gray-100 px-4 py-4 sm:px-6 sm:py-5 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-sm font-black text-red-700">{formatWeekLabel(selectedPaper.weekKey)}</p>
-                <h2 className="news-headline text-3xl font-black text-gray-900">{selectedPaper.title}</h2>
-                <p className="mt-2 max-w-3xl text-sm font-medium leading-7 text-gray-600">{selectedPaper.description}</p>
+                <h2 className="news-headline text-2xl font-black text-gray-900 sm:text-3xl">{selectedPaper.title}</h2>
+                <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-gray-600 sm:leading-7">{selectedPaper.description}</p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <a href={selectedPaper.pdfUrl} download target="_blank" rel="noreferrer" className="rounded-full bg-red-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-red-800">הורד PDF</a>
                 <button onClick={() => setSelectedPaper(null)} className="rounded-full border border-gray-200 px-5 py-3 text-sm font-bold text-gray-700 transition hover:border-red-200 hover:text-red-700">סגור תצוגה</button>
               </div>
@@ -72,7 +72,7 @@ export const WeeklyNewspaper: React.FC = () => {
         )}
 
         {filteredPapers.length > 0 ? (
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 sm:gap-8">
             {filteredPapers.map((paper) => (
               <WeeklyPaperCard key={paper.id} paper={paper} onOpen={setSelectedPaper} />
             ))}

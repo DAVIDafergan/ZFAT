@@ -70,6 +70,7 @@ export const AdminDashboard: React.FC = () => {
     ads,
     updateAd,
     createAd,
+    deleteAd,
     registeredUsers,
     contactMessages,
     weeklyPapers,
@@ -94,6 +95,7 @@ export const AdminDashboard: React.FC = () => {
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [postsPage, setPostsPage] = useState(1);
   const [editingAdId, setEditingAdId] = useState<string | null>(null);
+  const [editingAdMeta, setEditingAdMeta] = useState<Pick<Ad, 'title' | 'area' | 'isActive'> | null>(null);
   const [editingSlides, setEditingSlides] = useState<AdSlide[]>([]);
   const [draggedSlideIndex, setDraggedSlideIndex] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -222,19 +224,36 @@ export const AdminDashboard: React.FC = () => {
 
   const startEditingAd = (ad: Ad) => {
     setEditingAdId(ad.id);
+    setEditingAdMeta({
+      title: ad.title,
+      area: ad.area,
+      isActive: ad.isActive,
+    });
     setEditingSlides([...ad.slides]);
   };
 
   const cancelEditingAd = () => {
     setEditingAdId(null);
+    setEditingAdMeta(null);
     setEditingSlides([]);
   };
 
   const saveAdChanges = async () => {
-    if (!editingAdId) return;
-    await updateAd(editingAdId, { slides: editingSlides });
+    if (!editingAdId || !editingAdMeta) return;
+    await updateAd(editingAdId, { ...editingAdMeta, slides: editingSlides });
     cancelEditingAd();
     showToast('הבאנר עודכן בהצלחה');
+  };
+
+  const handleDeleteAd = async (adId: string) => {
+    const targetAd = ads.find((ad) => ad.id === adId);
+    if (!targetAd) return;
+    if (!window.confirm(`למחוק את הקמפיין "${targetAd.title}"?`)) return;
+    await deleteAd(adId);
+    if (editingAdId === adId) {
+      cancelEditingAd();
+    }
+    showToast('הקמפיין הוסר בהצלחה');
   };
 
   const addSlide = () => {
@@ -342,28 +361,28 @@ export const AdminDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-black text-gray-800">מערכת ניהול - צפת בתנופה</h1>
+        <div className="container mx-auto flex min-h-16 flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-lg font-black text-gray-800 sm:text-xl">מערכת ניהול - צפת בתנופה</h1>
             <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-800">שלום, {user?.name}</span>
           </div>
-          <button onClick={handleLogout} className="flex items-center gap-1 text-sm font-bold text-gray-500 transition hover:text-red-600"><LogOut size={16} /> יציאה</button>
+          <button onClick={handleLogout} className="inline-flex items-center gap-1 self-start rounded-full border border-gray-200 px-3 py-2 text-sm font-bold text-gray-500 transition hover:border-red-200 hover:text-red-600 sm:self-auto"><LogOut size={16} /> יציאה</button>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex flex-wrap gap-4">
+      <div className="container mx-auto px-4 py-5 sm:py-8">
+        <div className="mb-6 flex gap-3 overflow-x-auto pb-2 sm:mb-8">
           {tabs.map(({ key, label, icon: Icon }) => (
-            <button key={key} onClick={() => setActiveTab(key)} className={`flex items-center gap-2 rounded-xl px-6 py-3 font-black transition ${activeTab === key ? 'bg-red-700 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+            <button key={key} onClick={() => setActiveTab(key)} className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black transition sm:px-6 sm:py-3 sm:text-base ${activeTab === key ? 'bg-red-700 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
               <Icon size={18} /> {label}
             </button>
           ))}
         </div>
 
         {activeTab === 'posts' && (
-          <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-2xl font-black text-gray-800">{editingPostId ? 'עריכת כתבה' : 'יצירת כתבה חדשה'}</h2>
+              <h2 className="text-xl font-black text-gray-800 sm:text-2xl">{editingPostId ? 'עריכת כתבה' : 'יצירת כתבה חדשה'}</h2>
               <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">המערכת תייצר קישור קצר ממוספר אוטומטית</span>
             </div>
             <form onSubmit={handlePostSubmit} className="max-w-5xl space-y-6">
@@ -486,11 +505,8 @@ export const AdminDashboard: React.FC = () => {
 
         {activeTab === 'ads' && (
           <div className="space-y-8">
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-6 text-2xl font-black text-gray-800">ניהול באנרים ופרסומות</h2>
-              <p className="mb-4 rounded-lg border border-red-100 bg-red-50 p-3 text-sm font-bold text-red-800">
-                העלאת מבזקים בוטלה מניהול האתר. במסך זה ניתן לנהל רק אזורי פרסום עם תמונה/וידאו וקישור לחיצה.
-              </p>
+            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+              <h2 className="mb-6 text-xl font-black text-gray-800 sm:text-2xl">ניהול באנרים ופרסומות</h2>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {AD_PLACEMENTS.map((placement) => (
                   <div key={placement.area} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
@@ -503,9 +519,9 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-6 text-xl font-black text-gray-800">הוספת קמפיין חדש</h3>
-              <form onSubmit={handleCreateAdSubmit} className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+              <h3 className="mb-6 text-lg font-black text-gray-800 sm:text-xl">הוספת קמפיין חדש</h3>
+              <form onSubmit={handleCreateAdSubmit} className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5">
                 <div>
                   <label className="mb-2 block text-sm font-bold text-gray-700">שם הקמפיין</label>
                   <input type="text" value={newAdForm.title} onChange={(e) => setNewAdForm({ ...newAdForm, title: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" required />
@@ -550,18 +566,18 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
                 <div className="lg:col-span-2">
-                  <button type="submit" className="flex items-center gap-2 rounded-lg bg-red-700 px-8 py-3 font-black text-white shadow-lg transition hover:bg-red-800">
+                  <button type="submit" className="flex items-center gap-2 rounded-lg bg-red-700 px-6 py-3 font-black text-white shadow-lg transition hover:bg-red-800">
                     <Plus size={18} /> הוסף קמפיין פרסומי
                   </button>
                 </div>
               </form>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-6 text-xl font-black text-gray-800">קמפיינים קיימים ({ads.length})</h3>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+              <h3 className="mb-6 text-lg font-black text-gray-800 sm:text-xl">קמפיינים קיימים ({ads.length})</h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-6">
                 {ads.map((ad) => (
-                  <div key={ad.id} className="rounded-xl border border-gray-200 bg-gray-50 p-6 transition hover:shadow-md">
+                  <div key={ad.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4 transition hover:shadow-md sm:p-6">
                     <div className="mb-4 flex items-start justify-between">
                       <div>
                         <h3 className="text-lg font-black text-gray-900">{ad.title}</h3>
@@ -574,31 +590,56 @@ export const AdminDashboard: React.FC = () => {
                       {ad.slides.length > 0 && <img src={ad.slides[0].imageUrl} alt="preview" className="h-full w-full object-cover opacity-70" />}
                       <div className="absolute inset-0 flex items-center justify-center bg-black/30 font-black text-white">{ad.slides.length} שקופיות</div>
                     </div>
-                    <button onClick={() => startEditingAd(ad)} className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white py-2 font-black text-gray-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"><Edit2 size={16} /> ערוך קמפיין</button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button onClick={() => startEditingAd(ad)} className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white py-2 font-black text-gray-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"><Edit2 size={16} /> ערוך</button>
+                      <button onClick={() => handleDeleteAd(ad.id)} className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 py-2 font-black text-red-700 transition hover:bg-red-100"><Trash2 size={16} /> מחק</button>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {editingAdId && (
-              <div className="rounded-xl border-2 border-red-100 bg-white p-8 shadow-lg">
+            {editingAdId && editingAdMeta && (
+              <div className="rounded-xl border-2 border-red-100 bg-white p-4 shadow-lg sm:p-6 lg:p-8">
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="text-2xl font-black text-gray-900">עריכת קמפיין: {ads.find((ad) => ad.id === editingAdId)?.title}</h3>
-                  <div className="flex gap-3">
+                  <h3 className="text-xl font-black text-gray-900 sm:text-2xl">עריכת קמפיין: {ads.find((ad) => ad.id === editingAdId)?.title}</h3>
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
                     <button onClick={addSlide} className="flex items-center gap-1 rounded-lg bg-gray-100 px-4 py-2 font-black text-gray-800 transition hover:bg-gray-200"><Plus size={16} /> הוסף שקופית</button>
-                    <button onClick={saveAdChanges} className="flex items-center gap-1 rounded-lg bg-green-600 px-6 py-2 font-black text-white shadow-md transition hover:bg-green-700"><Save size={16} /> שמור שינויים</button>
-                    <button onClick={cancelEditingAd} className="flex items-center gap-1 rounded-lg bg-red-50 px-4 py-2 font-black text-red-700 transition hover:bg-red-100"><XIcon size={16} /> ביטול</button>
+                    <button onClick={saveAdChanges} className="flex items-center gap-1 rounded-lg bg-green-600 px-5 py-2 font-black text-white shadow-md transition hover:bg-green-700 sm:px-6"><Save size={16} /> שמור</button>
+                    <button onClick={() => handleDeleteAd(editingAdId)} className="flex items-center gap-1 rounded-lg bg-red-50 px-4 py-2 font-black text-red-700 transition hover:bg-red-100"><Trash2 size={16} /> מחק</button>
+                    <button onClick={cancelEditingAd} className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-4 py-2 font-black text-gray-700 transition hover:border-red-200 hover:text-red-700"><XIcon size={16} /> ביטול</button>
                   </div>
                 </div>
                 <p className="mb-6 rounded-lg bg-gray-50 px-4 py-3 text-sm font-bold text-gray-700">
                   מיקום: {AD_PLACEMENT_MAP[ads.find((ad) => ad.id === editingAdId)?.area || 'leaderboard'].label} · מידה מומלצת: {AD_PLACEMENT_MAP[ads.find((ad) => ad.id === editingAdId)?.area || 'leaderboard'].recommendedSize}px
                 </p>
 
+                <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-gray-700">שם הקמפיין</label>
+                    <input type="text" value={editingAdMeta.title} onChange={(e) => setEditingAdMeta({ ...editingAdMeta, title: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-gray-700">מיקום פרסום</label>
+                    <select value={editingAdMeta.area} onChange={(e) => setEditingAdMeta({ ...editingAdMeta, area: e.target.value as AdArea })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500">
+                      {AD_PLACEMENTS.map((placement) => (
+                        <option key={placement.area} value={placement.area}>
+                          {placement.label} ({placement.recommendedSize})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <label className="flex items-center gap-3 rounded-lg bg-gray-50 px-4 py-3 font-black text-gray-700">
+                    <input type="checkbox" checked={editingAdMeta.isActive} onChange={(e) => setEditingAdMeta({ ...editingAdMeta, isActive: e.target.checked })} className="h-5 w-5 rounded text-red-600 focus:ring-red-500" />
+                    קמפיין פעיל
+                  </label>
+                </div>
+
                 <div className="space-y-4">
                   {editingSlides.map((slide, index) => (
-                    <div key={slide.id} draggable onDragStart={(e) => handleDragStart(e, index)} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, index)} className={`flex items-start gap-6 rounded-xl border border-gray-200 bg-gray-50 p-6 transition-all ${draggedSlideIndex === index ? 'ring-2 ring-red-300 opacity-50' : 'hover:border-red-200'}`}>
-                      <div className="mt-8 cursor-grab text-gray-400 hover:text-gray-600"><GripVertical size={24} /></div>
-                      <div className="h-24 w-32 shrink-0 overflow-hidden rounded-lg border border-gray-300 bg-gray-200">
+                    <div key={slide.id} draggable onDragStart={(e) => handleDragStart(e, index)} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, index)} className={`flex flex-col gap-4 rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all sm:flex-row sm:items-start sm:gap-6 sm:p-6 ${draggedSlideIndex === index ? 'ring-2 ring-red-300 opacity-50' : 'hover:border-red-200'}`}>
+                      <div className="hidden cursor-grab text-gray-400 hover:text-gray-600 sm:mt-8 sm:block"><GripVertical size={24} /></div>
+                      <div className="h-24 w-full shrink-0 overflow-hidden rounded-lg border border-gray-300 bg-gray-200 sm:w-32">
                         <img src={slide.imageUrl} alt="preview" className="h-full w-full object-cover" />
                       </div>
                       <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-2">
@@ -636,7 +677,7 @@ export const AdminDashboard: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                      <button onClick={() => removeSlide(index)} className="mt-6 rounded-lg p-2 text-red-400 transition hover:bg-red-50 hover:text-red-700" title="מחק שקופית"><Trash2 size={20} /></button>
+                      <button onClick={() => removeSlide(index)} className="self-end rounded-lg p-2 text-red-400 transition hover:bg-red-50 hover:text-red-700 sm:mt-6" title="מחק שקופית"><Trash2 size={20} /></button>
                     </div>
                   ))}
                 </div>
@@ -647,8 +688,8 @@ export const AdminDashboard: React.FC = () => {
 
         {activeTab === 'weekly-paper' && (
           <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1fr_1.1fr]">
-            <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-              <h2 className="mb-6 flex items-center gap-2 text-2xl font-black text-gray-800"><Newspaper size={24} className="text-red-700" /> העלאת העיתון השבועי</h2>
+            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+              <h2 className="mb-6 flex items-center gap-2 text-xl font-black text-gray-800 sm:text-2xl"><Newspaper size={24} className="text-red-700" /> העלאת העיתון השבועי</h2>
               <form onSubmit={handleWeeklyPaperSubmit} className="space-y-5">
                 <div>
                   <label className="mb-2 block text-sm font-bold text-gray-700">כותרת</label>
@@ -688,11 +729,11 @@ export const AdminDashboard: React.FC = () => {
                 <button type="submit" className="flex items-center gap-2 rounded-lg bg-red-700 px-8 py-3 font-black text-white shadow-lg transition hover:bg-red-800"><Save size={18} /> פרסם מהדורה</button>
               </form>
             </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-              <h3 className="mb-4 text-xl font-black text-gray-800">מהדורות פעילות ({weeklyPapers.length})</h3>
+            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+              <h3 className="mb-4 text-lg font-black text-gray-800 sm:text-xl">מהדורות פעילות ({weeklyPapers.length})</h3>
               <div className="space-y-4">
                 {weeklyPapers.map((paper) => (
-                  <div key={paper.id} className="flex items-start justify-between gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <div key={paper.id} className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex gap-4">
                       <div className="h-20 w-16 overflow-hidden rounded-lg bg-gray-200">{paper.coverImageUrl ? <img src={paper.coverImageUrl} alt={paper.title} className="h-full w-full object-cover" /> : null}</div>
                       <div>
@@ -711,8 +752,8 @@ export const AdminDashboard: React.FC = () => {
 
         {activeTab === 'board' && (
           <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1fr_1.1fr]">
-            <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-              <h2 className="mb-6 flex items-center gap-2 text-2xl font-black text-gray-800"><Building2 size={24} className="text-red-700" /> העלאת מודעה ללוח בתנופה</h2>
+            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+              <h2 className="mb-6 flex items-center gap-2 text-xl font-black text-gray-800 sm:text-2xl"><Building2 size={24} className="text-red-700" /> העלאת מודעה ללוח בתנופה</h2>
               <form onSubmit={handleBoardListingSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
@@ -771,11 +812,11 @@ export const AdminDashboard: React.FC = () => {
                 <button type="submit" className="flex items-center gap-2 rounded-lg bg-red-700 px-8 py-3 font-black text-white shadow-lg transition hover:bg-red-800"><Save size={18} /> פרסם מודעה</button>
               </form>
             </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-              <h3 className="mb-4 text-xl font-black text-gray-800">מודעות פעילות ({boardListings.length})</h3>
+            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+              <h3 className="mb-4 text-lg font-black text-gray-800 sm:text-xl">מודעות פעילות ({boardListings.length})</h3>
               <div className="space-y-4">
                 {boardListings.map((listing) => (
-                  <div key={listing.id} className="flex items-start justify-between gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <div key={listing.id} className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex gap-4">
                       <div className="h-20 w-28 overflow-hidden rounded-lg bg-gray-200">{listing.imageUrl ? <img src={listing.imageUrl} alt={listing.title} className="h-full w-full object-cover" /> : null}</div>
                       <div>
@@ -793,9 +834,23 @@ export const AdminDashboard: React.FC = () => {
         )}
 
         {activeTab === 'users' && (
-          <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-            <h2 className="mb-6 text-2xl font-black text-gray-800">משתמשים רשומים ({registeredUsers.length})</h2>
-            <div className="overflow-x-auto">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+            <h2 className="mb-6 text-xl font-black text-gray-800 sm:text-2xl">משתמשים רשומים ({registeredUsers.length})</h2>
+            <div className="space-y-3 md:hidden">
+              {registeredUsers.map((currentUser) => (
+                <div key={currentUser.id} className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-black text-gray-900">{currentUser.name}</p>
+                      <p className="text-sm text-gray-600">{currentUser.email}</p>
+                    </div>
+                    <span className={`inline-block rounded px-2 py-0.5 text-xs font-black ${currentUser.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-50 text-blue-700'}`}>{currentUser.role === 'admin' ? 'מנהל' : 'משתמש'}</span>
+                  </div>
+                  <p className="mt-2 text-xs font-bold text-gray-500">הצטרף: {currentUser.joinedDate || '-'}</p>
+                </div>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-right">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50 text-sm uppercase tracking-wider text-gray-600">
@@ -821,15 +876,15 @@ export const AdminDashboard: React.FC = () => {
         )}
 
         {activeTab === 'messages' && (
-          <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-            <h2 className="mb-6 text-2xl font-black text-gray-800">הודעות מהאתר ({contactMessages.length})</h2>
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+            <h2 className="mb-6 text-xl font-black text-gray-800 sm:text-2xl">הודעות מהאתר ({contactMessages.length})</h2>
             <div className="space-y-4">
               {contactMessages.length > 0 ? contactMessages.map((message) => (
-                <div key={message.id} className={`rounded-xl border p-6 ${message.read ? 'border-gray-200 bg-gray-50' : 'border-red-100 border-r-4 border-r-red-500 bg-white shadow-sm'}`}>
-                  <div className="mb-3 flex items-start justify-between">
+                <div key={message.id} className={`rounded-xl border p-4 sm:p-6 ${message.read ? 'border-gray-200 bg-gray-50' : 'border-red-100 border-r-4 border-r-red-500 bg-white shadow-sm'}`}>
+                  <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <h3 className="text-lg font-black text-gray-900">{message.subject}</h3>
-                      <div className="mt-1 flex items-center gap-3 text-sm text-gray-500">
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500 sm:gap-3">
                         <span>{message.name}</span>
                         <span>&bull;</span>
                         <span>{message.email}</span>
@@ -847,7 +902,7 @@ export const AdminDashboard: React.FC = () => {
         )}
 
         {toastMessage && (
-          <div className="fixed bottom-6 right-6 z-50 rounded-xl bg-green-600 px-6 py-3 font-black text-white shadow-xl" role="status" aria-live="polite">
+          <div className="fixed right-4 bottom-4 left-4 z-50 rounded-xl bg-green-600 px-4 py-3 text-center font-black text-white shadow-xl sm:left-auto sm:right-6 sm:bottom-6 sm:px-6" role="status" aria-live="polite">
             {toastMessage}
           </div>
         )}
