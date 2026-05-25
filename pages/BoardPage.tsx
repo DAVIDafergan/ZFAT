@@ -3,11 +3,13 @@ import { Building2, Search, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { BoardListingCard } from '../components/BoardListingCard';
 import { PageHero } from '../components/PageHero';
+import { AdUnit } from '../components/AdUnit';
 
 export const BoardPage: React.FC = () => {
-  const { boardListings } = useApp();
+  const { boardListings, ads } = useApp();
   const [query, setQuery] = useState('');
   const [dealFilter, setDealFilter] = useState<'all' | 'rent' | 'sale'>('all');
+  const topAd = ads.find((ad) => ad.area === 'board_top' && ad.isActive);
 
   const filteredListings = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -47,6 +49,10 @@ export const BoardPage: React.FC = () => {
       </PageHero>
 
       <div className="container mx-auto px-4 py-10">
+        <div className="mb-8">
+          <AdUnit ad={topAd} className="w-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm" />
+        </div>
+
         <div className="mb-8 grid gap-4 rounded-[2rem] border border-red-100 bg-white p-6 shadow-sm md:grid-cols-3">
           <div className="rounded-3xl bg-red-50 p-5">
             <p className="text-sm font-black text-red-700">מודעות פעילות</p>

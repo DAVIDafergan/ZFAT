@@ -4,12 +4,14 @@ import { useApp } from '../context/AppContext';
 import { WeeklyPaper } from '../types';
 import { PageHero } from '../components/PageHero';
 import { WeeklyPaperCard } from '../components/WeeklyPaperCard';
+import { AdUnit } from '../components/AdUnit';
 import { formatWeekLabel } from '../services/siteConfig';
 
 export const WeeklyNewspaper: React.FC = () => {
-  const { weeklyPapers } = useApp();
+  const { weeklyPapers, ads } = useApp();
   const [query, setQuery] = useState('');
   const [selectedPaper, setSelectedPaper] = useState<WeeklyPaper | null>(weeklyPapers[0] || null);
+  const topAd = ads.find((ad) => ad.area === 'weekly_top' && ad.isActive);
 
   const filteredPapers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -46,6 +48,10 @@ export const WeeklyNewspaper: React.FC = () => {
       </PageHero>
 
       <div className="container mx-auto px-4 py-10">
+        <div className="mb-10">
+          <AdUnit ad={topAd} className="w-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm" />
+        </div>
+
         {selectedPaper && (
           <div className="mb-10 overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-xl">
             <div className="flex flex-col gap-4 border-b border-gray-100 px-6 py-5 md:flex-row md:items-center md:justify-between">

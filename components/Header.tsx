@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, User as UserIcon, LogOut, ChevronDown, Newspaper, Building2 } from 'lucide-react';
-import { Category, User, Post } from '../types';
+import { Category, User, Post, CATEGORY_COLORS } from '../types';
 import { useApp } from '../context/AppContext';
 import { LOGO_URL } from '../services/siteConfig';
 
@@ -28,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isAdmin = user?.role === 'admin';
+  const primaryCategories = Object.values(Category).slice(0, 4);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 16);
@@ -105,8 +106,15 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
 
             <nav className="hidden flex-1 items-center justify-center lg:flex">
               <ul className="flex items-center gap-6 text-sm font-extrabold text-white xl:text-base">
-                {Object.values(Category).slice(0, 4).map((cat) => (
-                  <li key={cat}><Link to={`/category/${cat}`} className="relative transition-all duration-300 hover:text-red-100 after:absolute after:-bottom-1 after:right-0 after:h-0.5 after:w-0 after:bg-white/80 after:transition-all hover:after:w-full">{cat}</Link></li>
+                {primaryCategories.map((cat) => (
+                  <li key={cat}>
+                    <Link
+                      to={`/category/${cat}`}
+                      className={`inline-flex items-center rounded-full px-4 py-2 font-black text-white transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 ${CATEGORY_COLORS[cat]} shadow-md`}
+                    >
+                      {cat}
+                    </Link>
+                  </li>
                 ))}
                 {quickLinks.map(({ label, to }) => (
                   <li key={label}><Link to={to} className="relative transition-all duration-300 hover:text-red-100 after:absolute after:-bottom-1 after:right-0 after:h-0.5 after:w-0 after:bg-white/80 after:transition-all hover:after:w-full">{label}</Link></li>

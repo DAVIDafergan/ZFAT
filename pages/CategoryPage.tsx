@@ -3,48 +3,62 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { PostCard } from '../components/PostCard';
+import { AdUnit } from '../components/AdUnit';
 import { CATEGORY_COLORS } from '../types';
 
 export const CategoryPage: React.FC = () => {
   const { categoryName } = useParams<{ categoryName: string }>();
-  const { posts } = useApp();
+  const { posts, ads } = useApp();
 
-  // Decode URI component to handle Hebrew characters in URL
   const decodedCategory = categoryName ? decodeURIComponent(categoryName) : '';
-
-  const categoryPosts = posts.filter(p => p.category === decodedCategory);
-  
-  // Find color for this category or default
-  // We need to match the enum value or find key by value if needed, but here we used string values in enum
-  const categoryColor = Object.values(CATEGORY_COLORS).find((_, idx) => 
-     Object.keys(CATEGORY_COLORS)[idx] === decodedCategory
-  ) || 'bg-red-700';
-
-  // Specific header background based on category
-  const headerBgClass = Object.entries(CATEGORY_COLORS).find(([key]) => key === decodedCategory)?.[1] || 'bg-gray-800';
+  const categoryPosts = posts.filter((post) => post.category === decodedCategory);
+  const headerBgClass = CATEGORY_COLORS[decodedCategory as keyof typeof CATEGORY_COLORS] || 'bg-gray-800';
+  const topAd = ads.find((ad) => ad.area === 'category_top' && ad.isActive);
+  const midAd = ads.find((ad) => ad.area === 'category_mid' && ad.isActive);
+  const splitIndex = Math.ceil(categoryPosts.length / 2);
+  const firstChunk = categoryPosts.slice(0, splitIndex);
+  const secondChunk = categoryPosts.slice(splitIndex);
 
   return (
-    <div className="min-h-screen">
-      {/* Category Header */}
-      <div className={`${headerBgClass} text-white py-12 mb-8`}>
+    <div className="min-h-screen bg-[#f7f5f1] pb-14">
+      <div className={`relative mb-8 overflow-hidden ${headerBgClass} py-14 text-white`}>
+        <div className="absolute inset-0 bg-gradient-to-l from-black/25 via-transparent to-black/20" />
+        <div className="absolute left-8 top-4 h-28 w-28 rounded-full bg-white/20 blur-3xl" />
+        <div className="absolute bottom-0 right-10 h-36 w-36 rounded-full bg-black/20 blur-3xl" />
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl md:text-5xl font-black mb-2">{decodedCategory}</h1>
-          <p className="text-white/80 text-lg">כל הכתבות והעדכונים בנושא {decodedCategory}</p>
+          <h1 className="news-headline mb-2 text-4xl font-black md:text-5xl">{decodedCategory}</h1>
+          <p className="text-lg font-bold text-white/90">כל הכתבות והעדכונים בנושא {decodedCategory}</p>
         </div>
       </div>
 
       <div className="container mx-auto px-4 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categoryPosts.length > 0 ? (
-            categoryPosts.map(post => (
-              <PostCard key={post.id} post={post} />
-            ))
-          ) : (
-            <div className="col-span-full text-center py-20 text-gray-500">
-              <p className="text-xl">לא נמצאו כתבות בקטגוריה זו.</p>
-            </div>
-          )}
+        <div className="mb-10">
+          <AdUnit ad={topAd} className="w-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm" />
         </div>
+
+        {categoryPosts.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {firstChunk.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+
+            <div className="my-10">
+              <AdUnit ad={midAd} className="w-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm" />
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {secondChunk.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="col-span-full py-20 text-center text-gray-500">
+            <p className="text-xl font-bold">לא נמצאו כתבות בקטגוריה זו.</p>
+          </div>
+        )}
       </div>
     </div>
   );

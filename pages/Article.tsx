@@ -20,6 +20,7 @@ export const Article: React.FC = () => {
   }, [id]);
 
   const post = posts.find((p) => p.id === id);
+  const inlineAd = ads.find(a => a.area === 'article_inline' && a.isActive);
   const bottomAd = ads.find(a => a.area === 'article_bottom' && a.isActive);
   const articleComments = comments.filter(c => c.postId === post?.id);
 
@@ -80,6 +81,8 @@ export const Article: React.FC = () => {
             <div className="mb-8">
               <ShareButtons title={post.title} description={post.excerpt} shareUrl={shareUrl} />
             </div>
+
+            <AdUnit ad={inlineAd} className="mb-8 rounded-2xl overflow-hidden border border-gray-100 shadow-sm" />
 
             <div className="article-content max-w-none text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: post.content }} />
 

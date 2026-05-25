@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Category, Post, Ad, AdSlide, WeeklyPaper, BoardListing, BoardListingDealType, DEAL_TYPE_LABELS } from '../types';
+import { Category, Post, Ad, AdSlide, AdArea, WeeklyPaper, BoardListing, BoardListingDealType, DEAL_TYPE_LABELS } from '../types';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -13,11 +13,9 @@ import {
   Trash2,
   Edit2,
   GripVertical,
-  Check,
   X as XIcon,
   Save,
   Video,
-  Bell,
   Upload,
   Newspaper,
   Building2,
@@ -25,8 +23,9 @@ import {
   FileText,
 } from 'lucide-react';
 import { formatWeekLabel, normalizeShareCode } from '../services/siteConfig';
+import { AD_PLACEMENTS, AD_PLACEMENT_MAP } from '../services/adPlacements';
 
-type TabKey = 'posts' | 'alerts' | 'ads' | 'weekly-paper' | 'board' | 'users' | 'messages';
+type TabKey = 'posts' | 'ads' | 'weekly-paper' | 'board' | 'users' | 'messages';
 
 const initialPaperForm = {
   title: '',
@@ -49,17 +48,25 @@ const initialBoardForm = {
   contactPhone: '',
 };
 
+const initialAdForm = {
+  title: '',
+  area: 'leaderboard' as AdArea,
+  imageUrl: '',
+  videoUrl: '',
+  linkUrl: '',
+  isActive: true,
+};
+
 export const AdminDashboard: React.FC = () => {
   const {
     user,
     logout,
     addPost,
-    deletePost,
     ads,
     updateAd,
+    createAd,
     registeredUsers,
     contactMessages,
-    posts,
     weeklyPapers,
     boardListings,
     createWeeklyPaper,
@@ -79,13 +86,13 @@ export const AdminDashboard: React.FC = () => {
     isFeatured: false,
   });
   const [tagsInput, setTagsInput] = useState('');
-  const [flashContent, setFlashContent] = useState('');
   const [editingAdId, setEditingAdId] = useState<string | null>(null);
   const [editingSlides, setEditingSlides] = useState<AdSlide[]>([]);
   const [draggedSlideIndex, setDraggedSlideIndex] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [paperForm, setPaperForm] = useState(initialPaperForm);
   const [boardForm, setBoardForm] = useState(initialBoardForm);
+  const [newAdForm, setNewAdForm] = useState(initialAdForm);
 
   useEffect(() => {
     if (!toastMessage) return;
@@ -102,8 +109,6 @@ export const AdminDashboard: React.FC = () => {
       navigate('/', { replace: true });
     }
   }, [user, navigate]);
-
-  const flashPosts = useMemo(() => posts.filter((post) => post.category === Category.NEWS), [posts]);
 
   const showToast = (message: string) => setToastMessage(message);
 
@@ -143,36 +148,6 @@ export const AdminDashboard: React.FC = () => {
     setNewPost({ title: '', category: Category.NEWS, excerpt: '', content: '', imageUrl: '', tags: [], isFeatured: false });
     setTagsInput('');
     showToast(`הכתבה פורסמה בהצלחה · קוד קצר ${post.shortLinkCode}`);
-  };
-
-  const handleFlashSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!flashContent.trim()) return;
-    const flashPost: Post = {
-      id: `flash-${Date.now()}`,
-      title: flashContent,
-      excerpt: '',
-      content: '<p>מבזק חדשות</p>',
-      category: Category.NEWS,
-      author: 'מבזקים',
-      date: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-      imageUrl: '',
-      tags: [],
-      isFeatured: false,
-      views: 0,
-      shortLinkCode: normalizeShareCode('', Date.now().toString()),
-    };
-    await addPost(flashPost);
-    setFlashContent('');
-    showToast('המבזק פורסם מיד בראש האתר');
-  };
-
-  const handleDeleteFlash = async (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!window.confirm('למחוק את המבזק?')) return;
-    await deletePost(id);
-    showToast('המבזק נמחק');
   };
 
   const startEditingAd = (ad: Ad) => {
@@ -262,9 +237,31 @@ export const AdminDashboard: React.FC = () => {
     showToast('מודעת לוח בתנופה פורסמה בהצלחה');
   };
 
+  const handleCreateAdSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAdForm.title.trim() || !newAdForm.linkUrl.trim()) return;
+    if (!newAdForm.imageUrl.trim() && !newAdForm.videoUrl.trim()) return;
+
+    const newAd: Ad = {
+      id: Date.now().toString(),
+      title: newAdForm.title.trim(),
+      area: newAdForm.area,
+      isActive: newAdForm.isActive,
+      slides: [{
+        id: `slide-${Date.now()}`,
+        imageUrl: newAdForm.imageUrl.trim(),
+        videoUrl: newAdForm.videoUrl.trim() || '',
+        linkUrl: newAdForm.linkUrl.trim(),
+      }],
+    };
+
+    await createAd(newAd);
+    setNewAdForm(initialAdForm);
+    showToast('קמפיין פרסומי חדש נוסף בהצלחה');
+  };
+
   const tabs: Array<{ key: TabKey; label: string; icon: React.ComponentType<{ size?: number }> }> = [
     { key: 'posts', label: 'הוספת כתבה', icon: Plus },
-    { key: 'alerts', label: 'ניהול מבזקים', icon: Bell },
     { key: 'ads', label: 'באנרים', icon: Layout },
     { key: 'weekly-paper', label: 'העיתון השבועי', icon: Newspaper },
     { key: 'board', label: 'לוח בתנופה', icon: Home },
@@ -292,36 +289,6 @@ export const AdminDashboard: React.FC = () => {
             </button>
           ))}
         </div>
-
-        {activeTab === 'alerts' && (
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div className="h-fit rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-              <h2 className="mb-6 flex items-center gap-2 text-2xl font-black text-red-700"><Bell size={24} /> פרסום מבזק חדש</h2>
-              <p className="mb-6 text-gray-500">המבזק יופיע מיידית בפס הנגלל בראש האתר.</p>
-              <form onSubmit={handleFlashSubmit}>
-                <label className="mb-2 block text-sm font-bold text-gray-700">תוכן המבזק</label>
-                <textarea value={flashContent} onChange={(e) => setFlashContent(e.target.value)} className="h-32 w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-red-500" placeholder="לדוגמה: שלג החל לרדת בצפת..." required />
-                <button type="submit" className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-red-700 py-3 font-black text-white shadow-lg transition hover:bg-red-800"><Check size={20} /> פרסם מבזק</button>
-              </form>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-              <h3 className="mb-4 text-xl font-black text-gray-800">מבזקים פעילים ({flashPosts.length})</h3>
-              <div className="max-h-[500px] space-y-3 overflow-y-auto">
-                {flashPosts.length > 0 ? flashPosts.map((post) => (
-                  <div key={post.id} className="flex items-start justify-between rounded-lg border border-gray-100 bg-gray-50 p-4 transition hover:bg-gray-100">
-                    <div>
-                      <p className="mb-1 font-black text-gray-900">{post.title}</p>
-                      <span className="text-xs font-bold text-gray-500">{post.date}</span>
-                    </div>
-                    <button type="button" onClick={(e) => handleDeleteFlash(e, post.id)} className="ml-2 rounded-lg border border-gray-200 bg-white p-2 text-gray-400 shadow-sm transition hover:bg-red-50 hover:text-red-600" title="מחק מבזק">
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                )) : <div className="py-10 text-center text-gray-400">אין מבזקים פעילים כרגע.</div>}
-              </div>
-            </div>
-          </div>
-        )}
 
         {activeTab === 'posts' && (
           <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
@@ -388,16 +355,88 @@ export const AdminDashboard: React.FC = () => {
           <div className="space-y-8">
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <h2 className="mb-6 text-2xl font-black text-gray-800">ניהול באנרים ופרסומות</h2>
+              <p className="mb-4 rounded-lg border border-red-100 bg-red-50 p-3 text-sm font-bold text-red-800">
+                העלאת מבזקים בוטלה מניהול האתר. במסך זה ניתן לנהל רק אזורי פרסום עם תמונה/וידאו וקישור לחיצה.
+              </p>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {AD_PLACEMENTS.map((placement) => (
+                  <div key={placement.area} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <p className="text-sm font-black text-gray-900">{placement.label}</p>
+                    <p className="mt-1 text-xs font-bold text-gray-500">{placement.page}</p>
+                    <p className="mt-2 text-xs font-black text-red-700">מידה מומלצת: {placement.recommendedSize}px</p>
+                    <p className="mt-1 text-xs font-bold text-gray-600">{placement.guidance}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 className="mb-6 text-xl font-black text-gray-800">הוספת קמפיין חדש</h3>
+              <form onSubmit={handleCreateAdSubmit} className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-gray-700">שם הקמפיין</label>
+                  <input type="text" value={newAdForm.title} onChange={(e) => setNewAdForm({ ...newAdForm, title: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" required />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-gray-700">מיקום פרסום</label>
+                  <select value={newAdForm.area} onChange={(e) => setNewAdForm({ ...newAdForm, area: e.target.value as AdArea })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500">
+                    {AD_PLACEMENTS.map((placement) => (
+                      <option key={placement.area} value={placement.area}>
+                        {placement.label} ({placement.recommendedSize})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-xs font-black text-red-700">מידה מומלצת: {AD_PLACEMENT_MAP[newAdForm.area].recommendedSize}px</p>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-gray-700">קישור בלחיצה</label>
+                  <input type="url" value={newAdForm.linkUrl} onChange={(e) => setNewAdForm({ ...newAdForm, linkUrl: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="https://example.com" required />
+                </div>
+                <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-4">
+                  <input type="checkbox" id="new-ad-active" checked={newAdForm.isActive} onChange={(e) => setNewAdForm({ ...newAdForm, isActive: e.target.checked })} className="h-5 w-5 rounded text-red-600 focus:ring-red-500" />
+                  <label htmlFor="new-ad-active" className="cursor-pointer font-black text-gray-700">פרסום פעיל מיד לאחר השמירה</label>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-gray-700">תמונה (חובה לתצוגה מיטבית)</label>
+                  <div className="flex gap-2">
+                    <input type="text" value={newAdForm.imageUrl} onChange={(e) => setNewAdForm({ ...newAdForm, imageUrl: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="קישור תמונה" />
+                    <label className="flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-600 transition hover:bg-gray-50" title="העלה תמונה">
+                      <Upload size={16} />
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (url) => setNewAdForm({ ...newAdForm, imageUrl: url }))} />
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-gray-700">וידאו (אופציונלי)</label>
+                  <div className="flex gap-2">
+                    <input type="text" value={newAdForm.videoUrl} onChange={(e) => setNewAdForm({ ...newAdForm, videoUrl: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="https://...mp4" />
+                    <label className="flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-600 transition hover:bg-gray-50" title="העלה וידאו">
+                      <Video size={16} />
+                      <input type="file" accept="video/*" className="hidden" onChange={(e) => handleFileUpload(e, (url) => setNewAdForm({ ...newAdForm, videoUrl: url }))} />
+                    </label>
+                  </div>
+                </div>
+                <div className="lg:col-span-2">
+                  <button type="submit" className="flex items-center gap-2 rounded-lg bg-red-700 px-8 py-3 font-black text-white shadow-lg transition hover:bg-red-800">
+                    <Plus size={18} /> הוסף קמפיין פרסומי
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 className="mb-6 text-xl font-black text-gray-800">קמפיינים קיימים ({ads.length})</h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {ads.map((ad) => (
                   <div key={ad.id} className="rounded-xl border border-gray-200 bg-gray-50 p-6 transition hover:shadow-md">
                     <div className="mb-4 flex items-start justify-between">
                       <div>
                         <h3 className="text-lg font-black text-gray-900">{ad.title}</h3>
-                        <span className="rounded bg-gray-200 px-2 py-0.5 text-xs font-bold uppercase text-gray-500">{ad.area}</span>
+                        <span className="rounded bg-gray-200 px-2 py-0.5 text-xs font-bold uppercase text-gray-500">{AD_PLACEMENT_MAP[ad.area]?.label || ad.area}</span>
                       </div>
                       <div className={`h-3 w-3 rounded-full ${ad.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
                     </div>
+                    <p className="mb-3 text-xs font-black text-red-700">מידה מומלצת: {AD_PLACEMENT_MAP[ad.area]?.recommendedSize || '1200x250'}px</p>
                     <div className="relative mb-4 aspect-video overflow-hidden rounded-lg bg-gray-200">
                       {ad.slides.length > 0 && <img src={ad.slides[0].imageUrl} alt="preview" className="h-full w-full object-cover opacity-70" />}
                       <div className="absolute inset-0 flex items-center justify-center bg-black/30 font-black text-white">{ad.slides.length} שקופיות</div>
@@ -418,6 +457,9 @@ export const AdminDashboard: React.FC = () => {
                     <button onClick={cancelEditingAd} className="flex items-center gap-1 rounded-lg bg-red-50 px-4 py-2 font-black text-red-700 transition hover:bg-red-100"><XIcon size={16} /> ביטול</button>
                   </div>
                 </div>
+                <p className="mb-6 rounded-lg bg-gray-50 px-4 py-3 text-sm font-bold text-gray-700">
+                  מיקום: {AD_PLACEMENT_MAP[ads.find((ad) => ad.id === editingAdId)?.area || 'leaderboard'].label} · מידה מומלצת: {AD_PLACEMENT_MAP[ads.find((ad) => ad.id === editingAdId)?.area || 'leaderboard'].recommendedSize}px
+                </p>
 
                 <div className="space-y-4">
                   {editingSlides.map((slide, index) => (
@@ -449,9 +491,15 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                         <div className="md:col-span-2">
                           <label className="mb-1 block text-xs font-black text-gray-500">וידאו (אופציונלי)</label>
-                          <div className="relative">
-                            <Video size={14} className="absolute right-3 top-3 text-gray-400" />
-                            <input type="text" value={slide.videoUrl || ''} onChange={(e) => updateSlide(index, 'videoUrl', e.target.value)} placeholder="https://...mp4" className="w-full rounded border border-gray-300 bg-white py-2 pl-3 pr-9 text-sm outline-none focus:ring-1 focus:ring-red-500" />
+                          <div className="flex gap-2">
+                            <div className="relative flex-1">
+                              <Video size={14} className="absolute right-3 top-3 text-gray-400" />
+                              <input type="text" value={slide.videoUrl || ''} onChange={(e) => updateSlide(index, 'videoUrl', e.target.value)} placeholder="https://...mp4" className="w-full rounded border border-gray-300 bg-white py-2 pl-3 pr-9 text-sm outline-none focus:ring-1 focus:ring-red-500" />
+                            </div>
+                            <label className="flex cursor-pointer items-center justify-center rounded border border-gray-300 bg-white px-3 py-2 text-gray-600 transition hover:bg-gray-50" title="העלה וידאו">
+                              <Video size={16} />
+                              <input type="file" accept="video/*" className="hidden" onChange={(e) => handleFileUpload(e, (url) => updateSlide(index, 'videoUrl', url))} />
+                            </label>
                           </div>
                         </div>
                       </div>

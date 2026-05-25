@@ -2,12 +2,14 @@ import React, { useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { PostCard } from '../components/PostCard';
+import { AdUnit } from '../components/AdUnit';
 import { Search } from 'lucide-react';
 
 export const SearchResults: React.FC = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
-  const { posts } = useApp();
+  const { posts, ads } = useApp();
+  const topAd = ads.find((ad) => ad.area === 'search_top' && ad.isActive);
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
@@ -33,6 +35,10 @@ export const SearchResults: React.FC = () => {
             <span className="font-bold text-blue-600 mr-1">"{query}"</span>
           </p>
         )}
+      </div>
+
+      <div className="mb-10">
+        <AdUnit ad={topAd} className="w-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm" />
       </div>
 
       {results.length > 0 ? (

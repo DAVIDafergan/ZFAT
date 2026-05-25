@@ -21,18 +21,20 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ posts }) => {
 
   if (featuredPosts.length === 0) return null;
   const currentPost = featuredPosts[currentIndex];
+  const categoryTint = CATEGORY_COLORS[currentPost.category].replace('bg-', 'from-');
 
   return (
     <section className="relative h-[340px] w-full overflow-hidden bg-gray-900 md:h-[620px]" aria-label="כותרות ראשיות">
       <div className="absolute inset-0">
         <img src={currentPost.imageUrl} alt={currentPost.title} className="h-full w-full object-cover opacity-85" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
+        <div className={`absolute inset-0 bg-gradient-to-l ${categoryTint}/40 via-transparent to-black/20`} />
       </div>
 
       <div className="absolute inset-0 flex items-end">
         <div className="container mx-auto w-full px-4 pb-8 md:pb-14">
           <div className="max-w-3xl rounded-[2rem] border border-white/10 bg-black/25 p-6 text-white shadow-2xl backdrop-blur-sm md:p-10">
-            <span className={`${CATEGORY_COLORS[currentPost.category]} mb-4 inline-block rounded-full px-4 py-1.5 text-sm font-black shadow-sm`}>{currentPost.category}</span>
+            <span className={`${CATEGORY_COLORS[currentPost.category]} mb-4 inline-block rounded-full px-4 py-1.5 text-base font-black shadow-sm`}>{currentPost.category}</span>
             <h2 className="news-headline mb-4 text-3xl font-black leading-tight md:text-6xl">
               <Link to={`/article/${currentPost.id}`} className="transition hover:text-red-300">{currentPost.title}</Link>
             </h2>

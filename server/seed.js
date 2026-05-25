@@ -54,23 +54,87 @@ const samplePosts = [
 
 const sampleAds = [
   {
-    title: 'לוח ראשי',
+    title: 'באנר עליון ראשי',
     area: 'leaderboard',
     isActive: true,
-    slides: [{ imageUrl: 'https://via.placeholder.com/970x90/2563EB/FFFFFF?text=פרסומת+ראשית', linkUrl: '#' }]
+    slides: [{ imageUrl: 'https://via.placeholder.com/1200x250/2563EB/FFFFFF?text=פרסומת+ראשית', linkUrl: '#' }]
+  },
+  {
+    title: 'באנר מרכזי בית',
+    area: 'homepage_mid',
+    isActive: true,
+    slides: [{ imageUrl: 'https://via.placeholder.com/1200x300/DC2626/FFFFFF?text=מודעת+אמצע+עמוד', linkUrl: '#' }]
+  },
+  {
+    title: 'באנר תחתית פיד הבית',
+    area: 'homepage_feed',
+    isActive: true,
+    slides: [{ imageUrl: 'https://via.placeholder.com/1200x220/991B1B/FFFFFF?text=באנר+פיד+הבית', linkUrl: '#' }]
   },
   {
     title: 'סרגל צדדי',
     area: 'sidebar',
     isActive: true,
-    slides: [{ imageUrl: 'https://via.placeholder.com/300x250/1A1A2E/FFFFFF?text=פרסומת+צד', linkUrl: '#' }]
+    slides: [{ imageUrl: 'https://via.placeholder.com/360x600/1A1A2E/FFFFFF?text=פרסומת+צד', linkUrl: '#' }]
   },
   {
-    title: 'אמצע עמוד בית',
-    area: 'homepage_mid',
+    title: 'וידאו צדדי',
+    area: 'sidebar_video',
     isActive: true,
-    slides: [{ imageUrl: 'https://via.placeholder.com/728x90/DC2626/FFFFFF?text=מודעת+אמצע+עמוד', linkUrl: '#' }]
-  }
+    slides: [{
+      imageUrl: 'https://via.placeholder.com/360x640/374151/FFFFFF?text=וידאו+צדדי',
+      videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+      linkUrl: '#'
+    }]
+  },
+  {
+    title: 'באנר בתוך כתבה',
+    area: 'article_inline',
+    isActive: true,
+    slides: [{ imageUrl: 'https://via.placeholder.com/1200x250/047857/FFFFFF?text=פרסום+בתוך+כתבה', linkUrl: '#' }]
+  },
+  {
+    title: 'באנר תחתון כתבה',
+    area: 'article_bottom',
+    isActive: true,
+    slides: [{ imageUrl: 'https://via.placeholder.com/1200x300/1D4ED8/FFFFFF?text=פרסום+תחתון+כתבה', linkUrl: '#' }]
+  },
+  {
+    title: 'באנר עליון קטגוריה',
+    area: 'category_top',
+    isActive: true,
+    slides: [{ imageUrl: 'https://via.placeholder.com/1200x220/7C3AED/FFFFFF?text=פרסום+קטגוריה+עליון', linkUrl: '#' }]
+  },
+  {
+    title: 'באנר אמצע קטגוריה',
+    area: 'category_mid',
+    isActive: true,
+    slides: [{ imageUrl: 'https://via.placeholder.com/1200x220/BE123C/FFFFFF?text=פרסום+קטגוריה+אמצע', linkUrl: '#' }]
+  },
+  {
+    title: 'באנר עיתון שבועי',
+    area: 'weekly_top',
+    isActive: true,
+    slides: [{ imageUrl: 'https://via.placeholder.com/1200x240/111827/FFFFFF?text=פרסום+עיתון+שבועי', linkUrl: '#' }]
+  },
+  {
+    title: 'באנר לוח בתנופה',
+    area: 'board_top',
+    isActive: true,
+    slides: [{ imageUrl: 'https://via.placeholder.com/1200x240/9A3412/FFFFFF?text=פרסום+לוח+בתנופה', linkUrl: '#' }]
+  },
+  {
+    title: 'באנר צור קשר',
+    area: 'contact_top',
+    isActive: true,
+    slides: [{ imageUrl: 'https://via.placeholder.com/1200x220/0E7490/FFFFFF?text=פרסום+צור+קשר', linkUrl: '#' }]
+  },
+  {
+    title: 'באנר תוצאות חיפוש',
+    area: 'search_top',
+    isActive: true,
+    slides: [{ imageUrl: 'https://via.placeholder.com/1200x220/334155/FFFFFF?text=פרסום+תוצאות+חיפוש', linkUrl: '#' }]
+  },
 ];
 
 const sampleWeeklyPapers = [

@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Mail, MapPin, Phone, Send, CheckCircle } from 'lucide-react';
+import { AdUnit } from '../components/AdUnit';
 
 export const Contact: React.FC = () => {
-  const { addContactMessage } = useApp();
+  const { addContactMessage, ads } = useApp();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -13,6 +14,7 @@ export const Contact: React.FC = () => {
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const topAd = ads.find((ad) => ad.area === 'contact_top' && ad.isActive);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,6 +69,10 @@ export const Contact: React.FC = () => {
       </div>
 
       <div className="container mx-auto px-4">
+        <div className="mx-auto mb-10 max-w-6xl">
+          <AdUnit ad={topAd} className="w-full rounded-2xl overflow-hidden border border-gray-100 bg-white shadow-sm" />
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-12 max-w-6xl mx-auto">
           
           {/* Contact Info */}

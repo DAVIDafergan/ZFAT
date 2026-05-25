@@ -17,6 +17,7 @@ export const Home: React.FC = () => {
   const sidebarAd = ads.find(a => a.area === 'sidebar' && a.isActive);
   const sidebarVideoAd = ads.find(a => a.area === 'sidebar_video' && a.isActive);
   const midPageAd = ads.find(a => a.area === 'homepage_mid' && a.isActive);
+  const homeFeedAd = ads.find(a => a.area === 'homepage_feed' && a.isActive);
   const categoriesToShow = Object.values(Category).filter(c => c !== Category.NEWS);
   const leadPaper = weeklyPapers[0];
   const featuredListings = boardListings.slice(0, 2);
@@ -138,6 +139,9 @@ export const Home: React.FC = () => {
                   </section>
                 );
               })}
+            </div>
+            <div className="mt-16">
+              <AdUnit ad={homeFeedAd} className="w-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm" />
             </div>
           </div>
 

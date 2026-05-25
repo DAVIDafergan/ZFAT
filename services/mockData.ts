@@ -508,26 +508,26 @@ export const INITIAL_POSTS: Post[] = [
 export const INITIAL_ADS: Ad[] = [
   {
     id: 'ad1',
-    title: 'מבצע רכב',
+    title: 'באנר צד - מבצע רכב',
     area: 'sidebar',
     isActive: true,
     slides: [
       {
         id: 's1',
-        imageUrl: 'https://picsum.photos/id/111/300/250',
+        imageUrl: 'https://picsum.photos/id/111/360/600',
         linkUrl: '#'
       }
     ]
   },
   {
     id: 'ad_video',
-    title: 'פרסומת וידאו',
+    title: 'וידאו צד - עסק מקומי',
     area: 'sidebar_video',
     isActive: true,
     slides: [
       {
         id: 'sv1',
-        imageUrl: 'https://picsum.photos/id/444/300/250', // Fallback
+        imageUrl: 'https://picsum.photos/id/444/360/640',
         videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
         linkUrl: '#'
       }
@@ -535,18 +535,18 @@ export const INITIAL_ADS: Ad[] = [
   },
   {
     id: 'ad2',
-    title: 'נדלן צפת',
+    title: 'באנר עליון ראשי',
     area: 'leaderboard',
     isActive: true,
     slides: [
       {
         id: 's2',
-        imageUrl: 'https://picsum.photos/id/222/1200/200',
+        imageUrl: 'https://picsum.photos/id/222/1200/250',
         linkUrl: '#'
       },
       {
         id: 's3',
-        imageUrl: 'https://picsum.photos/id/234/1200/200',
+        imageUrl: 'https://picsum.photos/id/234/1200/250',
         linkUrl: '#'
       }
     ]
@@ -562,9 +562,126 @@ export const INITIAL_ADS: Ad[] = [
         imageUrl: 'https://picsum.photos/id/555/1200/300',
         linkUrl: '#'
       },
-       {
+      {
         id: 's5',
         imageUrl: 'https://picsum.photos/id/666/1200/300',
+        linkUrl: '#'
+      }
+    ]
+  },
+  {
+    id: 'ad4',
+    title: 'באנר תחתית פיד הבית',
+    area: 'homepage_feed',
+    isActive: true,
+    slides: [
+      {
+        id: 's6',
+        imageUrl: 'https://picsum.photos/id/777/1200/220',
+        linkUrl: '#'
+      }
+    ]
+  },
+  {
+    id: 'ad5',
+    title: 'באנר בתוך כתבה',
+    area: 'article_inline',
+    isActive: true,
+    slides: [
+      {
+        id: 's7',
+        imageUrl: 'https://picsum.photos/id/888/1200/250',
+        linkUrl: '#'
+      }
+    ]
+  },
+  {
+    id: 'ad6',
+    title: 'באנר תחתון כתבה',
+    area: 'article_bottom',
+    isActive: true,
+    slides: [
+      {
+        id: 's8',
+        imageUrl: 'https://picsum.photos/id/889/1200/300',
+        linkUrl: '#'
+      }
+    ]
+  },
+  {
+    id: 'ad7',
+    title: 'באנר עליון קטגוריה',
+    area: 'category_top',
+    isActive: true,
+    slides: [
+      {
+        id: 's9',
+        imageUrl: 'https://picsum.photos/id/890/1200/220',
+        linkUrl: '#'
+      }
+    ]
+  },
+  {
+    id: 'ad8',
+    title: 'באנר אמצע קטגוריה',
+    area: 'category_mid',
+    isActive: true,
+    slides: [
+      {
+        id: 's10',
+        imageUrl: 'https://picsum.photos/id/891/1200/220',
+        linkUrl: '#'
+      }
+    ]
+  },
+  {
+    id: 'ad9',
+    title: 'באנר העיתון השבועי',
+    area: 'weekly_top',
+    isActive: true,
+    slides: [
+      {
+        id: 's11',
+        imageUrl: 'https://picsum.photos/id/892/1200/240',
+        linkUrl: '#'
+      }
+    ]
+  },
+  {
+    id: 'ad10',
+    title: 'באנר לוח בתנופה',
+    area: 'board_top',
+    isActive: true,
+    slides: [
+      {
+        id: 's12',
+        imageUrl: 'https://picsum.photos/id/893/1200/240',
+        linkUrl: '#'
+      }
+    ]
+  },
+  {
+    id: 'ad11',
+    title: 'באנר צור קשר',
+    area: 'contact_top',
+    isActive: true,
+    slides: [
+      {
+        id: 's13',
+        imageUrl: 'https://picsum.photos/id/894/1200/220',
+        linkUrl: '#'
+      }
+    ]
+  },
+  {
+    id: 'ad12',
+    title: 'באנר תוצאות חיפוש',
+    area: 'search_top',
+    isActive: true,
+    slides: [
+      {
+        id: 's14',
+        imageUrl: 'https://picsum.photos/id/895/1200/220',
         linkUrl: '#'
       }
     ]
