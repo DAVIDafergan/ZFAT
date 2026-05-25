@@ -146,11 +146,13 @@ const fetchJson = async (path: string, init?: RequestInit) => {
   let response: Response;
   try {
     response = await fetch(`${API_URL}${path}`, init);
-  } catch {
+  } catch (err) {
+    console.error(`[API] Network error for ${path}:`, err);
     throw new ApiRequestError('לא ניתן להתחבר לשרת כרגע. ודאו שה-Backend פעיל ונסו שוב.', 503);
   }
   const data = await response.json().catch(() => null);
   if (!response.ok) {
+    console.error(`[API] Request failed: ${path} [${response.status}]`, data);
     throw new ApiRequestError(data?.message || `Request failed: ${response.status}`, response.status);
   }
   return data;
