@@ -83,8 +83,8 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
 
   return (
     <>
-      <div className="h-[4.75rem] sm:h-24 lg:h-28" />
-      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${isScrolled ? 'border-b border-white/10 bg-[#77000c]/96 py-2 shadow-[0_18px_44px_rgba(0,0,0,0.40)] backdrop-blur-xl supports-[backdrop-filter]:bg-[#77000c]/93' : 'border-b border-white/12 bg-[#6d000b]/84 py-3 shadow-[0_10px_32px_rgba(0,0,0,0.28)] backdrop-blur-lg supports-[backdrop-filter]:bg-[#6d000b]/80'}`}>
+      <div className="h-[calc(4.75rem+env(safe-area-inset-top))] sm:h-24 lg:h-28" />
+      <header className={`fixed inset-x-0 top-0 z-50 pt-[env(safe-area-inset-top)] transition-all duration-500 ${isScrolled ? 'border-b border-white/10 bg-[#77000c]/96 py-2 shadow-[0_18px_44px_rgba(0,0,0,0.40)] backdrop-blur-xl supports-[backdrop-filter]:bg-[#77000c]/93' : 'border-b border-white/12 bg-[#6d000b]/84 py-3 shadow-[0_10px_32px_rgba(0,0,0,0.28)] backdrop-blur-lg supports-[backdrop-filter]:bg-[#6d000b]/80'}`}>
         <div className="container mx-auto px-4">
           <div className="mb-3 hidden items-center justify-between text-xs font-bold text-white/80 lg:flex">
             <div className="flex items-center gap-3">
