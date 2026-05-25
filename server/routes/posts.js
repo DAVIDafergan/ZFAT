@@ -60,8 +60,10 @@ router.put('/:id', mutateLimiter, auth, editorOrAbove, validateObjectId(), async
       ...req.body,
       ...(req.body.shortLinkCode ? { shortLinkCode: normalizeShortCode(req.body.shortLinkCode, req.params.id) } : {}),
     };
-    const post = await Post.findByIdAndUpdate(objectId, updates, { new: true, runValidators: true });
+    const post = await Post.findById(objectId);
     if (!post) return res.status(404).json({ message: 'כתבה לא נמצאה' });
+    post.set(updates);
+    await post.save();
     res.json(post);
   } catch (err) {
     res.status(400).json({ message: err.message });

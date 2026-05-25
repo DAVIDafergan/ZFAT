@@ -4,31 +4,121 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>צפת בתנופה - חדשות צפת והגליל</title>
-    <meta name="description" content="צפת בתנופה - אתר חדשות מקומי עם מבזקים, העיתון השבועי, לוח בתנופה וקהילת צפת והגליל." />
-    <meta name="theme-color" content="#a31319" />
-    <meta property="og:type" content="website" />
-    <meta property="og:locale" content="he_IL" />
-    <meta property="og:title" content="צפת בתנופה - חדשות צפת והגליל" />
-    <meta property="og:description" content="חדשות מקומיות, העיתון השבועי, לוח דירות בצפת ותוכן קהילתי מעוצב ונגיש." />
-    <meta property="og:image" content="https://github.com/user-attachments/assets/a1878587-9bc6-475e-8ccc-85c15ac3f713" />
-    <link rel="icon" href="https://github.com/user-attachments/assets/a1878587-9bc6-475e-8ccc-85c15ac3f713" />
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <script type="importmap">
-      {
-        "imports": {
-          "react/": "https://aistudiocdn.com/react@^19.2.0/",
-          "react": "https://aistudiocdn.com/react@^19.2.0",
-          "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-          "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6",
-          "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0"
-        }
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800;900&display=swap');
+      
+      :root {
+        --font-scale: 1;
       }
-    </script>
-    <script type="module" crossorigin src="/assets/index-CPjWfgHI.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CQ-avVlh.css">
-  </head>
+      
+      body {
+        font-family: 'Assistant', sans-serif;
+        background-color: #f8f9fa;
+        color: #1a1a1a;
+        font-size: calc(1rem * var(--font-scale));
+      }
+      
+      /* Smooth scrolling */
+      
+      html {
+        scroll-behavior: smooth;
+      }
+      
+      /* Custom scrollbar */
+      
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: #2563EB;
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: #1d4ed8;
+      }
+      
+      /* Animation Utilities */
+      
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      /* Accessibility Modes */
+      
+      .a11y-grayscale {
+        filter: grayscale(100%);
+      }
+      
+      .a11y-high-contrast {
+        background-color: #000 !important;
+        color: #fff !important;
+      }
+      
+      .a11y-high-contrast * {
+        background-color: #000 !important;
+        color: #fff !important;
+        border-color: #fff !important;
+        box-shadow: none !important;
+      }
+      
+      .a11y-high-contrast img, 
+      .a11y-high-contrast video {
+        filter: contrast(150%);
+      }
+      
+      .a11y-high-contrast a {
+        color: #ffff00 !important;
+        text-decoration: underline !important;
+      }
+      
+      .a11y-high-contrast button {
+        border: 2px solid #fff !important;
+      }
+      
+      .a11y-highlight-links a {
+        text-decoration: underline !important;
+        background-color: rgba(255, 255, 0, 0.2);
+      }
+      
+      .a11y-highlight-links button {
+        outline: 2px solid #0000ff;
+      }
+      
+      .a11y-stop-animations *,
+      .a11y-stop-animations *::before,
+      .a11y-stop-animations *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    </style>
+
+<link rel="stylesheet" href="/index.css">
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/assets/index-BtuJSIU5.js"></script>
+</head>
   <body>
     <div id="root"></div>
-  </body>
+</body>
 </html>

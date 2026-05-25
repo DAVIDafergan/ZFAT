@@ -32,8 +32,10 @@ router.post('/', mutateLimiter, auth, adminOnly, async (req, res) => {
 router.put('/:id', mutateLimiter, auth, adminOnly, validateObjectId(), async (req, res) => {
   try {
     const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
-    const listing = await BoardListing.findByIdAndUpdate(objectId, req.body, { new: true, runValidators: true });
+    const listing = await BoardListing.findById(objectId);
     if (!listing) return res.status(404).json({ message: 'המודעה לא נמצאה' });
+    listing.set(req.body);
+    await listing.save();
     res.json(listing);
   } catch (err) {
     res.status(400).json({ message: err.message });

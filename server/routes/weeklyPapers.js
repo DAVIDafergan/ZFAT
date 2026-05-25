@@ -32,8 +32,10 @@ router.post('/', mutateLimiter, auth, adminOnly, async (req, res) => {
 router.put('/:id', mutateLimiter, auth, adminOnly, validateObjectId(), async (req, res) => {
   try {
     const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
-    const paper = await WeeklyPaper.findByIdAndUpdate(objectId, req.body, { new: true, runValidators: true });
+    const paper = await WeeklyPaper.findById(objectId);
     if (!paper) return res.status(404).json({ message: 'העיתון לא נמצא' });
+    paper.set(req.body);
+    await paper.save();
     res.json(paper);
   } catch (err) {
     res.status(400).json({ message: err.message });
