@@ -11,7 +11,7 @@ const { generateShortCode } = require('./utils/shortLink');
 const ADMIN_NAME = process.env.ADMIN_NAME || 'ניהול';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'ZP@GMAIL.COM';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '1234567';
-const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI || 'mongodb://localhost:27017/zfat-news';
+const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI;
 
 const samplePosts = [
   {
@@ -103,6 +103,7 @@ const sampleBoardListings = [
 
 async function seed() {
   try {
+    if (!MONGO_URI) throw new Error('MONGO_URL/MONGODB_URI is not configured');
     await mongoose.connect(MONGO_URI);
     console.log('✅ Connected to MongoDB');
 

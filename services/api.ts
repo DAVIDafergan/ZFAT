@@ -169,9 +169,18 @@ export const api = {
           fetchJson('/api/weekly-papers', { headers: authHeaders() }),
           fetchJson('/api/board-listings', { headers: authHeaders() }),
         ]);
-        const messagesRes = await fetch(`${API_URL}/api/messages`, { headers: authHeaders() }).catch(() => null);
-        const subscribersRes = await fetch(`${API_URL}/api/subscribers`, { headers: authHeaders() }).catch(() => null);
-        const usersRes = await fetch(`${API_URL}/api/auth/users`, { headers: authHeaders() }).catch(() => null);
+        const messagesRes = await fetch(`${API_URL}/api/messages`, { headers: authHeaders() }).catch((error) => {
+          console.error('[API] Failed loading messages', error);
+          return null;
+        });
+        const subscribersRes = await fetch(`${API_URL}/api/subscribers`, { headers: authHeaders() }).catch((error) => {
+          console.error('[API] Failed loading subscribers', error);
+          return null;
+        });
+        const usersRes = await fetch(`${API_URL}/api/auth/users`, { headers: authHeaders() }).catch((error) => {
+          console.error('[API] Failed loading users', error);
+          return null;
+        });
         const messages = messagesRes?.ok ? await messagesRes.json() : [];
         const subscribers = subscribersRes?.ok ? await subscribersRes.json() : [];
         const users = usersRes?.ok ? await usersRes.json() : [];
@@ -247,7 +256,9 @@ export const api = {
 
   incrementViews: async (id: string) => {
     if (shouldUseServer()) {
-      fetch(`${API_URL}/api/posts/${id}/views`, { method: 'PATCH' }).catch(() => {});
+      fetch(`${API_URL}/api/posts/${id}/views`, { method: 'PATCH' }).catch((error) => {
+        console.error('[API] Failed to increment post views', { id, error });
+      });
       return;
     }
 
@@ -419,13 +430,21 @@ export const api = {
 
   register: async (user: User): Promise<User> => {
     if (shouldUseServer()) {
-      const data = await fetchJson('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user),
-      });
-      if (data.token) localStorage.setItem('zfat_jwt', data.token);
-      return normalizeUser({ ...data.user, isAuthenticated: true });
+      try {
+        const data = await fetchJson('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(user),
+        });
+        if (data.token) localStorage.setItem('zfat_jwt', data.token);
+        return normalizeUser({ ...data.user, isAuthenticated: true });
+      } catch (error) {
+        console.error('[API][Auth] Register failed', {
+          email: user.email,
+          error,
+        });
+        throw error;
+      }
     }
 
     await delay(250);
@@ -455,7 +474,8 @@ export const api = {
     try {
       const user = await fetchJson('/api/auth/me', { headers: authHeaders() });
       return normalizeUser({ ...user, isAuthenticated: true });
-    } catch {
+    } catch (error) {
+      console.error('[API][Auth] Token verification failed', error);
       localStorage.removeItem('zfat_jwt');
       return null;
     }
@@ -484,7 +504,9 @@ export const api = {
       fetch(`${API_URL}/api/comments/${commentId}/like`, {
         method: 'PATCH',
         headers: authHeaders(),
-      }).catch(() => {});
+      }).catch((error) => {
+        console.error('[API] Failed to toggle comment like', { commentId, userId, error });
+      });
       return;
     }
 
@@ -530,7 +552,8 @@ export const api = {
           body: JSON.stringify({ email }),
         });
         return true;
-      } catch {
+      } catch (error) {
+        console.error('[API] Newsletter subscribe failed', { email, error });
         return false;
       }
     }

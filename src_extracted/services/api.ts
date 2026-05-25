@@ -4,7 +4,7 @@ import { INITIAL_POSTS, INITIAL_ADS, INITIAL_COMMENTS, INITIAL_USERS, INITIAL_ME
 
 // SET THIS TO TRUE WHEN YOU HAVE A REAL SERVER CONNECTED
 const USE_SERVER = false;
-const API_URL = 'http://localhost:3000/api'; // Replace with your real server URL in production
+const API_URL = 'https://zfat-production.up.railway.app/api';
 
 // Helper to simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
