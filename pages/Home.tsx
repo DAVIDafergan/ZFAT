@@ -13,6 +13,7 @@ export const Home: React.FC = () => {
 
   const featuredPosts = posts.filter(p => p.isFeatured);
   const latestPosts = posts.slice(0, 6);
+  const newsPosts = posts.filter((post) => post.category === Category.NEWS).slice(0, 6);
   const leaderboardAd = ads.find(a => a.area === 'leaderboard' && a.isActive);
   const sidebarAd = ads.find(a => a.area === 'sidebar' && a.isActive);
   const sidebarVideoAd = ads.find(a => a.area === 'sidebar_video' && a.isActive);
@@ -21,43 +22,55 @@ export const Home: React.FC = () => {
   const categoriesToShow = Object.values(Category).filter(c => c !== Category.NEWS);
   const leadPaper = weeklyPapers[0];
   const featuredListings = boardListings.slice(0, 2);
+  const formatRelativeTime = (dateLabel: string) => {
+    const parsedDate = new Date(dateLabel);
+    if (Number.isNaN(parsedDate.getTime())) return dateLabel;
+    const diffMinutes = Math.max(1, Math.floor((Date.now() - parsedDate.getTime()) / 60000));
+    if (diffMinutes < 60) return `לפני ${diffMinutes} דק׳`;
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `לפני ${diffHours} שעות`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `לפני ${diffDays} ימים`;
+  };
 
   return (
     <div className="animate-fade-in bg-[#f7f5f1] pb-16 sm:pb-20">
       {/* Hero — flush to header, no mobile gap */}
-      <div className="shadow-2xl sm:mb-10">
+      <div className="-mt-1 shadow-2xl sm:mt-0 sm:mb-10">
         <HeroSlider posts={featuredPosts} />
-      </div>
-
-      {/* Dark breaking-news strip — visible on all screen sizes */}
-      <div className="animate-dark-shimmer border-b border-red-900/40 md:hidden">
-        <div className="flex items-stretch">
-          <div className="flex shrink-0 items-center gap-2 bg-red-700 px-4 py-3">
-            <span className="animate-live-dot h-2 w-2 rounded-full bg-white" />
-            <span className="text-[11px] font-black tracking-widest text-white">מבזק</span>
-          </div>
-          <div className="flex flex-1 items-center overflow-hidden px-4">
-            <p className="animate-breaking-badge line-clamp-1 text-sm font-bold text-gray-200">
-              {latestPosts[0]?.title || 'עקבו אחרינו לקבלת עדכונים שוטפים מצפת והגליל'}
-            </p>
-          </div>
-        </div>
       </div>
 
       <div className="container mx-auto px-4">
         <div className="mb-8 grid gap-5 lg:grid-cols-[1.3fr_0.7fr] sm:mb-10 sm:gap-6">
-          <div className="overflow-hidden rounded-[1.5rem] border border-gray-200 bg-white shadow-sm sm:rounded-[2rem]">
-            <div className="border-b border-gray-100 px-4 py-4 sm:px-6 sm:py-5">
-              <div className="mb-3 inline-flex animate-breaking-badge items-center gap-2 rounded-full bg-red-700 px-4 py-1 text-xs font-black text-white">
-                <span className="animate-live-dot h-1.5 w-1.5 rounded-full bg-white" /> מהדורה ראשית
+          <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0b0f19] shadow-[0_22px_60px_rgba(2,6,23,0.35)] sm:rounded-[2rem]">
+            <div className="border-b border-white/10 px-4 py-4 sm:px-6 sm:py-5">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1 text-xs font-black text-white/85">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> מהדורה ראשית
               </div>
-              <h2 className="news-headline text-2xl font-black text-gray-900 sm:text-3xl">חדשות אחרונות מצפת והגליל</h2>
+              <h2 className="news-headline text-2xl font-black text-white sm:text-3xl">חדשות אחרונות מצפת והגליל</h2>
             </div>
-            <div className="grid grid-cols-1 gap-5 p-4 sm:grid-cols-2 sm:gap-8 sm:p-6">
-              {latestPosts.map(post => (
-                <div key={post.id} className="animate-stagger-in">
-                  <PostCard post={post} />
-                </div>
+            <div className="space-y-3 p-4 sm:space-y-4 sm:p-6">
+              {(newsPosts.length > 0 ? newsPosts : latestPosts).map((post, index) => (
+                <Link key={post.id} to={`/article/${post.id}`} className="group block">
+                  <article className="flex items-start gap-3 rounded-[1.2rem] border border-white/10 bg-[#101827] p-3 transition hover:border-red-500/40 hover:bg-[#131d2f] sm:gap-4 sm:p-4">
+                    <div className="w-full">
+                      <h3 className="line-clamp-2 text-sm font-black leading-6 text-white transition group-hover:text-red-300 sm:text-base">
+                        {post.title}
+                      </h3>
+                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-white/65 sm:text-sm">
+                        {post.excerpt}
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] font-bold text-white/55 sm:mt-3 sm:text-xs">
+                        <span>{formatRelativeTime(post.date)}</span>
+                        <span className="h-1 w-1 rounded-full bg-white/30" />
+                        <span>{post.views.toLocaleString('he-IL')} צפיות</span>
+                      </div>
+                    </div>
+                    <div className="aspect-[4/3] w-[34%] shrink-0 overflow-hidden rounded-xl border border-white/10 sm:w-[32%]">
+                      <img src={post.imageUrl} alt={post.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                    </div>
+                  </article>
+                </Link>
               ))}
             </div>
           </div>

@@ -342,7 +342,7 @@ const App: React.FC = () => {
         <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-[#f7f5f1] text-gray-900">
           <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-1/2 focus:-translate-x-1/2 focus:rounded-full focus:bg-yellow-400 focus:px-4 focus:py-2 focus:font-black focus:text-black focus:z-[100] focus:shadow-xl">דלג לתוכן הראשי</a>
           <Header onSearch={() => {}} user={user} />
-          <div className="hidden md:block"><NewsTicker posts={tickerPosts.slice(0, 10)} /></div>
+          <NewsTicker posts={tickerPosts} />
 
           <main id="main-content" className="flex-1 focus:outline-none" tabIndex={-1}>
             <ErrorBoundary>

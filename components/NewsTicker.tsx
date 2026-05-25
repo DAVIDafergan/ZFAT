@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Post } from '../types';
 
@@ -7,20 +7,59 @@ interface NewsTickerProps {
 }
 
 export const NewsTicker: React.FC<NewsTickerProps> = ({ posts }) => {
-  if (posts.length === 0) return null;
+  const tickerPosts = useMemo(() => posts.slice(0, 12), [posts]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [visibleLetters, setVisibleLetters] = useState(0);
+
+  useEffect(() => {
+    if (tickerPosts.length === 0) return;
+    if (activeIndex >= tickerPosts.length) {
+      setActiveIndex(0);
+      setVisibleLetters(0);
+    }
+  }, [activeIndex, tickerPosts.length]);
+
+  useEffect(() => {
+    if (tickerPosts.length === 0) return;
+    const activePost = tickerPosts[activeIndex];
+    if (!activePost) return;
+
+    let timer: number;
+    if (visibleLetters < activePost.title.length) {
+      timer = window.setTimeout(() => {
+        setVisibleLetters((value) => value + 1);
+      }, 42);
+    } else {
+      timer = window.setTimeout(() => {
+        setVisibleLetters(0);
+        setActiveIndex((value) => (value + 1) % tickerPosts.length);
+      }, 2500);
+    }
+
+    return () => window.clearTimeout(timer);
+  }, [activeIndex, tickerPosts, visibleLetters]);
+
+  if (tickerPosts.length === 0) return null;
+  const activePost = tickerPosts[activeIndex];
+  const typedTitle = activePost.title.slice(0, visibleLetters);
+
   return (
-    <div className="relative z-40 flex h-11 items-center overflow-hidden border-b-4 border-red-700 bg-[#111] text-white" aria-label="מבזקים" role="region">
-      <div className="z-10 flex h-full shrink-0 items-center bg-red-700 px-5 text-sm font-black shadow-lg">מבזקים</div>
-      <div className="ticker-track flex-1 overflow-hidden px-4" aria-live="polite">
-        <div className="ticker-content flex whitespace-nowrap py-3 hover:[animation-play-state:paused]">
-          {[...posts, ...posts].map((post, index) => (
-            <Link key={`${post.id}-${index}`} to={`/article/${post.id}`} className="ml-10 inline-flex items-center gap-2 text-sm font-bold transition hover:text-red-300">
-              <span className="text-red-500">•</span>
-              <span className="text-white/70">{post.date}</span>
-              <span>{post.title}</span>
-            </Link>
-          ))}
-        </div>
+    <div className="relative z-40 flex min-h-11 items-stretch overflow-hidden border-y border-red-900/40 bg-[#090c14] text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]" aria-label="מבזקים" role="region">
+      <div className="z-10 flex shrink-0 items-center gap-2 bg-red-700 px-4 text-xs font-black tracking-[0.12em] text-white sm:px-5 sm:text-sm">
+        <span className="h-1.5 w-1.5 rounded-full bg-white" />
+        מבזק
+      </div>
+      <div className="flex flex-1 items-center overflow-hidden px-4 sm:px-6" aria-live="polite">
+        <Link to={`/article/${activePost.id}`} className="group inline-flex w-full items-center gap-2 text-sm font-bold text-white/85 transition hover:text-red-300 sm:text-base">
+          <span className="shrink-0 text-red-400">•</span>
+          <span className="line-clamp-1">
+            {typedTitle}
+            <span className="ml-0.5 inline-block h-4 w-[1px] animate-pulse bg-red-400 align-middle sm:h-5" />
+          </span>
+          <span className="mr-auto hidden text-xs text-white/45 sm:block">
+            {activePost.date}
+          </span>
+        </Link>
       </div>
     </div>
   );
