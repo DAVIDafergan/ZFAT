@@ -123,6 +123,87 @@ h6 {
   100% { transform: translateX(0); }
 }
 
+/* ─── News-site animations ─── */
+
+/* Pulsing red dot for LIVE indicator */
+.animate-live-dot {
+  animation: liveDot 1.4s ease-in-out infinite;
+}
+
+@keyframes liveDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+/* Flashing breaking-news badge */
+.animate-breaking-badge {
+  animation: breakingBadge 2.8s ease-in-out infinite;
+}
+
+@keyframes breakingBadge {
+  0%, 70%, 100% { opacity: 1; }
+  80% { opacity: 0.45; }
+}
+
+/* Headline slide-in from right (RTL) */
+.animate-headline-in {
+  animation: headlineIn 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes headlineIn {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Staggered card entrance — apply to each card wrapper */
+.animate-stagger-in {
+  animation: fadeInUp 0.45s ease-out both;
+}
+.animate-stagger-in:nth-child(1) { animation-delay: 0s; }
+.animate-stagger-in:nth-child(2) { animation-delay: 0.07s; }
+.animate-stagger-in:nth-child(3) { animation-delay: 0.14s; }
+.animate-stagger-in:nth-child(4) { animation-delay: 0.21s; }
+.animate-stagger-in:nth-child(5) { animation-delay: 0.28s; }
+.animate-stagger-in:nth-child(6) { animation-delay: 0.35s; }
+
+/* Horizontal scan-line sweep for hero */
+.animate-scan-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    transparent 100%
+  );
+  background-size: 100% 8px;
+  animation: scanLine 6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes scanLine {
+  0%   { background-position: 0 -100vh; }
+  100% { background-position: 0 100vh; }
+}
+
+/* Dark shimmer for accent sections */
+.animate-dark-shimmer {
+  background: linear-gradient(
+    105deg,
+    #0d0d0d 0%,
+    #1a1a2e 45%,
+    #0d0d0d 100%
+  );
+  background-size: 200% 100%;
+  animation: darkShimmer 5s ease-in-out infinite;
+}
+
+@keyframes darkShimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
 .a11y-grayscale {
   filter: grayscale(100%);
 }
