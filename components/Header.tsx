@@ -76,8 +76,8 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
 
   return (
     <>
-      <div className="h-20 lg:h-28" />
-      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${isScrolled ? 'border-b border-white/20 bg-[#8B0000]/88 py-2 shadow-[0_14px_40px_rgba(0,0,0,0.40)] backdrop-blur-[12px]' : 'border-b border-[#6b0000]/40 bg-[#8B0000] py-3 shadow-[0_4px_24px_rgba(0,0,0,0.28)]'}`}>
+      <div className="h-20 sm:h-24 lg:h-28" />
+      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${isScrolled ? 'border-b border-white/20 bg-gradient-to-b from-[#6f0000]/90 to-[#4a0000]/85 py-2 shadow-[0_16px_46px_rgba(0,0,0,0.45)] backdrop-blur-xl' : 'border-b border-[#6b0000]/55 bg-gradient-to-b from-[#8B0000] to-[#680000] py-3 shadow-[0_8px_26px_rgba(0,0,0,0.32)]'}`}>
         <div className="container mx-auto px-4">
           <div className="mb-3 hidden items-center justify-between text-xs font-bold text-white/80 lg:flex">
             <div className="flex items-center gap-3">
@@ -95,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <button type="button" className="rounded-full p-2 text-white transition hover:bg-white/10 lg:hidden" onClick={() => setIsMenuOpen(true)} aria-label="פתח תפריט ניווט" aria-expanded={isMenuOpen}>
+            <button type="button" className="rounded-full p-2 text-white transition-all duration-300 hover:bg-white/15 hover:scale-105 lg:hidden" onClick={() => setIsMenuOpen(true)} aria-label="פתח תפריט ניווט" aria-expanded={isMenuOpen}>
               <Menu size={28} />
             </button>
 
@@ -106,10 +106,10 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
             <nav className="hidden flex-1 items-center justify-center lg:flex">
               <ul className="flex items-center gap-6 text-sm font-extrabold text-white xl:text-base">
                 {Object.values(Category).slice(0, 4).map((cat) => (
-                  <li key={cat}><Link to={`/category/${cat}`} className="transition hover:text-red-100">{cat}</Link></li>
+                  <li key={cat}><Link to={`/category/${cat}`} className="relative transition-all duration-300 hover:text-red-100 after:absolute after:-bottom-1 after:right-0 after:h-0.5 after:w-0 after:bg-white/80 after:transition-all hover:after:w-full">{cat}</Link></li>
                 ))}
                 {quickLinks.map(({ label, to }) => (
-                  <li key={label}><Link to={to} className="transition hover:text-red-100">{label}</Link></li>
+                  <li key={label}><Link to={to} className="relative transition-all duration-300 hover:text-red-100 after:absolute after:-bottom-1 after:right-0 after:h-0.5 after:w-0 after:bg-white/80 after:transition-all hover:after:w-full">{label}</Link></li>
                 ))}
                 <li className="group relative">
                   <button type="button" className="inline-flex items-center gap-1 transition hover:text-red-100" aria-haspopup="true">
@@ -126,7 +126,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
 
             <div className="hidden items-center gap-3 lg:flex">
               <div ref={searchRef} className="relative">
-                <form onSubmit={handleSearchSubmit} className={`flex h-11 items-center overflow-hidden rounded-full border transition-all ${isSearchFocused || searchQuery ? 'w-[300px] border-white/40 bg-white shadow-xl' : 'w-11 border-white/20 bg-white/10 hover:bg-white/15'}`}>
+                <form onSubmit={handleSearchSubmit} className={`flex h-11 items-center overflow-hidden rounded-full border transition-all duration-500 ${isSearchFocused || searchQuery ? 'w-[300px] border-white/40 bg-white shadow-xl' : 'w-11 border-white/20 bg-white/10 hover:bg-white/15'}`}>
                   <button type={isSearchFocused || searchQuery ? 'submit' : 'button'} onClick={() => { setIsSearchFocused(true); setTimeout(() => searchInputRef.current?.focus(), 0); }} className={`flex h-11 w-11 items-center justify-center ${isSearchFocused || searchQuery ? 'text-red-700' : 'text-white'}`} aria-label="חפש באתר">
                     <Search size={19} />
                   </button>
@@ -148,7 +148,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
               </div>
 
               <div className="relative">
-                <button type="button" className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/15" onClick={() => setIsUserMenuOpen((value) => !value)} aria-haspopup="menu" aria-expanded={isUserMenuOpen} aria-label="תפריט משתמש">
+                <button type="button" className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-all duration-300 hover:bg-white/20 hover:scale-105" onClick={() => setIsUserMenuOpen((value) => !value)} aria-haspopup="menu" aria-expanded={isUserMenuOpen} aria-label="תפריט משתמש">
                   <UserIcon size={18} />
                 </button>
                 {isUserMenuOpen && (
@@ -179,8 +179,8 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
       </header>
 
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden" role="dialog" aria-modal="true" onClick={() => setIsMenuOpen(false)}>
-          <div className="ml-auto h-full w-[88%] max-w-sm border-l border-red-100 bg-gradient-to-b from-white via-red-50/40 to-white p-6 shadow-2xl animate-fade-in" onClick={(event) => event.stopPropagation()}>
+        <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm lg:hidden" role="dialog" aria-modal="true" onClick={() => setIsMenuOpen(false)}>
+          <div className="ml-auto h-full w-[92%] max-w-sm border-l border-red-100 bg-gradient-to-b from-white via-red-50/40 to-white p-5 shadow-2xl animate-fade-in-up sm:p-6" onClick={(event) => event.stopPropagation()}>
             <div className="mb-8 flex items-center justify-between">
               <div className="rounded-2xl bg-[#8B0000] px-3 py-2 shadow-lg">
                 <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-12 w-auto drop-shadow-[0_0_16px_rgba(255,255,255,0.42)]" />

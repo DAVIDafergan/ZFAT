@@ -57,6 +57,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
   const [user, setUser] = useState<User | null>(null);
@@ -88,6 +89,12 @@ const App: React.FC = () => {
     const init = async () => {
       setIsLoading(true);
       try {
+        const hasToken = Boolean(localStorage.getItem('zfat_jwt'));
+        const savedUser = localStorage.getItem('zfat_user');
+        if (hasToken && savedUser) {
+          setUser(JSON.parse(savedUser));
+        }
+
         const data = await api.fetchInitialData();
         setPosts(data.posts);
         setAds(data.ads);
@@ -104,8 +111,8 @@ const App: React.FC = () => {
             setRegisteredUsers(await api.fetchUsers());
           }
         } else {
-          const savedUser = localStorage.getItem('zfat_user');
-          if (savedUser) setUser(JSON.parse(savedUser));
+          localStorage.removeItem('zfat_jwt');
+          setUser(null);
         }
       } catch (error) {
         console.error('Failed to load initial data', error);
@@ -182,19 +189,26 @@ const App: React.FC = () => {
     setBoardListings((prev) => prev.filter((listing) => listing.id !== id));
   };
 
-  const login = async (usernameOrEmail: string, password: string): Promise<boolean> => {
-    const authenticatedUser = await api.login(usernameOrEmail, password);
-    if (!authenticatedUser) return false;
-    setUser(authenticatedUser);
-    if (authenticatedUser.role === 'admin') {
-      setRegisteredUsers(await api.fetchUsers());
-    } else {
-      mergeRegisteredUser(authenticatedUser);
+  const login = async (usernameOrEmail: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    setAuthLoading(true);
+    try {
+      const authenticatedUser = await api.login(usernameOrEmail, password);
+      setUser(authenticatedUser);
+      if (authenticatedUser.role === 'admin') {
+        setRegisteredUsers(await api.fetchUsers());
+      } else {
+        mergeRegisteredUser(authenticatedUser);
+      }
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'ההתחברות נכשלה. נסו שוב.' };
+    } finally {
+      setAuthLoading(false);
     }
-    return true;
   };
 
   const register = async (newUser: User): Promise<{ success: boolean; error?: string }> => {
+    setAuthLoading(true);
     try {
       const createdUser = await api.register(newUser);
       mergeRegisteredUser(createdUser);
@@ -202,11 +216,14 @@ const App: React.FC = () => {
       return { success: true };
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : 'ההרשמה נכשלה. נסו שוב.' };
+    } finally {
+      setAuthLoading(false);
     }
   };
 
   const logout = () => {
     localStorage.removeItem('zfat_jwt');
+    localStorage.removeItem('zfat_user');
     setUser(null);
   };
 
@@ -292,6 +309,7 @@ const App: React.FC = () => {
       boardListings,
       accessibility,
       isLoading,
+      authLoading,
       addPost,
       deletePost,
       incrementViews,
@@ -328,7 +346,13 @@ const App: React.FC = () => {
                 <Route path="/category/:categoryName" element={<CategoryPage />} />
                 <Route path="/weekly-paper" element={<WeeklyNewspaper />} />
                 <Route path="/board" element={<BoardPage />} />
-                <Route path="/admin" element={user && user.role === 'admin' ? <AdminDashboard /> : <Login />} />
+                <Route path="/admin" element={
+                  authLoading ? (
+                    <div className="flex min-h-[50vh] items-center justify-center">
+                      <Loader2 size={28} className="animate-spin text-red-700" />
+                    </div>
+                  ) : user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/login" replace />
+                } />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/contact" element={<Contact />} />

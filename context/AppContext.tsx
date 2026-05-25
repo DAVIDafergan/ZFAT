@@ -35,7 +35,8 @@ export interface AppState {
   createBoardListing: (listing: BoardListing) => Promise<void>;
   deleteBoardListing: (id: string) => Promise<void>;
 
-  login: (usernameOrEmail: string, password: string) => Promise<boolean>;
+  login: (usernameOrEmail: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  authLoading: boolean;
   logout: () => void;
   register: (user: User) => Promise<{ success: boolean; error?: string }>;
 
