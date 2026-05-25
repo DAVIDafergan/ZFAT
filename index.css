@@ -204,6 +204,34 @@ h6 {
   100% { background-position: -200% center; }
 }
 
+.animate-luxury-rise {
+  animation: luxuryRise 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes luxuryRise {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-luxury-pan {
+  animation: luxuryPan 13s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+@keyframes luxuryPan {
+  0% { transform: scale(1) translate3d(0, 0, 0); }
+  100% { transform: scale(1.08) translate3d(-10px, -6px, 0); }
+}
+
+.animate-orbit-glow {
+  animation: orbitGlow 3.4s ease-in-out infinite;
+}
+
+@keyframes orbitGlow {
+  0%, 100% { transform: translateY(0); box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+  50% { transform: translateY(-4px); box-shadow: 0 14px 34px rgba(255, 255, 255, 0.28); }
+}
+
 .a11y-grayscale {
   filter: grayscale(100%);
 }
