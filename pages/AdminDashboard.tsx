@@ -21,11 +21,12 @@ import {
   Building2,
   Home,
   FileText,
+  Download,
 } from 'lucide-react';
 import { formatWeekLabel, normalizeShareCode } from '../services/siteConfig';
 import { AD_PLACEMENTS, AD_PLACEMENT_MAP } from '../services/adPlacements';
 
-type TabKey = 'posts' | 'ads' | 'weekly-paper' | 'board' | 'users' | 'messages';
+type TabKey = 'posts' | 'ads' | 'weekly-paper' | 'board' | 'users' | 'messages' | 'newsletter';
 
 const initialPaperForm = {
   title: '',
@@ -73,6 +74,7 @@ export const AdminDashboard: React.FC = () => {
     deleteAd,
     registeredUsers,
     contactMessages,
+    newsletterSubscribers,
     weeklyPapers,
     boardListings,
     createWeeklyPaper,
@@ -349,6 +351,29 @@ export const AdminDashboard: React.FC = () => {
     showToast('קמפיין פרסומי חדש נוסף בהצלחה');
   };
 
+  const exportNewsletterSubscribers = () => {
+    if (newsletterSubscribers.length === 0) return;
+    const headers = ['אימייל', 'תאריך הצטרפות', 'סטטוס'];
+    const rows = newsletterSubscribers.map((subscriber) => [
+      subscriber.email,
+      subscriber.joinedDate,
+      subscriber.isActive ? 'פעיל' : 'לא פעיל',
+    ]);
+    const escapeCsvValue = (value: string) => `"${value.replace(/"/g, '""')}"`;
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => escapeCsvValue(String(cell ?? ''))).join(','))
+      .join('\n');
+
+    const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `newsletter-subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
   const tabs: Array<{ key: TabKey; label: string; icon: React.ComponentType<{ size?: number }> }> = [
     { key: 'posts', label: 'הוספת כתבה', icon: Plus },
     { key: 'ads', label: 'באנרים', icon: Layout },
@@ -356,6 +381,7 @@ export const AdminDashboard: React.FC = () => {
     { key: 'board', label: 'לוח בתנופה', icon: Home },
     { key: 'users', label: 'משתמשים', icon: Users },
     { key: 'messages', label: 'הודעות', icon: Mail },
+    { key: 'newsletter', label: 'ניוזלטר', icon: Mail },
   ];
 
   return (
@@ -898,6 +924,54 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               )) : <div className="py-20 text-center text-gray-400">אין הודעות חדשות.</div>}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'newsletter' && (
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-xl font-black text-gray-800 sm:text-2xl">נרשמים לניוזלטר ({newsletterSubscribers.length})</h2>
+              <button
+                type="button"
+                onClick={exportNewsletterSubscribers}
+                disabled={newsletterSubscribers.length === 0}
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 font-black text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+              >
+                <Download size={16} />
+                ייצוא לאקסל (CSV)
+              </button>
+            </div>
+
+            {newsletterSubscribers.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-right">
+                  <thead>
+                    <tr className="border-b border-gray-200 bg-gray-50 text-sm uppercase tracking-wider text-gray-600">
+                      <th className="px-4 py-3 font-black">אימייל</th>
+                      <th className="px-4 py-3 font-black">תאריך הצטרפות</th>
+                      <th className="px-4 py-3 font-black">סטטוס</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {newsletterSubscribers.map((subscriber) => (
+                      <tr key={subscriber.id} className="transition hover:bg-gray-50">
+                        <td className="px-4 py-3 font-bold text-gray-900">{subscriber.email}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{subscriber.joinedDate}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-block rounded px-2 py-0.5 text-xs font-black ${subscriber.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                            {subscriber.isActive ? 'פעיל' : 'לא פעיל'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-12 text-center text-sm font-bold text-gray-400">
+                עדיין אין נרשמים לניוזלטר.
+              </div>
+            )}
           </div>
         )}
 

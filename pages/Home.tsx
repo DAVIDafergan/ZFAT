@@ -120,29 +120,6 @@ export const Home: React.FC = () => {
           <AdUnit ad={leaderboardAd} className="w-full max-w-6xl mx-auto rounded-lg overflow-hidden shadow-sm" />
         </div>
 
-        {featuredListings.length > 0 && (
-          <section className="mb-12 rounded-[1.5rem] border border-red-100 bg-white p-4 shadow-sm sm:mb-16 sm:rounded-[2rem] sm:p-6">
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4">
-              <div>
-                <p className="text-sm font-black text-red-700">לוח בתנופה</p>
-                <h2 className="news-headline text-2xl font-black text-gray-900 sm:text-3xl">דירות נבחרות השבוע</h2>
-              </div>
-              <Link to="/board" className="rounded-full border border-red-100 px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-50">לכל המודעות</Link>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 sm:gap-6">
-              {featuredListings.map((listing) => (
-                <article key={listing.id} className="rounded-[1.4rem] border border-gray-100 bg-gray-50 p-4 sm:rounded-[1.75rem] sm:p-5">
-                  <div className="mb-4 aspect-[16/10] overflow-hidden rounded-[1.1rem] sm:rounded-[1.5rem]">
-                    <img src={listing.imageUrl} alt={listing.title} className="h-full w-full object-cover" />
-                  </div>
-                  <h3 className="news-headline text-xl font-black text-gray-900 sm:text-2xl">{listing.title}</h3>
-                  <p className="mt-2 text-sm font-medium leading-6 text-gray-600 sm:leading-7">{listing.location} • ₪{listing.price.toLocaleString('he-IL')} • {listing.sizeSqm} מ"ר</p>
-                </article>
-              ))}
-            </div>
-          </section>
-        )}
-
         <div className="flex flex-col gap-8 lg:flex-row lg:gap-16 sm:gap-10">
           <div className="lg:w-2/3">
             <div className="mb-12 sm:mb-16">
@@ -162,6 +139,29 @@ export const Home: React.FC = () => {
                 ))}
               </div>
             </div>
+
+            {featuredListings.length > 0 && (
+              <section className="mb-12 rounded-[1.5rem] border border-red-100 bg-white p-4 shadow-sm sm:mb-16 sm:rounded-[2rem] sm:p-6">
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                  <div>
+                    <p className="text-sm font-black text-red-700">לוח בתנופה</p>
+                    <h2 className="news-headline text-2xl font-black text-gray-900 sm:text-3xl">דירות נבחרות השבוע</h2>
+                  </div>
+                  <Link to="/board" className="rounded-full border border-red-100 px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-50">לכל המודעות</Link>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 sm:gap-6">
+                  {featuredListings.map((listing) => (
+                    <article key={listing.id} className="rounded-[1.4rem] border border-gray-100 bg-gray-50 p-4 sm:rounded-[1.75rem] sm:p-5">
+                      <div className="mb-4 aspect-[16/10] overflow-hidden rounded-[1.1rem] sm:rounded-[1.5rem]">
+                        <img src={listing.imageUrl} alt={listing.title} className="h-full w-full object-cover" />
+                      </div>
+                      <h3 className="news-headline text-xl font-black text-gray-900 sm:text-2xl">{listing.title}</h3>
+                      <p className="mt-2 text-sm font-medium leading-6 text-gray-600 sm:leading-7">{listing.location} • ₪{listing.price.toLocaleString('he-IL')} • {listing.sizeSqm} מ"ר</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <div className="mb-16">
               <AdUnit ad={midPageAd} className="w-full rounded-lg overflow-hidden shadow-md border border-gray-100" />

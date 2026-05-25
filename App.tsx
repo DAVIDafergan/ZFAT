@@ -368,48 +368,61 @@ const App: React.FC = () => {
             </ErrorBoundary>
           </main>
 
-          <footer className="mt-12 border-t-8 border-red-700 bg-[#111] py-16 text-gray-400">
-            <div className="container mx-auto grid grid-cols-1 gap-10 px-4 text-center md:grid-cols-4 md:text-right">
-              <div>
-                <div className="mb-6 flex justify-center md:justify-start">
-                  <img src={LOGO_URL} alt="צפת בתנופה" className="h-16 w-auto md:h-20" />
+          <footer className="mt-12 bg-gradient-to-b from-[#0b1221] via-[#0f172a] to-[#05070f] py-16 text-gray-300">
+            <div className="container mx-auto px-4">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm">
+                  <div className="mb-5 flex justify-center md:justify-start">
+                    <img src={LOGO_URL} alt="צפת בתנופה" className="h-16 w-auto md:h-20" />
+                  </div>
+                  <p className="text-sm leading-7 text-gray-300">האתר המקומי לצפת: חדשות, מבזקים, קהילה, לוח בתנופה והעיתון השבועי במקום אחד.</p>
                 </div>
-                <p className="text-sm leading-7 text-gray-400">האתר המקומי לצפת: חדשות, מבזקים, קהילה, לוח בתנופה והעיתון השבועי במקום אחד.</p>
+
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm">
+                  <h4 className="mb-4 text-lg font-black text-white">ניווט מהיר</h4>
+                  <ul className="space-y-3 text-sm font-bold">
+                    <li><Link to="/weekly-paper" className="transition hover:text-red-300">העיתון השבועי</Link></li>
+                    <li><Link to="/board" className="transition hover:text-red-300">לוח בתנופה</Link></li>
+                    <li><Link to="/contact" className="transition hover:text-red-300">צור קשר</Link></li>
+                  </ul>
+                </div>
+
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm">
+                  <h4 className="mb-4 text-lg font-black text-white">אזורים בולטים</h4>
+                  <ul className="space-y-3 text-sm font-bold">
+                    <li className="inline-flex items-center gap-2"><Newspaper size={14} className="text-red-400" /> ארכיון שבועי דיגיטלי</li>
+                    <li className="inline-flex items-center gap-2"><Building2 size={14} className="text-red-400" /> מודעות נדל"ן עם וואטסאפ</li>
+                    <li>שיתוף כתבות עם קישור קצר ותצוגה מקדימה</li>
+                  </ul>
+                </div>
+
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm">
+                  <h4 className="mb-4 text-lg font-black text-white">הירשמו לניוזלטר</h4>
+                  {footerNewsletterStatus === 'success' ? (
+                    <p className="py-4 text-center font-black text-green-400">נרשמת בהצלחה! ✓</p>
+                  ) : (
+                    <>
+                      <input type="email" placeholder="הכנס אימייל..." value={footerEmail} onChange={(event) => setFooterEmail(event.target.value)} className="mb-3 w-full rounded-xl border border-white/20 bg-[#0f182c] p-3 text-white outline-none transition focus:border-red-500" />
+                      {footerNewsletterStatus === 'error' && <p className="mb-2 text-sm text-red-300">כתובת זו כבר רשומה במערכת.</p>}
+                      <button onClick={handleFooterSubscribe} disabled={footerNewsletterStatus === 'loading'} className="w-full rounded-xl bg-red-700 py-3 font-black text-white transition hover:bg-red-800 disabled:opacity-60">
+                        {footerNewsletterStatus === 'loading' ? 'שולח...' : 'הרשמה'}
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-              <div>
-                <h4 className="mb-6 inline-block border-b border-gray-800 pb-2 font-black text-white">ניווט מהיר</h4>
-                <ul className="space-y-3 text-sm font-bold">
-                  <li><Link to="/weekly-paper" className="transition hover:text-red-400">העיתון השבועי</Link></li>
-                  <li><Link to="/board" className="transition hover:text-red-400">לוח בתנופה</Link></li>
-                  <li><Link to="/contact" className="transition hover:text-red-400">צור קשר</Link></li>
-                </ul>
+
+              <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-7 text-xs md:flex-row">
+                <p>&copy; {new Date().getFullYear()} צפת בתנופה. כל הזכויות שמורות.</p>
+                <a
+                  href="https://wa.me/972556674329"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-black text-gray-300 transition hover:text-green-400"
+                >
+                  פיתוח ובנייה: DA פרויקטים ויזמות
+                </a>
               </div>
-              <div>
-                <h4 className="mb-6 inline-block border-b border-gray-800 pb-2 font-black text-white">אזורים בולטים</h4>
-                <ul className="space-y-3 text-sm font-bold">
-                  <li className="inline-flex items-center gap-2"><Newspaper size={14} className="text-red-500" /> ארכיון שבועי דיגיטלי</li>
-                  <li className="inline-flex items-center gap-2"><Building2 size={14} className="text-red-500" /> מודעות נדל"ן עם וואטסאפ</li>
-                  <li>שיתוף כתבות עם קישור קצר ותצוגה מקדימה</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="mb-6 inline-block border-b border-gray-800 pb-2 font-black text-white">הירשמו לניוזלטר</h4>
-                {footerNewsletterStatus === 'success' ? (
-                  <p className="py-4 text-center font-black text-green-400">נרשמת בהצלחה! ✓</p>
-                ) : (
-                  <>
-                    <input type="email" placeholder="הכנס אימייל..." value={footerEmail} onChange={(event) => setFooterEmail(event.target.value)} className="mb-3 w-full rounded-xl border border-gray-700 bg-gray-800 p-3 text-white outline-none transition focus:border-red-500" />
-                    {footerNewsletterStatus === 'error' && <p className="mb-2 text-sm text-red-400">כתובת זו כבר רשומה במערכת.</p>}
-                    <button onClick={handleFooterSubscribe} disabled={footerNewsletterStatus === 'loading'} className="w-full rounded-xl bg-red-700 py-3 font-black text-white transition hover:bg-red-800 disabled:opacity-60">
-                      {footerNewsletterStatus === 'loading' ? 'שולח...' : 'הרשמה'}
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-            <div className="container mx-auto mt-16 flex flex-col items-center justify-between gap-4 border-t border-gray-800 px-4 pt-8 text-xs md:flex-row">
-              <p>&copy; {new Date().getFullYear()} צפת בתנופה. כל הזכויות שמורות.</p>
-              <p className="font-black text-gray-500">פיתוח ובנייה: DA פרויקטים ויזמות</p>
             </div>
           </footer>
 
