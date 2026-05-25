@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Building2, Search, Sparkles } from 'lucide-react';
+import { Building2, Search } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { BoardListingCard } from '../components/BoardListingCard';
 import { PageHero } from '../components/PageHero';
@@ -20,6 +20,8 @@ export const BoardPage: React.FC = () => {
       return listing.isActive && matchesDeal && matchesQuery;
     });
   }, [boardListings, dealFilter, query]);
+  const rentCount = filteredListings.filter((listing) => listing.dealType === 'rent').length;
+  const saleCount = filteredListings.filter((listing) => listing.dealType === 'sale').length;
 
   return (
     <div className="min-h-screen bg-[#f6f6f7] pb-16">
@@ -59,12 +61,12 @@ export const BoardPage: React.FC = () => {
             <p className="mt-2 text-4xl font-black text-gray-900">{filteredListings.length}</p>
           </div>
           <div className="rounded-3xl bg-gray-50 p-5">
-            <p className="text-sm font-black text-gray-700">צור קשר ישיר</p>
-            <p className="mt-2 text-sm font-medium leading-7 text-gray-600">בלחיצה על כפתור וואטסאפ נפתחת הודעה מוכנה שמציינת שהגולש הגיע דרך לוח בתנופה.</p>
+            <p className="text-sm font-black text-gray-700">להשכרה</p>
+            <p className="mt-2 text-4xl font-black text-gray-900">{rentCount}</p>
           </div>
           <div className="rounded-3xl bg-[#111827] p-5 text-white">
-            <p className="inline-flex items-center gap-2 text-sm font-black text-white/80"><Sparkles size={16} /> באנר מקצועי</p>
-            <p className="mt-2 text-sm font-medium leading-7 text-white/80">תצוגה חדשותית, ברורה ומודרנית כמו אתרי החדשות הגדולים.</p>
+            <p className="text-sm font-black text-white/80">למכירה</p>
+            <p className="mt-2 text-4xl font-black text-white">{saleCount}</p>
           </div>
         </div>
 

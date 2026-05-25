@@ -236,6 +236,25 @@ export const api = {
     setStorage('zfat_posts', [post, ...posts]);
   },
 
+  updatePost: async (id: string, updates: Partial<Post>) => {
+    if (shouldUseServer()) {
+      try {
+        await fetchJson(`/api/posts/${id}`, {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify(updates),
+        });
+        return;
+      } catch (error) {
+        console.warn('Falling back to local post update', error);
+      }
+    }
+
+    await delay(150);
+    const posts = getStorage<Post[]>('zfat_posts', INITIAL_POSTS);
+    setStorage('zfat_posts', posts.map((post) => (post.id === id ? { ...post, ...updates } : post)));
+  },
+
   deletePost: async (id: string) => {
     if (shouldUseServer()) {
       try {

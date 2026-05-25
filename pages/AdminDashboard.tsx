@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Category, Post, Ad, AdSlide, AdArea, WeeklyPaper, BoardListing, BoardListingDealType, DEAL_TYPE_LABELS } from '../types';
 import { useNavigate } from 'react-router-dom';
@@ -57,11 +57,16 @@ const initialAdForm = {
   isActive: true,
 };
 
+const POSTS_PAGE_SIZE = 5;
+
 export const AdminDashboard: React.FC = () => {
   const {
     user,
     logout,
+    posts,
     addPost,
+    updatePost,
+    deletePost,
     ads,
     updateAd,
     createAd,
@@ -86,6 +91,8 @@ export const AdminDashboard: React.FC = () => {
     isFeatured: false,
   });
   const [tagsInput, setTagsInput] = useState('');
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [postsPage, setPostsPage] = useState(1);
   const [editingAdId, setEditingAdId] = useState<string | null>(null);
   const [editingSlides, setEditingSlides] = useState<AdSlide[]>([]);
   const [draggedSlideIndex, setDraggedSlideIndex] = useState<number | null>(null);
@@ -111,6 +118,17 @@ export const AdminDashboard: React.FC = () => {
   }, [user, navigate]);
 
   const showToast = (message: string) => setToastMessage(message);
+  const totalPostsPages = Math.max(1, Math.ceil(posts.length / POSTS_PAGE_SIZE));
+  const paginatedPosts = useMemo(() => {
+    const start = (postsPage - 1) * POSTS_PAGE_SIZE;
+    return posts.slice(start, start + POSTS_PAGE_SIZE);
+  }, [posts, postsPage]);
+
+  useEffect(() => {
+    if (postsPage > totalPostsPages) {
+      setPostsPage(totalPostsPages);
+    }
+  }, [postsPage, totalPostsPages]);
 
   const handleLogout = () => {
     logout();
@@ -130,24 +148,76 @@ export const AdminDashboard: React.FC = () => {
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPost.title || !newPost.content) return;
-    const post: Post = {
-      id: Date.now().toString(),
-      title: newPost.title,
-      excerpt: newPost.excerpt || '',
-      content: newPost.content,
-      category: newPost.category as Category,
-      author: user?.name || 'Admin',
-      date: new Date().toLocaleDateString('he-IL'),
-      imageUrl: newPost.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200',
-      tags: tagsInput.split(',').map((tag) => tag.trim()).filter(Boolean),
-      isFeatured: Boolean(newPost.isFeatured),
-      views: 0,
-      shortLinkCode: normalizeShareCode('', Date.now().toString()),
-    };
-    await addPost(post);
+
+    const nextTags = tagsInput.split(',').map((tag) => tag.trim()).filter(Boolean);
+    if (editingPostId) {
+      const current = posts.find((post) => post.id === editingPostId);
+      if (!current) return;
+      await updatePost(editingPostId, {
+        title: newPost.title,
+        excerpt: newPost.excerpt || '',
+        content: newPost.content,
+        category: newPost.category as Category,
+        author: current.author || user?.name || 'Admin',
+        date: current.date || new Date().toLocaleDateString('he-IL'),
+        imageUrl: newPost.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200',
+        tags: nextTags,
+        isFeatured: Boolean(newPost.isFeatured),
+        shortLinkCode: current.shortLinkCode || normalizeShareCode('', current.id),
+      });
+      showToast('הכתבה עודכנה בהצלחה');
+    } else {
+      const post: Post = {
+        id: Date.now().toString(),
+        title: newPost.title,
+        excerpt: newPost.excerpt || '',
+        content: newPost.content,
+        category: newPost.category as Category,
+        author: user?.name || 'Admin',
+        date: new Date().toLocaleDateString('he-IL'),
+        imageUrl: newPost.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200',
+        tags: nextTags,
+        isFeatured: Boolean(newPost.isFeatured),
+        views: 0,
+        shortLinkCode: normalizeShareCode('', Date.now().toString()),
+      };
+      await addPost(post);
+      showToast(`הכתבה פורסמה בהצלחה · קוד קצר ${post.shortLinkCode}`);
+    }
+
     setNewPost({ title: '', category: Category.NEWS, excerpt: '', content: '', imageUrl: '', tags: [], isFeatured: false });
     setTagsInput('');
-    showToast(`הכתבה פורסמה בהצלחה · קוד קצר ${post.shortLinkCode}`);
+    setEditingPostId(null);
+  };
+
+  const startEditingPost = (post: Post) => {
+    setNewPost({
+      title: post.title,
+      category: post.category,
+      excerpt: post.excerpt,
+      content: post.content,
+      imageUrl: post.imageUrl,
+      tags: post.tags,
+      isFeatured: post.isFeatured,
+    });
+    setTagsInput(post.tags.join(', '));
+    setEditingPostId(post.id);
+    setActiveTab('posts');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const resetPostForm = () => {
+    setNewPost({ title: '', category: Category.NEWS, excerpt: '', content: '', imageUrl: '', tags: [], isFeatured: false });
+    setTagsInput('');
+    setEditingPostId(null);
+  };
+
+  const handleDeletePost = async (post: Post) => {
+    const shouldDelete = window.confirm(`למחוק את הכתבה "${post.title}"?`);
+    if (!shouldDelete) return;
+    await deletePost(post.id);
+    if (editingPostId === post.id) resetPostForm();
+    showToast('הכתבה נמחקה בהצלחה');
   };
 
   const startEditingAd = (ad: Ad) => {
@@ -293,7 +363,7 @@ export const AdminDashboard: React.FC = () => {
         {activeTab === 'posts' && (
           <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-2xl font-black text-gray-800">יצירת כתבה חדשה</h2>
+              <h2 className="text-2xl font-black text-gray-800">{editingPostId ? 'עריכת כתבה' : 'יצירת כתבה חדשה'}</h2>
               <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">המערכת תייצר קישור קצר ממוספר אוטומטית</span>
             </div>
             <form onSubmit={handlePostSubmit} className="max-w-5xl space-y-6">
@@ -346,8 +416,71 @@ export const AdminDashboard: React.FC = () => {
                 <label htmlFor="isFeatured" className="cursor-pointer font-black text-gray-700">הצג בסליידר הראשי</label>
               </div>
 
-              <button type="submit" className="flex items-center gap-2 rounded-lg bg-red-700 px-8 py-3 font-black text-white shadow-lg transition hover:bg-red-800"><Save size={20} /> פרסם כתבה</button>
+              <div className="flex flex-wrap items-center gap-3">
+                <button type="submit" className="flex items-center gap-2 rounded-lg bg-red-700 px-8 py-3 font-black text-white shadow-lg transition hover:bg-red-800">
+                  <Save size={20} /> {editingPostId ? 'שמור שינויים' : 'פרסם כתבה'}
+                </button>
+                {editingPostId && (
+                  <button type="button" onClick={resetPostForm} className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-black text-gray-700 transition hover:bg-gray-50">
+                    בטל עריכה
+                  </button>
+                )}
+              </div>
             </form>
+
+            <div className="mt-10 border-t border-gray-200 pt-8">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-xl font-black text-gray-800">ניהול כתבות ({posts.length})</h3>
+                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">מוצגות 5 כתבות בכל דף</span>
+              </div>
+
+              <div className="space-y-4">
+                {paginatedPosts.map((post) => (
+                  <div key={post.id} className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
+                    <div className="min-w-[220px] flex-1">
+                      <p className="font-black text-gray-900">{post.title}</p>
+                      <p className="mt-1 text-sm font-bold text-red-700">{post.category} · {post.date}</p>
+                      <p className="mt-2 line-clamp-2 text-sm text-gray-600">{post.excerpt || 'ללא תקציר'}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => startEditingPost(post)} className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-black text-gray-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700">
+                        <Edit2 size={15} /> ערוך
+                      </button>
+                      <button onClick={() => handleDeletePost(post)} className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-black text-red-700 transition hover:bg-red-100">
+                        <Trash2 size={15} /> מחק
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {paginatedPosts.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-10 text-center text-sm font-bold text-gray-400">
+                    אין כתבות להצגה.
+                  </div>
+                )}
+              </div>
+
+              {posts.length > POSTS_PAGE_SIZE && (
+                <div className="mt-6 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setPostsPage((prev) => Math.max(1, prev - 1))}
+                    disabled={postsPage === 1}
+                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-black text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    הדף הקודם
+                  </button>
+                  <span className="text-sm font-black text-gray-600">עמוד {postsPage} מתוך {totalPostsPages}</span>
+                  <button
+                    type="button"
+                    onClick={() => setPostsPage((prev) => Math.min(totalPostsPages, prev + 1))}
+                    disabled={postsPage === totalPostsPages}
+                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-black text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    הדף הבא
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
