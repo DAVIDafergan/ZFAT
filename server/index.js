@@ -16,6 +16,12 @@ const publicSiteUrl = (process.env.PUBLIC_SITE_URL || process.env.FRONTEND_URL |
 const defaultAdminName = (process.env.ADMIN_NAME || 'ניהול').trim();
 const defaultAdminEmail = (process.env.ADMIN_EMAIL || 'ZP@GMAIL.COM').trim().toLowerCase();
 const defaultAdminPassword = process.env.ADMIN_PASSWORD || '1234567';
+const mongoStateLabels = {
+  0: 'disconnected',
+  1: 'connected',
+  2: 'connecting',
+  3: 'disconnecting',
+};
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -48,6 +54,25 @@ app.use(cors({
 
 app.use(express.json({ limit: '50mb' }));
 
+const getMongoStatus = () => ({
+  state: mongoStateLabels[mongoose.connection.readyState] || 'unknown',
+  readyState: mongoose.connection.readyState,
+});
+
+app.get('/', (req, res) => {
+  res.json({
+    service: 'zfat-server',
+    status: 'ok',
+    frontend: 'Deploy the frontend separately from the repository root.',
+    health: '/health',
+    authRoutes: {
+      register: 'POST /api/auth/register',
+      login: 'POST /api/auth/login',
+    },
+    database: getMongoStatus(),
+  });
+});
+
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/comments', require('./routes/comments'));
@@ -57,7 +82,14 @@ app.use('/api/subscribers', require('./routes/subscribers'));
 app.use('/api/weekly-papers', require('./routes/weeklyPapers'));
 app.use('/api/board-listings', require('./routes/boardListings'));
 
-app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
+app.get('/health', (req, res) => {
+  const database = getMongoStatus();
+  res.json({
+    status: database.state === 'connected' ? 'ok' : 'degraded',
+    timestamp: new Date(),
+    database,
+  });
+});
 
 const ensureDefaultAdmin = async () => {
   const existingAdmin = await User.findOne({ email: defaultAdminEmail });
@@ -76,7 +108,7 @@ const ensureDefaultAdmin = async () => {
 app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
   try {
     const requestedCode = normalizeShortCode(req.params.shortCode);
-    if (!requestedCode) return res.status(404).send('Short link not found');
+    if (!requestedCode) return res.status(404).json({ message: 'Short link not found' });
 
     let post = await Post.findOne({ shortLinkCode: requestedCode }).lean();
     if (!post) {
@@ -86,7 +118,7 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
       post = candidates.find(candidate => normalizeShortCode(candidate.shortLinkCode, candidate._id?.toString()) === requestedCode);
     }
 
-    if (!post) return res.status(404).send('Short link not found');
+    if (!post) return res.status(404).json({ message: 'Short link not found' });
 
     const title = escapeHtml(post.title || 'צפת בתנופה');
     const description = escapeHtml(post.excerpt || 'כתבה מתוך אתר צפת בתנופה');
@@ -119,8 +151,19 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
   </body>
 </html>`);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).json({ message: err.message });
   }
+});
+
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
+
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+
+  const statusCode = err.status || (err.message === 'Not allowed by CORS' ? 403 : 500);
+  res.status(statusCode).json({ message: err.message || 'Internal server error' });
 });
 
 mongoose.connect(MONGO_URI)
@@ -130,7 +173,7 @@ mongoose.connect(MONGO_URI)
   })
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`🚀 Server listening on port ${PORT}`);
     });
   })
   .catch(err => {
