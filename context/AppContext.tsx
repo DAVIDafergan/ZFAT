@@ -1,6 +1,15 @@
-
 import { createContext, useContext } from 'react';
-import { Post, Ad, User, Comment, ContactMessage, NewsletterSubscriber, AccessibilitySettings } from '../types';
+import {
+  Post,
+  Ad,
+  User,
+  Comment,
+  ContactMessage,
+  NewsletterSubscriber,
+  AccessibilitySettings,
+  WeeklyPaper,
+  BoardListing,
+} from '../types';
 
 export interface AppState {
   posts: Post[];
@@ -10,29 +19,33 @@ export interface AppState {
   registeredUsers: User[];
   contactMessages: ContactMessage[];
   newsletterSubscribers: NewsletterSubscriber[];
+  weeklyPapers: WeeklyPaper[];
+  boardListings: BoardListing[];
   accessibility: AccessibilitySettings;
   isLoading: boolean;
-  
-  // Async Actions
+
   addPost: (post: Post) => Promise<void>;
   deletePost: (id: string) => Promise<void>;
   incrementViews: (id: string) => void;
   updateAd: (id: string, updates: Partial<Ad>) => Promise<void>;
   createAd: (ad: Ad) => Promise<void>;
   deleteAd: (id: string) => Promise<void>;
-  
+  createWeeklyPaper: (paper: WeeklyPaper) => Promise<void>;
+  deleteWeeklyPaper: (id: string) => Promise<void>;
+  createBoardListing: (listing: BoardListing) => Promise<void>;
+  deleteBoardListing: (id: string) => Promise<void>;
+
   login: (usernameOrEmail: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (user: User) => Promise<boolean>;
-  
+
   addComment: (comment: Comment) => Promise<void>;
   toggleLikeComment: (commentId: string) => Promise<void>;
-  
+
   addContactMessage: (msg: ContactMessage) => Promise<void>;
   subscribeToNewsletter: (email: string) => Promise<boolean>;
   sendNewsletter: (subject: string, content: string, postId?: string) => Promise<void>;
-  
-  // Accessibility (Sync)
+
   toggleAccessibilityOption: (option: keyof AccessibilitySettings) => void;
   setFontSize: (size: number) => void;
   resetAccessibility: () => void;

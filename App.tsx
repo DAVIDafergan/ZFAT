@@ -1,6 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Header } from './components/Header';
 import { NewsTicker } from './components/NewsTicker';
 import { Home } from './pages/Home';
@@ -11,14 +10,28 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Contact } from './pages/Contact';
 import { SearchResults } from './pages/SearchResults';
+import { WeeklyNewspaper } from './pages/WeeklyNewspaper';
+import { BoardPage } from './pages/BoardPage';
 import { AccessibilityWidget } from './components/AccessibilityWidget';
-import { Post, Ad, User, Comment, ContactMessage, Category, NewsletterSubscriber, AccessibilitySettings } from './types';
+import {
+  Post,
+  Ad,
+  User,
+  Comment,
+  ContactMessage,
+  Category,
+  NewsletterSubscriber,
+  AccessibilitySettings,
+  WeeklyPaper,
+  BoardListing,
+} from './types';
 import { AppContext } from './context/AppContext';
 import { api } from './services/api';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Newspaper, Building2 } from 'lucide-react';
+import { LOGO_URL } from './services/siteConfig';
 
-class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
-  constructor(props: {children: React.ReactNode}) {
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
@@ -31,11 +44,9 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 flex-col gap-4 text-center px-4">
-          <h2 className="text-2xl font-bold text-gray-800">אירעה שגיאה</h2>
+          <h2 className="text-2xl font-black text-gray-800">אירעה שגיאה</h2>
           <p className="text-gray-500">אנא נסה לרענן את הדף</p>
-          <button onClick={() => window.location.reload()} className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition">
-            רענן דף
-          </button>
+          <button onClick={() => window.location.reload()} className="rounded-full bg-red-700 px-6 py-3 font-black text-white transition hover:bg-red-800">רענן דף</button>
         </div>
       );
     }
@@ -46,8 +57,6 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
 
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Data State
   const [posts, setPosts] = useState<Post[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
   const [user, setUser] = useState<User | null>(null);
@@ -55,8 +64,8 @@ const App: React.FC = () => {
   const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<NewsletterSubscriber[]>([]);
-  
-  // Accessibility State
+  const [weeklyPapers, setWeeklyPapers] = useState<WeeklyPaper[]>([]);
+  const [boardListings, setBoardListings] = useState<BoardListing[]>([]);
   const [accessibility, setAccessibility] = useState<AccessibilitySettings>({
     fontSize: 0,
     highContrast: false,
@@ -67,15 +76,6 @@ const App: React.FC = () => {
   const [footerEmail, setFooterEmail] = useState('');
   const [footerNewsletterStatus, setFooterNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
-  const handleFooterSubscribe = async () => {
-    if (!footerEmail.trim()) return;
-    setFooterNewsletterStatus('loading');
-    const success = await subscribeToNewsletter(footerEmail);
-    setFooterNewsletterStatus(success ? 'success' : 'error');
-    if (success) setFooterEmail('');
-  };
-
-  // Initial Data Fetch
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
@@ -85,14 +85,19 @@ const App: React.FC = () => {
         setAds(data.ads);
         setComments(data.comments);
         setRegisteredUsers(data.registeredUsers);
-        if(data.contactMessages) setContactMessages(data.contactMessages);
-        if(data.newsletterSubscribers) setNewsletterSubscribers(data.newsletterSubscribers);
-        
-        // Restore user session
-        const savedUser = localStorage.getItem('zfat_user');
-        if (savedUser) setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error("Failed to load initial data", e);
+        setContactMessages(data.contactMessages || []);
+        setNewsletterSubscribers(data.newsletterSubscribers || []);
+        setWeeklyPapers(data.weeklyPapers || []);
+        setBoardListings(data.boardListings || []);
+        const authenticatedUser = await api.verifyToken();
+        if (authenticatedUser) {
+          setUser(authenticatedUser);
+        } else {
+          const savedUser = localStorage.getItem('zfat_user');
+          if (savedUser) setUser(JSON.parse(savedUser));
+        }
+      } catch (error) {
+        console.error('Failed to load initial data', error);
       } finally {
         setIsLoading(false);
       }
@@ -100,132 +105,10 @@ const App: React.FC = () => {
     init();
   }, []);
 
-  // Persist User Session only
-  useEffect(() => { 
+  useEffect(() => {
     if (user) localStorage.setItem('zfat_user', JSON.stringify(user));
     else localStorage.removeItem('zfat_user');
   }, [user]);
-
-  // Actions wrapped with API calls
-  const addPost = async (post: Post) => {
-    await api.addPost(post);
-    setPosts(prev => [post, ...prev]);
-  };
-
-  const deletePost = async (id: string) => {
-    await api.deletePost(id);
-    setPosts(prev => prev.filter(p => p.id !== id));
-  };
-
-  const incrementViews = (id: string) => {
-    api.incrementViews(id);
-    setPosts(prev => prev.map(post => 
-      post.id === id ? { ...post, views: (post.views || 0) + 1 } : post
-    ));
-  };
-
-  const updateAd = async (id: string, updates: Partial<Ad>) => {
-    await api.updateAd(id, updates);
-    setAds(prev => prev.map(ad => ad.id === id ? { ...ad, ...updates } : ad));
-  };
-
-  const createAd = async (ad: Ad) => {
-    await api.createAd(ad);
-    setAds(prev => [...prev, ad]);
-  };
-
-  const deleteAd = async (id: string) => {
-    await api.deleteAd(id);
-    setAds(prev => prev.filter(a => a.id !== id));
-  };
-
-  const login = async (usernameOrEmail: string, password: string): Promise<boolean> => {
-    const authenticatedUser = await api.login(usernameOrEmail, password);
-    if (authenticatedUser) {
-      setUser(authenticatedUser);
-      return true;
-    }
-    return false;
-  };
-
-  const register = async (newUser: User): Promise<boolean> => {
-    const success = await api.register(newUser);
-    if (success) {
-      setRegisteredUsers(prev => [...prev, newUser]);
-      setUser({ ...newUser, isAuthenticated: true });
-      return true;
-    }
-    return false;
-  };
-
-  const logout = () => {
-    setUser(null);
-  };
-
-  const addComment = async (comment: Comment) => {
-    await api.addComment(comment);
-    setComments(prev => [...prev, comment]);
-  };
-
-  const toggleLikeComment = async (commentId: string) => {
-    if (!user) return;
-    await api.toggleLike(commentId, user.id);
-    setComments(prev => prev.map(c => {
-      if (c.id === commentId) {
-        const hasLiked = c.likedBy.includes(user.id);
-        return {
-          ...c,
-          likes: hasLiked ? c.likes - 1 : c.likes + 1,
-          likedBy: hasLiked ? c.likedBy.filter(id => id !== user.id) : [...c.likedBy, user.id]
-        };
-      }
-      return c;
-    }));
-  };
-
-  const addContactMessage = async (msg: ContactMessage) => {
-    await api.sendMessage(msg);
-    setContactMessages(prev => [msg, ...prev]);
-  };
-
-  const subscribeToNewsletter = async (email: string) => {
-    const success = await api.subscribe(email);
-    if (success) {
-      setNewsletterSubscribers(prev => [...prev, {
-        id: Date.now().toString(),
-        email,
-        joinedDate: new Date().toLocaleDateString('he-IL'),
-        isActive: true
-      }]);
-    }
-    return success;
-  };
-
-  const sendNewsletter = async (subject: string, content: string, postId?: string) => {
-    console.log(`Sending Newsletter to ${newsletterSubscribers.length} subscribers.`);
-    await new Promise(r => setTimeout(r, 1000));
-    // Toast notification handled by AdminDashboard
-  };
-
-  // Accessibility Logic
-  const toggleAccessibilityOption = (option: keyof AccessibilitySettings) => {
-    if (option === 'fontSize') return; 
-    setAccessibility(prev => ({ ...prev, [option]: !prev[option] }));
-  };
-
-  const setFontSize = (size: number) => {
-    setAccessibility(prev => ({ ...prev, fontSize: size }));
-  };
-
-  const resetAccessibility = () => {
-    setAccessibility({
-      fontSize: 0,
-      highContrast: false,
-      grayscale: false,
-      highlightLinks: false,
-      stopAnimations: false,
-    });
-  };
 
   useEffect(() => {
     const root = document.documentElement;
@@ -238,44 +121,194 @@ const App: React.FC = () => {
     body.classList.toggle('a11y-stop-animations', accessibility.stopAnimations);
   }, [accessibility]);
 
+  const addPost = async (post: Post) => {
+    await api.addPost(post);
+    setPosts((prev) => [post, ...prev]);
+  };
+
+  const deletePost = async (id: string) => {
+    await api.deletePost(id);
+    setPosts((prev) => prev.filter((post) => post.id !== id));
+  };
+
+  const incrementViews = (id: string) => {
+    api.incrementViews(id);
+    setPosts((prev) => prev.map((post) => post.id === id ? { ...post, views: (post.views || 0) + 1 } : post));
+  };
+
+  const updateAd = async (id: string, updates: Partial<Ad>) => {
+    await api.updateAd(id, updates);
+    setAds((prev) => prev.map((ad) => ad.id === id ? { ...ad, ...updates } : ad));
+  };
+
+  const createAd = async (ad: Ad) => {
+    await api.createAd(ad);
+    setAds((prev) => [...prev, ad]);
+  };
+
+  const deleteAd = async (id: string) => {
+    await api.deleteAd(id);
+    setAds((prev) => prev.filter((ad) => ad.id !== id));
+  };
+
+  const createWeeklyPaper = async (paper: WeeklyPaper) => {
+    await api.createWeeklyPaper(paper);
+    setWeeklyPapers((prev) => [paper, ...prev]);
+  };
+
+  const deleteWeeklyPaper = async (id: string) => {
+    await api.deleteWeeklyPaper(id);
+    setWeeklyPapers((prev) => prev.filter((paper) => paper.id !== id));
+  };
+
+  const createBoardListing = async (listing: BoardListing) => {
+    await api.createBoardListing(listing);
+    setBoardListings((prev) => [listing, ...prev]);
+  };
+
+  const deleteBoardListing = async (id: string) => {
+    await api.deleteBoardListing(id);
+    setBoardListings((prev) => prev.filter((listing) => listing.id !== id));
+  };
+
+  const login = async (usernameOrEmail: string, password: string): Promise<boolean> => {
+    const authenticatedUser = await api.login(usernameOrEmail, password);
+    if (!authenticatedUser) return false;
+    setUser(authenticatedUser);
+    return true;
+  };
+
+  const register = async (newUser: User): Promise<boolean> => {
+    const success = await api.register(newUser);
+    if (!success) return false;
+    setRegisteredUsers((prev) => [...prev, newUser]);
+    setUser({ ...newUser, isAuthenticated: true });
+    return true;
+  };
+
+  const logout = () => {
+    localStorage.removeItem('zfat_jwt');
+    setUser(null);
+  };
+
+  const addComment = async (comment: Comment) => {
+    await api.addComment(comment);
+    setComments((prev) => [...prev, comment]);
+  };
+
+  const toggleLikeComment = async (commentId: string) => {
+    if (!user) return;
+    await api.toggleLike(commentId, user.id);
+    setComments((prev) => prev.map((comment) => {
+      if (comment.id !== commentId) return comment;
+      const hasLiked = comment.likedBy.includes(user.id);
+      return {
+        ...comment,
+        likes: hasLiked ? comment.likes - 1 : comment.likes + 1,
+        likedBy: hasLiked ? comment.likedBy.filter((id) => id !== user.id) : [...comment.likedBy, user.id],
+      };
+    }));
+  };
+
+  const addContactMessage = async (msg: ContactMessage) => {
+    await api.sendMessage(msg);
+    setContactMessages((prev) => [msg, ...prev]);
+  };
+
+  const subscribeToNewsletter = async (email: string) => {
+    const success = await api.subscribe(email);
+    if (success) {
+      setNewsletterSubscribers((prev) => [...prev, {
+        id: Date.now().toString(),
+        email,
+        joinedDate: new Date().toLocaleDateString('he-IL'),
+        isActive: true,
+      }]);
+    }
+    return success;
+  };
+
+  const sendNewsletter = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+  };
+
+  const toggleAccessibilityOption = (option: keyof AccessibilitySettings) => {
+    if (option === 'fontSize') return;
+    setAccessibility((prev) => ({ ...prev, [option]: !prev[option] }));
+  };
+
+  const setFontSize = (size: number) => setAccessibility((prev) => ({ ...prev, fontSize: size }));
+  const resetAccessibility = () => setAccessibility({ fontSize: 0, highContrast: false, grayscale: false, highlightLinks: false, stopAnimations: false });
+
+  const handleFooterSubscribe = async () => {
+    if (!footerEmail.trim()) return;
+    setFooterNewsletterStatus('loading');
+    const success = await subscribeToNewsletter(footerEmail);
+    setFooterNewsletterStatus(success ? 'success' : 'error');
+    if (success) setFooterEmail('');
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 flex-col gap-4">
-        <img src="logo.png" alt="Loading..." className="h-16 w-auto animate-pulse opacity-50" onError={(e) => e.currentTarget.style.display = 'none'} />
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#f7f5f1]">
+        <img src={LOGO_URL} alt="צפת בתנופה" className="h-16 w-auto animate-pulse opacity-80" />
         <Loader2 size={40} className="animate-spin text-red-700" />
-        <p className="text-gray-500 font-bold">טוען נתונים...</p>
+        <p className="font-black text-gray-500">טוען נתונים...</p>
       </div>
     );
   }
 
-  const tickerPosts = posts.filter(p => p.category === Category.NEWS);
+  const tickerPosts = posts.filter((post) => post.category === Category.NEWS);
 
   return (
-    <AppContext.Provider value={{ 
-      posts, ads, user, comments, registeredUsers, contactMessages, newsletterSubscribers, accessibility, isLoading,
-      addPost, deletePost, incrementViews, updateAd, createAd, deleteAd, login, logout, register, 
-      addComment, toggleLikeComment, addContactMessage, subscribeToNewsletter, sendNewsletter,
-      toggleAccessibilityOption, setFontSize, resetAccessibility
+    <AppContext.Provider value={{
+      posts,
+      ads,
+      user,
+      comments,
+      registeredUsers,
+      contactMessages,
+      newsletterSubscribers,
+      weeklyPapers,
+      boardListings,
+      accessibility,
+      isLoading,
+      addPost,
+      deletePost,
+      incrementViews,
+      updateAd,
+      createAd,
+      deleteAd,
+      createWeeklyPaper,
+      deleteWeeklyPaper,
+      createBoardListing,
+      deleteBoardListing,
+      login,
+      logout,
+      register,
+      addComment,
+      toggleLikeComment,
+      addContactMessage,
+      subscribeToNewsletter,
+      sendNewsletter,
+      toggleAccessibilityOption,
+      setFontSize,
+      resetAccessibility,
     }}>
       <HashRouter>
-        <div className="min-h-screen flex flex-col font-sans text-gray-900 bg-[#f8f9fa] relative">
-          
-          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-1/2 focus:-translate-x-1/2 focus:bg-yellow-400 focus:text-black focus:px-4 focus:py-2 focus:z-[100] focus:rounded font-bold shadow-xl">
-            דלג לתוכן הראשי
-          </a>
-
+        <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-[#f7f5f1] text-gray-900">
+          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-1/2 focus:-translate-x-1/2 focus:rounded-full focus:bg-yellow-400 focus:px-4 focus:py-2 focus:font-black focus:text-black focus:z-[100] focus:shadow-xl">דלג לתוכן הראשי</a>
           <Header onSearch={() => {}} user={user} />
-          
-          <div className="hidden md:block">
-            <NewsTicker posts={tickerPosts.slice(0, 10)} />
-          </div>
-          
-          <main id="main-content" className="flex-1 w-full max-w-[100vw] overflow-x-hidden focus:outline-none" tabIndex={-1}>
+          <div className="hidden md:block"><NewsTicker posts={tickerPosts.slice(0, 10)} /></div>
+
+          <main id="main-content" className="flex-1 focus:outline-none" tabIndex={-1}>
             <ErrorBoundary>
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/article/:id" element={<Article />} />
                 <Route path="/category/:categoryName" element={<CategoryPage />} />
+                <Route path="/weekly-paper" element={<WeeklyNewspaper />} />
+                <Route path="/board" element={<BoardPage />} />
                 <Route path="/admin" element={user && user.role === 'admin' ? <AdminDashboard /> : <Login />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
@@ -286,72 +319,48 @@ const App: React.FC = () => {
             </ErrorBoundary>
           </main>
 
-          <footer className="bg-[#111] text-gray-400 py-16 mt-12 border-t-8 border-red-700">
-            <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-10 text-center md:text-right">
+          <footer className="mt-12 border-t-8 border-red-700 bg-[#111] py-16 text-gray-400">
+            <div className="container mx-auto grid grid-cols-1 gap-10 px-4 text-center md:grid-cols-4 md:text-right">
               <div>
                 <div className="mb-6 flex justify-center md:justify-start">
-                   <img 
-                    src="logo.png" 
-                    alt="צפת בתנופה" 
-                    className="h-16 md:h-20 w-auto object-contain"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                    }} 
-                   />
-                   <div className="hidden text-white leading-none">
-                     <h3 className="text-3xl font-black tracking-tight">צפת<span className="text-red-600">בתנופה</span></h3>
-                   </div>
+                  <img src={LOGO_URL} alt="צפת בתנופה" className="h-16 w-auto md:h-20" />
                 </div>
-                <p className="text-sm leading-relaxed text-gray-400">האתר המוביל לחדשות, תרבות וקהילה בצפת והגליל.</p>
+                <p className="text-sm leading-7 text-gray-400">האתר המקומי לצפת: חדשות, מבזקים, קהילה, לוח בתנופה והעיתון השבועי במקום אחד.</p>
               </div>
               <div>
-                <h4 className="text-white font-bold mb-6 border-b border-gray-800 pb-2 inline-block">ניווט מהיר</h4>
-                <ul className="space-y-3 text-sm">
-                  <li><a href="#" className="hover:text-red-500 transition">אודות</a></li>
-                  <li><a href="/#/contact" className="hover:text-red-500 transition">צור קשר</a></li>
-                  <li><a href="#" className="hover:text-red-500 transition">פרסום באתר</a></li>
-                </ul>
-              </div>
-               <div>
-                <h4 className="text-white font-bold mb-6 border-b border-gray-800 pb-2 inline-block">קטגוריות</h4>
-                <ul className="space-y-3 text-sm">
-                  <li><a href="/#/category/מבזקים" className="hover:text-red-500 transition">מבזקים</a></li>
-                  <li><a href="/#/category/נדלן" className="hover:text-red-500 transition">נדל"ן</a></li>
+                <h4 className="mb-6 inline-block border-b border-gray-800 pb-2 font-black text-white">ניווט מהיר</h4>
+                <ul className="space-y-3 text-sm font-bold">
+                  <li><Link to="/weekly-paper" className="transition hover:text-red-400">העיתון השבועי</Link></li>
+                  <li><Link to="/board" className="transition hover:text-red-400">לוח בתנופה</Link></li>
+                  <li><Link to="/contact" className="transition hover:text-red-400">צור קשר</Link></li>
                 </ul>
               </div>
               <div>
-                <h4 className="text-white font-bold mb-6 border-b border-gray-800 pb-2 inline-block">הירשמו לניוזלטר</h4>
+                <h4 className="mb-6 inline-block border-b border-gray-800 pb-2 font-black text-white">אזורים בולטים</h4>
+                <ul className="space-y-3 text-sm font-bold">
+                  <li className="inline-flex items-center gap-2"><Newspaper size={14} className="text-red-500" /> ארכיון שבועי דיגיטלי</li>
+                  <li className="inline-flex items-center gap-2"><Building2 size={14} className="text-red-500" /> מודעות נדל"ן עם וואטסאפ</li>
+                  <li>שיתוף כתבות עם קישור קצר ותצוגה מקדימה</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="mb-6 inline-block border-b border-gray-800 pb-2 font-black text-white">הירשמו לניוזלטר</h4>
                 {footerNewsletterStatus === 'success' ? (
-                  <p className="text-green-400 font-bold text-center py-4">נרשמת בהצלחה! ✓</p>
+                  <p className="py-4 text-center font-black text-green-400">נרשמת בהצלחה! ✓</p>
                 ) : (
                   <>
-                    <input 
-                      type="email" 
-                      placeholder="הכנס אימייל..." 
-                      value={footerEmail}
-                      onChange={(e) => setFooterEmail(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 focus:border-blue-500 rounded p-3 mb-3 text-white outline-none transition" 
-                    />
-                    {footerNewsletterStatus === 'error' && (
-                      <p className="text-red-400 text-sm mb-2">כתובת זו כבר רשומה במערכת.</p>
-                    )}
-                    <button 
-                      onClick={handleFooterSubscribe}
-                      disabled={footerNewsletterStatus === 'loading'}
-                      className="w-full bg-blue-600 text-white font-bold py-3 rounded hover:bg-blue-700 transition shadow-lg disabled:opacity-60"
-                    >
+                    <input type="email" placeholder="הכנס אימייל..." value={footerEmail} onChange={(event) => setFooterEmail(event.target.value)} className="mb-3 w-full rounded-xl border border-gray-700 bg-gray-800 p-3 text-white outline-none transition focus:border-red-500" />
+                    {footerNewsletterStatus === 'error' && <p className="mb-2 text-sm text-red-400">כתובת זו כבר רשומה במערכת.</p>}
+                    <button onClick={handleFooterSubscribe} disabled={footerNewsletterStatus === 'loading'} className="w-full rounded-xl bg-red-700 py-3 font-black text-white transition hover:bg-red-800 disabled:opacity-60">
                       {footerNewsletterStatus === 'loading' ? 'שולח...' : 'הרשמה'}
                     </button>
                   </>
                 )}
               </div>
             </div>
-            <div className="container mx-auto px-4 mt-16 border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs gap-4">
+            <div className="container mx-auto mt-16 flex flex-col items-center justify-between gap-4 border-t border-gray-800 px-4 pt-8 text-xs md:flex-row">
               <p>&copy; {new Date().getFullYear()} צפת בתנופה. כל הזכויות שמורות.</p>
-              <p className="font-bold text-gray-500 hover:text-white transition-colors cursor-default">
-                פיתוח ובנייה: DA פרויקטים ויזמות
-              </p>
+              <p className="font-black text-gray-500">פיתוח ובנייה: DA פרויקטים ויזמות</p>
             </div>
           </footer>
 

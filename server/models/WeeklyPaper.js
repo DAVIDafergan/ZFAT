@@ -1,0 +1,13 @@
+const mongoose = require('mongoose');
+
+const weeklyPaperSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  weekKey: { type: String, required: true, index: true },
+  description: { type: String, default: '' },
+  pdfUrl: { type: String, required: true },
+  coverImageUrl: { type: String, default: '' },
+  publishedAt: { type: Date, default: Date.now },
+  isActive: { type: Boolean, default: true },
+}, { timestamps: true });
+
+module.exports = mongoose.model('WeeklyPaper', weeklyPaperSchema);

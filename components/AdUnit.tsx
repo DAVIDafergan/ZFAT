@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Ad } from '../types';
 
 interface AdUnitProps {
@@ -13,54 +12,28 @@ export const AdUnit: React.FC<AdUnitProps> = ({ ad, className = '', label = true
 
   useEffect(() => {
     if (!ad || !ad.slides || ad.slides.length <= 1) return;
-
-    const interval = setInterval(() => {
+    const interval = window.setInterval(() => {
       setCurrentSlideIndex((prev) => (prev + 1) % ad.slides.length);
-    }, 5000); // Rotate every 5 seconds
-
-    return () => clearInterval(interval);
+    }, 5000);
+    return () => window.clearInterval(interval);
   }, [ad]);
 
   if (!ad || !ad.isActive || !ad.slides || ad.slides.length === 0) return null;
-
   const currentSlide = ad.slides[currentSlideIndex];
 
   return (
-    <div className={`flex flex-col items-center justify-center my-4 ${className} relative group`}>
-      {label && <span className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">פרסומת</span>}
-      <a 
-        href={currentSlide.linkUrl} 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        className="block w-full overflow-hidden rounded-md shadow-sm transition-all hover:shadow-md relative"
-      >
+    <div className={`relative my-4 flex flex-col items-center justify-center ${className}`}>
+      {label && <span className="mb-1 text-[10px] uppercase tracking-wider text-gray-400">פרסומת</span>}
+      <a href={currentSlide.linkUrl} target="_blank" rel="noopener noreferrer" className="group block w-full overflow-hidden rounded-2xl shadow-sm transition-all hover:shadow-md" aria-label={`מעבר אל ${ad.title}`}>
         {currentSlide.videoUrl ? (
-          <video 
-            key={currentSlide.videoUrl}
-            src={currentSlide.videoUrl}
-            className="w-full h-auto object-cover animate-fade-in"
-            autoPlay
-            muted
-            loop
-            playsInline
-          />
+          <video key={currentSlide.videoUrl} src={currentSlide.videoUrl} className="h-auto w-full object-cover animate-fade-in" autoPlay muted loop playsInline />
         ) : (
-          <img 
-            key={currentSlide.imageUrl} // Key change forces animation
-            src={currentSlide.imageUrl} 
-            alt={ad.title} 
-            className="w-full h-auto object-cover animate-fade-in" 
-          />
+          <img key={currentSlide.imageUrl} src={currentSlide.imageUrl} alt={ad.title} className="h-auto w-full object-cover animate-fade-in" />
         )}
-        
-        {/* Carousel Indicators if multiple slides */}
         {ad.slides.length > 1 && (
-          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
             {ad.slides.map((_, idx) => (
-              <span 
-                key={idx} 
-                className={`w-1.5 h-1.5 rounded-full shadow-sm ${idx === currentSlideIndex ? 'bg-white' : 'bg-white/50'}`}
-              />
+              <span key={idx} className={`h-1.5 w-1.5 rounded-full shadow-sm ${idx === currentSlideIndex ? 'bg-white' : 'bg-white/50'}`} />
             ))}
           </div>
         )}

@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Clock, Share2, ChevronLeft, Loader2, Eye } from 'lucide-react';
+import { Clock, ChevronLeft, Loader2, Eye, Link2 } from 'lucide-react';
 import { Post, CATEGORY_COLORS } from '../types';
+import { buildShortPostUrl } from '../services/siteConfig';
 
 interface PostCardProps {
   post: Post;
@@ -13,135 +13,66 @@ export const PostCard: React.FC<PostCardProps> = ({ post, layout = 'grid' }) => 
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const categoryColor = CATEGORY_COLORS[post.category] || 'bg-gray-600';
-
-  const shareOnWhatsapp = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const text = encodeURIComponent(`${post.title}\nלקריאה: https://zfatbt.com/p/${post.shortLinkCode}`);
-    window.open(`https://wa.me/?text=${text}`, '_blank');
-  };
+  const shortUrl = buildShortPostUrl(post.shortLinkCode, post.id);
 
   const handleReadMore = (e: React.MouseEvent) => {
     e.preventDefault();
     if (isLoading) return;
-    
     setIsLoading(true);
-    // Simulate network request/loading time for visual feedback
     setTimeout(() => {
       setIsLoading(false);
       navigate(`/article/${post.id}`);
-    }, 600);
+    }, 250);
   };
 
   if (layout === 'list') {
     return (
-      <Link to={`/article/${post.id}`} className="flex gap-5 group bg-white p-4 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden transform hover:-translate-x-1">
-        <div className="w-1/3 md:w-1/4 shrink-0 overflow-hidden rounded-xl relative aspect-[4/3] md:aspect-video shadow-inner">
-           <img 
-            src={post.imageUrl} 
-            alt={post.title} 
-            className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-          />
-           <span className={`absolute top-0 right-0 ${categoryColor} text-white text-[10px] md:text-xs px-3 py-1 rounded-bl-xl font-bold shadow-md`}>
-            {post.category}
-          </span>
+      <Link to={`/article/${post.id}`} className="group flex gap-5 overflow-hidden rounded-[1.75rem] border border-gray-100 bg-white p-4 shadow-sm transition hover:-translate-x-1 hover:shadow-xl">
+        <div className="relative aspect-[4/3] w-1/3 shrink-0 overflow-hidden rounded-[1.25rem] shadow-inner md:w-1/4">
+          <img src={post.imageUrl} alt={post.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+          <span className={`absolute top-0 right-0 rounded-bl-2xl px-3 py-1 text-[10px] font-black text-white shadow-md md:text-xs ${categoryColor}`}>{post.category}</span>
         </div>
-        <div className="flex-1 flex flex-col justify-between py-1">
+        <div className="flex flex-1 flex-col justify-between py-1">
           <div>
-            <h3 className="font-bold text-lg md:text-xl leading-snug text-gray-900 group-hover:text-blue-600 transition-colors mb-3 line-clamp-2">
-              {post.title}
-            </h3>
-            <p className="text-sm text-gray-500 line-clamp-2 hidden md:block font-normal leading-relaxed">
-              {post.excerpt}
-            </p>
+            <h3 className="news-headline mb-3 text-lg font-black leading-snug text-gray-900 transition group-hover:text-red-700 md:text-xl">{post.title}</h3>
+            <p className="hidden line-clamp-2 text-sm leading-7 text-gray-500 md:block">{post.excerpt}</p>
           </div>
-          <div className="flex items-center justify-between text-xs text-gray-400 mt-3 border-t border-gray-50 pt-3 md:border-none md:pt-0">
+          <div className="mt-3 flex items-center justify-between border-t border-gray-50 pt-3 text-xs text-gray-400 md:border-none md:pt-0">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 font-medium bg-gray-50 px-2 py-1 rounded-md">
-                <Clock size={12} />
-                <span>{post.date}</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-medium">
-                <Eye size={12} />
-                <span>{post.views}</span>
-              </div>
+              <div className="flex items-center gap-1.5 rounded-full bg-gray-50 px-3 py-1 font-bold"><Clock size={12} /> <span>{post.date}</span></div>
+              <div className="flex items-center gap-1.5 font-bold"><Eye size={12} /> <span>{post.views}</span></div>
             </div>
-            <div className="flex gap-3">
-               <button 
-                onClick={shareOnWhatsapp}
-                className="text-gray-400 hover:text-green-600 transition-colors flex items-center gap-1 hover:bg-green-50 px-2 py-1 rounded-full"
-              >
-                <Share2 size={14} />
-                <span className="hidden md:inline font-bold">שתף</span>
-              </button>
-            </div>
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 font-black text-red-700" dir="ltr"><Link2 size={12} /> {shortUrl.split('/').pop()}</span>
           </div>
         </div>
       </Link>
     );
   }
 
-  // Grid Layout - Mobile Optimized
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 border border-gray-100 flex flex-col h-full group">
-      <Link to={`/article/${post.id}`} className="relative aspect-video md:aspect-[16/10] overflow-hidden block">
-        <img 
-          src={post.imageUrl} 
-          alt={post.title} 
-          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" />
-        
-        {/* Category Tag */}
-        <span className={`absolute top-4 right-4 ${categoryColor} text-white text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-lg shadow-lg font-bold backdrop-blur-sm`}>
-          {post.category}
-        </span>
+    <article className="group flex h-full flex-col overflow-hidden rounded-[2rem] border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1.5 hover:shadow-xl">
+      <Link to={`/article/${post.id}`} className="relative block aspect-[16/10] overflow-hidden">
+        <img src={post.imageUrl} alt={post.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-70" />
+        <span className={`absolute top-4 right-4 rounded-xl px-3 py-1.5 text-[10px] font-black text-white shadow-lg ${categoryColor}`}>{post.category}</span>
       </Link>
-      
-      <div className="p-6 flex flex-col flex-1 relative">
-        <div className="flex items-center text-xs text-gray-400 mb-3 gap-2 font-medium">
-          <Clock size={12} />
-          <span>{post.date}</span>
+      <div className="flex flex-1 flex-col p-6">
+        <div className="mb-3 flex items-center gap-2 text-xs font-bold text-gray-400">
+          <Clock size={12} /> <span>{post.date}</span>
           <span className="text-gray-300">|</span>
-          <Eye size={12} />
-          <span>{post.views}</span>
+          <Eye size={12} /> <span>{post.views}</span>
         </div>
-        
-        <Link to={`/article/${post.id}`} className="block mb-3">
-          <h3 className="font-bold text-lg md:text-xl leading-tight text-gray-900 group-hover:text-blue-600 transition-colors">
-            {post.title}
-          </h3>
+        <Link to={`/article/${post.id}`} className="mb-3 block">
+          <h3 className="news-headline text-xl font-black leading-tight text-gray-900 transition group-hover:text-red-700">{post.title}</h3>
         </Link>
-        
-        <p className="text-sm text-gray-500 line-clamp-3 mb-5 flex-1 font-normal leading-relaxed">
-          {post.excerpt}
-        </p>
-        
-        <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
-           <button 
-             onClick={handleReadMore}
-             disabled={isLoading}
-             className="text-blue-600 text-sm font-bold hover:underline flex items-center gap-1 group-hover:gap-2 transition-all disabled:opacity-70 disabled:no-underline"
-           >
-             {isLoading ? (
-               <>
-                 טוען <Loader2 size={14} className="animate-spin" />
-               </>
-             ) : (
-               <>
-                 קרא עוד <ChevronLeft size={14} />
-               </>
-             )}
-           </button>
-           <button 
-              onClick={shareOnWhatsapp}
-              className="text-gray-400 hover:text-white hover:bg-green-500 transition-all p-2 rounded-full shadow-sm hover:shadow-green-200"
-              title="שתף בוואצאפ"
-            >
-              <Share2 size={16} />
-            </button>
+        <p className="mb-5 line-clamp-3 flex-1 text-sm leading-7 text-gray-500">{post.excerpt}</p>
+        <div className="mt-auto flex items-center justify-between border-t border-gray-50 pt-4">
+          <button onClick={handleReadMore} disabled={isLoading} className="inline-flex items-center gap-1 text-sm font-black text-red-700 transition hover:gap-2 disabled:opacity-70">
+            {isLoading ? <>טוען <Loader2 size={14} className="animate-spin" /></> : <>קרא עוד <ChevronLeft size={14} /></>}
+          </button>
+          <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-black text-gray-600" dir="ltr"><Link2 size={12} /> {shortUrl.split('/').pop()}</span>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
