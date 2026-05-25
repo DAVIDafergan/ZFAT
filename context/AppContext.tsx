@@ -25,6 +25,7 @@ export interface AppState {
   isLoading: boolean;
 
   addPost: (post: Post) => Promise<void>;
+  updatePost: (id: string, updates: Partial<Post>) => Promise<void>;
   deletePost: (id: string) => Promise<void>;
   incrementViews: (id: string) => void;
   updateAd: (id: string, updates: Partial<Ad>) => Promise<void>;

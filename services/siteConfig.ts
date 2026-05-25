@@ -56,6 +56,6 @@ export const buildListingWhatsappUrl = (title: string, phone: string) => {
   const clean = cleanPhoneNumber(phone);
   if (!clean) return '#';
   const localIsraeli = clean.startsWith('0') ? `972${clean.slice(1)}` : clean;
-  const text = encodeURIComponent(`הגעתי דרך לוח בתנופה ואני מתעניין/ת בדירה: ${title}`);
+  const text = encodeURIComponent(`הגעתי דרך לוח בתנופה באתר צפת בתנופה ואני מתעניין/ת בדירה: ${title}`);
   return `https://wa.me/${localIsraeli}?text=${text}`;
 };
