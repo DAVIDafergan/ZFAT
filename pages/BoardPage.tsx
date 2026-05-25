@@ -29,7 +29,7 @@ export const BoardPage: React.FC = () => {
         description={'עמוד מודגש ומעוצב בסגנון מקצועי ללוח הנדל"ן של צפת. כל מודעה כוללת תמונה, מיקום, מחיר, גודל, פרטים נוספים, מרפסת ויצירת קשר ישירה בוואטסאפ.'}
         accent="from-red-900 via-red-800 to-[#111827]"
       >
-        <div className="grid gap-4 rounded-[2rem] border border-white/15 bg-white/10 p-4 backdrop-blur-sm md:grid-cols-[1.6fr_0.9fr]">
+        <div className="grid gap-3 rounded-[1.5rem] border border-white/15 bg-white/10 p-3 backdrop-blur-sm sm:gap-4 sm:rounded-[2rem] sm:p-4 md:grid-cols-[1.6fr_0.9fr]">
           <div>
             <label htmlFor="listing-search" className="mb-2 block text-sm font-bold text-white/80">חיפוש לפי שכונה, רחוב או תיאור</label>
             <div className="flex items-center gap-3 rounded-full bg-white px-4 py-3 text-gray-800 shadow-lg">
@@ -53,23 +53,23 @@ export const BoardPage: React.FC = () => {
           <AdUnit ad={topAd} className="w-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm" />
         </div>
 
-        <div className="mb-8 grid gap-4 rounded-[2rem] border border-red-100 bg-white p-6 shadow-sm md:grid-cols-3">
-          <div className="rounded-3xl bg-red-50 p-5">
+        <div className="mb-8 grid gap-4 rounded-[1.5rem] border border-red-100 bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6 md:grid-cols-3">
+          <div className="rounded-3xl bg-red-50 p-4 sm:p-5">
             <p className="text-sm font-black text-red-700">מודעות פעילות</p>
-            <p className="mt-2 text-4xl font-black text-gray-900">{filteredListings.length}</p>
+            <p className="mt-2 text-3xl font-black text-gray-900 sm:text-4xl">{filteredListings.length}</p>
           </div>
-          <div className="rounded-3xl bg-gray-50 p-5">
+          <div className="rounded-3xl bg-gray-50 p-4 sm:p-5">
             <p className="text-sm font-black text-gray-700">צור קשר ישיר</p>
-            <p className="mt-2 text-sm font-medium leading-7 text-gray-600">בלחיצה על כפתור וואטסאפ נפתחת הודעה מוכנה שמציינת שהגולש הגיע דרך לוח בתנופה.</p>
+            <p className="mt-2 text-sm font-medium leading-6 text-gray-600 sm:leading-7">בלחיצה על כפתור וואטסאפ נפתחת הודעה מוכנה שמציינת שהגולש הגיע דרך לוח בתנופה.</p>
           </div>
-          <div className="rounded-3xl bg-[#111827] p-5 text-white">
+          <div className="rounded-3xl bg-[#111827] p-4 text-white sm:p-5">
             <p className="inline-flex items-center gap-2 text-sm font-black text-white/80"><Sparkles size={16} /> באנר מקצועי</p>
-            <p className="mt-2 text-sm font-medium leading-7 text-white/80">תצוגה חדשותית, ברורה ומודרנית כמו אתרי החדשות הגדולים.</p>
+            <p className="mt-2 text-sm font-medium leading-6 text-white/80 sm:leading-7">תצוגה חדשותית, ברורה ומודרנית כמו אתרי החדשות הגדולים.</p>
           </div>
         </div>
 
         {filteredListings.length > 0 ? (
-          <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 sm:gap-8">
             {filteredListings.map((listing) => (
               <BoardListingCard key={listing.id} listing={listing} />
             ))}

@@ -23,44 +23,44 @@ export const Home: React.FC = () => {
   const featuredListings = boardListings.slice(0, 2);
 
   return (
-    <div className="animate-fade-in bg-[#f7f5f1] pb-20">
-      <div className="mb-10 shadow-2xl">
+    <div className="animate-fade-in bg-[#f7f5f1] pb-16 sm:pb-20">
+      <div className="mb-8 shadow-2xl sm:mb-10">
         <HeroSlider posts={featuredPosts} />
       </div>
 
       <div className="container mx-auto px-4">
-        <div className="mb-10 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-          <div className="overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-100 px-6 py-5">
+        <div className="mb-8 grid gap-5 lg:grid-cols-[1.3fr_0.7fr] sm:mb-10 sm:gap-6">
+          <div className="overflow-hidden rounded-[1.5rem] border border-gray-200 bg-white shadow-sm sm:rounded-[2rem]">
+            <div className="border-b border-gray-100 px-4 py-4 sm:px-6 sm:py-5">
               <div className="mb-3 inline-flex rounded-full bg-red-50 px-4 py-1 text-xs font-black text-red-700">מהדורה ראשית</div>
-              <h2 className="news-headline text-3xl font-black text-gray-900">חדשות אחרונות מצפת והגליל</h2>
+              <h2 className="news-headline text-2xl font-black text-gray-900 sm:text-3xl">חדשות אחרונות מצפת והגליל</h2>
             </div>
-            <div className="grid grid-cols-1 gap-8 p-6 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 p-4 sm:grid-cols-2 sm:gap-8 sm:p-6">
               {latestPosts.map(post => (
                 <PostCard key={post.id} post={post} />
               ))}
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {leadPaper && (
-              <Link to="/weekly-paper" className="block overflow-hidden rounded-[2rem] bg-[#111827] p-6 text-white shadow-xl transition hover:-translate-y-1">
+              <Link to="/weekly-paper" className="block overflow-hidden rounded-[1.5rem] bg-[#111827] p-4 text-white shadow-xl transition hover:-translate-y-1 sm:rounded-[2rem] sm:p-6">
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-black text-white/80">
                   <Newspaper size={14} /> {formatWeekLabel(leadPaper.weekKey)}
                 </div>
-                <h3 className="news-headline text-3xl font-black leading-tight">העיתון השבועי</h3>
-                <p className="mt-3 text-sm font-medium leading-7 text-white/75">עיון אונליין, הורדת PDF וחיפוש מהיר לפי שבוע.</p>
+                <h3 className="news-headline text-2xl font-black leading-tight sm:text-3xl">העיתון השבועי</h3>
+                <p className="mt-3 text-sm font-medium leading-6 text-white/75 sm:leading-7">עיון אונליין, הורדת PDF וחיפוש מהיר לפי שבוע.</p>
                 <div className="mt-5 inline-flex items-center gap-2 text-sm font-black text-red-300">
                   לפתיחת המהדורה <ArrowLeft size={16} />
                 </div>
               </Link>
             )}
-            <Link to="/board" className="block overflow-hidden rounded-[2rem] bg-gradient-to-l from-red-800 via-red-700 to-[#7f1116] p-6 text-white shadow-xl transition hover:-translate-y-1">
+            <Link to="/board" className="block overflow-hidden rounded-[1.5rem] bg-gradient-to-l from-red-800 via-red-700 to-[#7f1116] p-4 text-white shadow-xl transition hover:-translate-y-1 sm:rounded-[2rem] sm:p-6">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-black text-white/85">
                 <Building2 size={14} /> לוח בתנופה
               </div>
-              <h3 className="news-headline text-3xl font-black leading-tight">מודעות נדל"ן בצפת</h3>
-              <p className="mt-3 text-sm font-medium leading-7 text-white/80">דירות להשכרה ולמכירה עם יצירת קשר ישירה בוואטסאפ.</p>
+              <h3 className="news-headline text-2xl font-black leading-tight sm:text-3xl">מודעות נדל"ן בצפת</h3>
+              <p className="mt-3 text-sm font-medium leading-6 text-white/80 sm:leading-7">דירות להשכרה ולמכירה עם יצירת קשר ישירה בוואטסאפ.</p>
               <div className="mt-5 inline-flex items-center gap-2 text-sm font-black text-yellow-200">
                 מעבר ללוח <ArrowLeft size={16} />
               </div>
@@ -73,39 +73,39 @@ export const Home: React.FC = () => {
         </div>
 
         {featuredListings.length > 0 && (
-          <section className="mb-16 rounded-[2rem] border border-red-100 bg-white p-6 shadow-sm">
-            <div className="mb-6 flex items-center justify-between gap-4 border-b border-gray-100 pb-4">
+          <section className="mb-12 rounded-[1.5rem] border border-red-100 bg-white p-4 shadow-sm sm:mb-16 sm:rounded-[2rem] sm:p-6">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4">
               <div>
                 <p className="text-sm font-black text-red-700">לוח בתנופה</p>
-                <h2 className="news-headline text-3xl font-black text-gray-900">דירות נבחרות השבוע</h2>
+                <h2 className="news-headline text-2xl font-black text-gray-900 sm:text-3xl">דירות נבחרות השבוע</h2>
               </div>
               <Link to="/board" className="rounded-full border border-red-100 px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-50">לכל המודעות</Link>
             </div>
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 sm:gap-6">
               {featuredListings.map((listing) => (
-                <article key={listing.id} className="rounded-[1.75rem] border border-gray-100 bg-gray-50 p-5">
-                  <div className="mb-4 aspect-[16/10] overflow-hidden rounded-[1.5rem]">
+                <article key={listing.id} className="rounded-[1.4rem] border border-gray-100 bg-gray-50 p-4 sm:rounded-[1.75rem] sm:p-5">
+                  <div className="mb-4 aspect-[16/10] overflow-hidden rounded-[1.1rem] sm:rounded-[1.5rem]">
                     <img src={listing.imageUrl} alt={listing.title} className="h-full w-full object-cover" />
                   </div>
-                  <h3 className="news-headline text-2xl font-black text-gray-900">{listing.title}</h3>
-                  <p className="mt-2 text-sm font-medium leading-7 text-gray-600">{listing.location} • ₪{listing.price.toLocaleString('he-IL')} • {listing.sizeSqm} מ"ר</p>
+                  <h3 className="news-headline text-xl font-black text-gray-900 sm:text-2xl">{listing.title}</h3>
+                  <p className="mt-2 text-sm font-medium leading-6 text-gray-600 sm:leading-7">{listing.location} • ₪{listing.price.toLocaleString('he-IL')} • {listing.sizeSqm} מ"ר</p>
                 </article>
               ))}
             </div>
           </section>
         )}
 
-        <div className="flex flex-col gap-10 lg:flex-row lg:gap-16">
+        <div className="flex flex-col gap-8 lg:flex-row lg:gap-16 sm:gap-10">
           <div className="lg:w-2/3">
-            <div className="mb-16">
-              <div className="mb-8 flex items-end justify-between border-b-2 border-red-100 pb-3">
+            <div className="mb-12 sm:mb-16">
+              <div className="mb-6 flex items-end justify-between gap-3 border-b-2 border-red-100 pb-3 sm:mb-8">
                 <div className="relative">
-                  <h2 className="news-headline text-3xl font-black text-gray-900 leading-none">עוד כותרות</h2>
+                  <h2 className="news-headline text-2xl font-black leading-none text-gray-900 sm:text-3xl">עוד כותרות</h2>
                   <div className="absolute -bottom-4 right-0 h-1.5 w-24 rounded-full bg-red-700" />
                 </div>
                 <Link to={`/category/${Category.NEWS}`} className="rounded-full border border-red-100 px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-50">לכל המבזקים</Link>
               </div>
-              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-8">
                 {latestPosts.map(post => (
                   <PostCard key={`${post.id}-repeat`} post={post} />
                 ))}
@@ -116,7 +116,7 @@ export const Home: React.FC = () => {
               <AdUnit ad={midPageAd} className="w-full rounded-lg overflow-hidden shadow-md border border-gray-100" />
             </div>
 
-            <div className="space-y-20">
+            <div className="space-y-14 sm:space-y-20">
               {categoriesToShow.map((cat) => {
                 const catPosts = posts.filter(p => p.category === cat).slice(0, 4);
                 if (catPosts.length === 0) return null;
@@ -124,16 +124,16 @@ export const Home: React.FC = () => {
                 const textColorClass = colorClass.replace('bg-', 'text-');
                 return (
                   <section key={cat} className="category-section">
-                    <div className="mb-8 flex items-end justify-between border-b border-gray-100 pb-3">
+                    <div className="mb-6 flex items-end justify-between gap-3 border-b border-gray-100 pb-3 sm:mb-8">
                       <div className="flex items-center gap-3">
-                        <span className={`h-8 w-2 rounded-full ${colorClass}`} />
-                        <h2 className="news-headline text-2xl font-black text-gray-900 leading-none">{cat}</h2>
+                        <span className={`h-7 w-2 rounded-full sm:h-8 ${colorClass}`} />
+                        <h2 className="news-headline text-xl font-black leading-none text-gray-900 sm:text-2xl">{cat}</h2>
                       </div>
-                      <Link to={`/category/${cat}`} className={`${textColorClass} rounded-full bg-white px-4 py-2 text-sm font-black transition hover:opacity-80`}>
+                      <Link to={`/category/${cat}`} className={`${textColorClass} rounded-full bg-white px-3 py-2 text-sm font-black transition hover:opacity-80 sm:px-4`}>
                         עוד ב{cat} <ArrowLeft size={16} className="mr-1 inline" />
                       </Link>
                     </div>
-                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 sm:gap-8">
                       {catPosts.map(post => <PostCard key={post.id} post={post} layout="list" />)}
                     </div>
                   </section>
@@ -146,7 +146,7 @@ export const Home: React.FC = () => {
           </div>
 
           <aside className="lg:w-1/3 flex flex-col gap-10">
-            <div className="sticky top-28 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="sticky top-24 rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-sm sm:top-28 sm:rounded-[2rem] sm:p-6">
               <div className="mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
                 <div className="rounded-full bg-red-50 p-2 text-red-700"><TrendingUp size={20} /></div>
                 <h3 className="text-xl font-black text-gray-900">הכי נקראים</h3>
@@ -171,11 +171,11 @@ export const Home: React.FC = () => {
               <AdUnit ad={sidebarAd} label={false} className="my-0 w-full" />
             </div>
 
-            <div className="relative overflow-hidden rounded-[2rem] bg-[#111827] p-8 text-center text-white shadow-xl">
+            <div className="relative overflow-hidden rounded-[1.5rem] bg-[#111827] p-5 text-center text-white shadow-xl sm:rounded-[2rem] sm:p-8">
               <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-red-600 blur-[70px] opacity-20" />
               <Mail size={40} className="mx-auto mb-4 text-red-500" />
-              <h3 className="text-xl font-black mb-2">חדשות עד הבית</h3>
-              <p className="mb-6 text-sm leading-7 text-gray-300">הירשמו לניוזלטר שלנו וקבלו את כל העדכונים החמים ישירות למייל.</p>
+              <h3 className="mb-2 text-xl font-black">חדשות עד הבית</h3>
+              <p className="mb-5 text-sm leading-6 text-gray-300 sm:mb-6 sm:leading-7">הירשמו לניוזלטר שלנו וקבלו את כל העדכונים החמים ישירות למייל.</p>
               <div className="space-y-3 relative z-10">
                 <input type="email" placeholder="האימייל שלך..." className="w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-red-500" />
                 <button className="w-full rounded-xl bg-red-600 py-3 font-black text-white transition hover:bg-red-700">הרשמה</button>

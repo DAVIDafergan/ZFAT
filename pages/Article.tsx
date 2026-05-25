@@ -57,9 +57,9 @@ export const Article: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f7f5f1] pb-12">
-      <article className="container mx-auto max-w-5xl px-4 py-8">
-        <div className="overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-sm">
-          <div className="px-6 py-8 md:px-10 md:py-10">
+      <article className="container mx-auto max-w-5xl px-4 py-6 sm:py-8">
+        <div className="overflow-hidden rounded-[1.5rem] border border-gray-200 bg-white shadow-sm sm:rounded-[2rem]">
+          <div className="px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-10">
             <div className="mb-5 flex flex-wrap gap-3 text-sm font-bold">
               <span className={`${categoryColor} rounded-full px-3 py-1.5 text-white shadow-sm`}>{post.category}</span>
               <span className="inline-flex items-center gap-1.5 text-gray-500"><Calendar size={14} /> {post.date}</span>
@@ -67,12 +67,12 @@ export const Article: React.FC = () => {
               <span className="inline-flex items-center gap-1.5 text-gray-500"><Eye size={14} /> {post.views.toLocaleString('he-IL')} צפיות</span>
             </div>
 
-            <h1 className="news-headline mb-6 text-4xl font-black leading-tight text-gray-900 md:text-6xl">{post.title}</h1>
-            <p className="mb-8 border-r-4 border-red-600 pr-5 text-xl leading-9 text-gray-600 md:text-2xl">{post.excerpt}</p>
+            <h1 className="news-headline mb-4 text-3xl font-black leading-tight text-gray-900 sm:mb-6 sm:text-4xl md:text-6xl">{post.title}</h1>
+            <p className="mb-6 border-r-4 border-red-600 pr-4 text-lg leading-8 text-gray-600 sm:mb-8 sm:pr-5 sm:text-xl md:text-2xl">{post.excerpt}</p>
 
             <div className="mb-8 rounded-[2rem] overflow-hidden shadow-lg">
               <img src={post.imageUrl} alt={post.title} className="max-h-[560px] w-full object-cover" />
-              <div className="flex items-center justify-between gap-4 bg-gray-950 px-4 py-3 text-xs font-bold text-gray-300">
+              <div className="flex flex-wrap items-center justify-between gap-2 bg-gray-950 px-4 py-3 text-[11px] font-bold text-gray-300 sm:gap-4 sm:text-xs">
                 <span>צילום: דוברות / רשתות חברתיות</span>
                 <span className="inline-flex items-center gap-2" dir="ltr"><Link2 size={13} /> {shareUrl.replace(/^https?:\/\//, '')}</span>
               </div>
@@ -95,14 +95,14 @@ export const Article: React.FC = () => {
             </div>
           </div>
 
-          <div className="px-6 pb-10 md:px-10">
+          <div className="px-4 pb-6 sm:px-6 sm:pb-10 md:px-10">
             <AdUnit ad={bottomAd} className="mt-4" />
           </div>
         </div>
 
-        <div className="mt-12 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm md:p-8">
+        <div className="mt-10 rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-sm sm:mt-12 sm:rounded-[2rem] sm:p-6 md:p-8">
           <div className="mb-6 flex flex-col gap-4 border-b border-gray-100 pb-4 md:flex-row md:items-center md:justify-between">
-            <h3 className="text-2xl font-black text-gray-900 flex items-center gap-2"><MessageCircle className="text-red-600" /> תגובות ({articleComments.length})</h3>
+            <h3 className="flex items-center gap-2 text-xl font-black text-gray-900 sm:text-2xl"><MessageCircle className="text-red-600" /> תגובות ({articleComments.length})</h3>
             <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 p-1 text-sm">
               <span className="px-2 text-gray-400"><ArrowUpDown size={14} /></span>
               {[
@@ -130,7 +130,7 @@ export const Article: React.FC = () => {
                     <span>כדי לשמור היסטוריה.</span>
                   </div>
                 )}
-                <textarea value={commentText} onChange={(e) => setCommentText(e.target.value)} className="min-h-[120px] w-full resize-none rounded-[1.5rem] border border-gray-200 bg-gray-50 p-4 text-base outline-none transition focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100" placeholder={user ? `היי ${user.name}, מה דעתך?` : 'כתוב תגובה...'} />
+                <textarea value={commentText} onChange={(e) => setCommentText(e.target.value)} className="min-h-[120px] w-full resize-none rounded-[1.25rem] border border-gray-200 bg-gray-50 p-4 text-base outline-none transition focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100 sm:rounded-[1.5rem]" placeholder={user ? `היי ${user.name}, מה דעתך?` : 'כתוב תגובה...'} />
                 <div className="mt-3 flex justify-end">
                   <button type="submit" disabled={!commentText.trim()} className="inline-flex items-center gap-2 rounded-full bg-red-700 px-6 py-3 text-sm font-black text-white shadow-md transition hover:bg-red-800 disabled:opacity-50">
                     <Send size={16} /> פרסם תגובה
@@ -144,7 +144,7 @@ export const Article: React.FC = () => {
             {sortedComments.length > 0 ? sortedComments.map(comment => {
               const isLiked = user ? comment.likedBy.includes(user.id) : false;
               return (
-                <div key={comment.id} className="rounded-[1.5rem] border border-gray-100 bg-gray-50 p-5 shadow-sm">
+                <div key={comment.id} className="rounded-[1.25rem] border border-gray-100 bg-gray-50 p-4 shadow-sm sm:rounded-[1.5rem] sm:p-5">
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-black ${comment.userId.startsWith('guest') ? 'bg-gray-100 text-gray-500' : 'bg-red-100 text-red-700'}`}>{comment.userName.charAt(0)}</div>
