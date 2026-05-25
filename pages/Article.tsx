@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { CATEGORY_COLORS, Comment } from '../types';
-import { Calendar, User, Eye, Tag, ThumbsUp, MessageCircle, Send, ArrowUpDown, Link2 } from 'lucide-react';
+import { Calendar, User, Eye, Tag, ThumbsUp, MessageCircle, Send, ArrowUpDown } from 'lucide-react';
 import { AdUnit } from '../components/AdUnit';
 import { PostCard } from '../components/PostCard';
 import { ShareButtons } from '../components/ShareButtons';
@@ -74,7 +74,7 @@ export const Article: React.FC = () => {
               <img src={post.imageUrl} alt={post.title} className="max-h-[560px] w-full object-cover" />
               <div className="flex flex-wrap items-center justify-between gap-2 bg-gray-950 px-4 py-3 text-[11px] font-bold text-gray-300 sm:gap-4 sm:text-xs">
                 <span>צילום: דוברות / רשתות חברתיות</span>
-                <span className="inline-flex items-center gap-2" dir="ltr"><Link2 size={13} /> {shareUrl.replace(/^https?:\/\//, '')}</span>
+                <span>זמין לשיתוף בלחיצה אחת</span>
               </div>
             </div>
 
