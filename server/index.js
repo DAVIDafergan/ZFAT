@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const path = require('path');
+const fs = require('fs');
 const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcryptjs');
 const Post = require('./models/Post');
@@ -10,9 +12,11 @@ const { normalizeShortCode } = require('./utils/shortLink');
 const escapeHtml = require('./utils/escapeHtml');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
-const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI || 'mongodb://localhost:27017/zfat-news';
-const publicSiteUrl = (process.env.PUBLIC_SITE_URL || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+const PORT = Number(process.env.PORT || 3001);
+const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI;
+const publicSiteUrl = (process.env.PUBLIC_SITE_URL || process.env.FRONTEND_URL || 'https://zfat-production.up.railway.app').replace(/\/$/, '');
+const distDir = path.join(__dirname, '../dist');
+const distIndexPath = path.join(distDir, 'index.html');
 const defaultAdminName = (process.env.ADMIN_NAME || 'ניהול').trim();
 const defaultAdminEmail = (process.env.ADMIN_EMAIL || 'ZP@GMAIL.COM').trim().toLowerCase();
 const defaultAdminPassword = process.env.ADMIN_PASSWORD || '1234567';
@@ -23,13 +27,11 @@ const mongoStateLabels = {
   3: 'disconnecting',
 };
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:3000',
+const allowedOrigins = Array.from(new Set([
+  publicSiteUrl,
   ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim()).filter(Boolean) : []),
-];
+  ...(process.env.PUBLIC_SITE_URL ? process.env.PUBLIC_SITE_URL.split(',').map(origin => origin.trim()).filter(Boolean) : []),
+].filter(Boolean)));
 
 const shortLinkLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -57,20 +59,6 @@ app.use(express.json({ limit: '50mb' }));
 const getMongoStatus = () => ({
   state: mongoStateLabels[mongoose.connection.readyState] || 'unknown',
   readyState: mongoose.connection.readyState,
-});
-
-app.get('/', (req, res) => {
-  res.json({
-    service: 'zfat-server',
-    status: 'ok',
-    frontend: 'Deploy the frontend separately from the repository root.',
-    health: '/health',
-    authRoutes: {
-      register: 'POST /api/auth/register',
-      login: 'POST /api/auth/login',
-    },
-    database: getMongoStatus(),
-  });
 });
 
 app.use('/api/posts', require('./routes/posts'));
@@ -155,6 +143,17 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
   }
 });
 
+app.use(express.static(distDir));
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  if (!fs.existsSync(distIndexPath)) {
+    console.error(`[Startup] Missing frontend build file at ${distIndexPath}`);
+    return res.status(503).json({ message: 'Frontend build not available yet' });
+  }
+  return res.sendFile(distIndexPath);
+});
+
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
@@ -163,20 +162,53 @@ app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
 
   const statusCode = err.status || (err.message === 'Not allowed by CORS' ? 403 : 500);
+  console.error('[Express] Unhandled error', {
+    path: req.path,
+    method: req.method,
+    statusCode,
+    message: err.message,
+  });
   res.status(statusCode).json({ message: err.message || 'Internal server error' });
 });
 
+if (!MONGO_URI) {
+  console.error('❌ Startup error: MONGO_URL/MONGODB_URI is missing');
+  process.exit(1);
+}
+
+mongoose.connection.on('connected', () => {
+  console.log('✅ MongoDB connected');
+});
+
+mongoose.connection.on('error', (error) => {
+  console.error('❌ MongoDB connection error:', error);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️ MongoDB disconnected');
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('❌ Unhandled promise rejection:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught exception:', error);
+});
+
 mongoose.connect(MONGO_URI)
+  .then(() => ensureDefaultAdmin())
   .then(() => {
-    console.log('✅ Connected to MongoDB');
-    return ensureDefaultAdmin();
-  })
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`🚀 Server listening on port ${PORT}`);
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📦 Static frontend path: ${distDir}`);
+    });
+    server.on('error', (error) => {
+      console.error('❌ Startup server error:', error);
+      process.exit(1);
     });
   })
   .catch(err => {
-    console.error('❌ MongoDB connection failed:', err.message);
+    console.error('❌ Startup error:', err);
     process.exit(1);
   });

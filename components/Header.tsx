@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
   return (
     <>
       <div className="h-20 sm:h-24 lg:h-28" />
-      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${isScrolled ? 'border-b border-white/20 bg-gradient-to-b from-[#6f0000]/90 to-[#4a0000]/85 py-2 shadow-[0_16px_46px_rgba(0,0,0,0.45)] backdrop-blur-xl' : 'border-b border-[#6b0000]/55 bg-gradient-to-b from-[#8B0000] to-[#680000] py-3 shadow-[0_8px_26px_rgba(0,0,0,0.32)]'}`}>
+      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${isScrolled ? 'border-b border-white/20 bg-[#5b0007]/88 py-2 shadow-[0_18px_52px_rgba(0,0,0,0.46)] backdrop-blur-xl supports-[backdrop-filter]:bg-[#5b0007]/72' : 'border-b border-[#4b0006] bg-[#5b0007] py-3 shadow-[0_10px_32px_rgba(0,0,0,0.34)]'}`}>
         <div className="container mx-auto px-4">
           <div className="mb-3 hidden items-center justify-between text-xs font-bold text-white/80 lg:flex">
             <div className="flex items-center gap-3">

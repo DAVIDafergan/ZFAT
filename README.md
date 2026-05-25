@@ -39,10 +39,10 @@ cp .env.example .env
 בקובץ `server/.env`:
 
 ```env
-MONGO_URL=mongodb://localhost:27017/zfat-news
+MONGO_URL=<railway mongo url>
 JWT_SECRET=change_me
-FRONTEND_URL=http://localhost:5173
-PUBLIC_SITE_URL=http://localhost:5173
+FRONTEND_URL=https://zfat-production.up.railway.app
+PUBLIC_SITE_URL=https://zfat-production.up.railway.app
 ```
 
 > השרת תומך גם ב-`MONGODB_URI`, אבל `MONGO_URL` הוא המשתנה המומלץ לפרודקשן ב-Railway.
@@ -70,9 +70,9 @@ npm run dev
 
 ### שלב 5: גש לאתר
 
-Frontend: [http://localhost:5173](http://localhost:5173)
+Frontend: [https://zfat-production.up.railway.app](https://zfat-production.up.railway.app)
 
-Backend healthcheck: [http://localhost:3001/health](http://localhost:3001/health)
+Backend healthcheck: [https://zfat-production.up.railway.app/health](https://zfat-production.up.railway.app/health)
 
 ## כניסת אדמין
 
@@ -105,21 +105,21 @@ ZFAT/
 
 ## פריסה ל-Railway
 
-### Backend (Express)
+### Single Railway Service (Node + Express + Vite build)
 
-ב-Railway יש ליצור שירות Backend נפרד מה-frontend ולהגדיר:
+ב-Railway יש לפרוס את המאגר מה-root ולהגדיר:
 
-- **Root Directory:** `server/`
-- **Start Command:** `npm start` (הסקריפט מפעיל `node index.js`)
-- **Port:** השרת מאזין אוטומטית ל-`process.env.PORT`
+- **Build Command:** `npm run build`
+- **Start Command:** `node server/index.js` (או `npm start`)
+- **Port:** השרת מאזין ל-`process.env.PORT`
 
 בפרודקשן מומלץ להגדיר:
 
 ```env
 MONGO_URL=<railway mongo url>
 JWT_SECRET=<strong secret>
-FRONTEND_URL=<frontend origin>
-PUBLIC_SITE_URL=<public site/backend origin used for share previews>
+FRONTEND_URL=https://zfat-production.up.railway.app
+PUBLIC_SITE_URL=https://zfat-production.up.railway.app
 ```
 
 ה-Backend מחזיר תגובות JSON למסלולי ה-API ולמסלולי הבדיקה:
@@ -129,18 +129,18 @@ PUBLIC_SITE_URL=<public site/backend origin used for share previews>
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 
-ה-Backend לא אמור לפרוס או לשרת את ה-build של Vite מתוך Railway. אם צריך frontend בפרודקשן, יש לפרוס אותו כשירות נפרד.
+אותו שירות גם משרת את build ה-frontend מהתיקייה `dist` עם SPA fallback כך שרענון נתיבים עובד.
 
-### Frontend (Vite)
+### Frontend environment
 
-אם החזית מדברת לשרת דרך כתובת שונה, אפשר להגדיר ב-frontend:
+אם צריך להגדיר URL מפורש ב-frontend:
 
 ```env
-VITE_API_URL=<backend url>
-VITE_PUBLIC_SITE_URL=<public url for /p/:shortCode shares>
+VITE_API_URL=https://zfat-production.up.railway.app
+VITE_PUBLIC_SITE_URL=https://zfat-production.up.railway.app
 ```
 
-את ה-frontend אפשר לפרוס בנפרד מהתיקייה הראשית של המאגר עם:
+Build ידני מה-root:
 
 ```bash
 npm run build
