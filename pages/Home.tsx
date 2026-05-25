@@ -24,20 +24,40 @@ export const Home: React.FC = () => {
 
   return (
     <div className="animate-fade-in bg-[#f7f5f1] pb-16 sm:pb-20">
-      <div className="mb-8 shadow-2xl sm:mb-10">
+      {/* Hero — flush to header, no mobile gap */}
+      <div className="shadow-2xl sm:mb-10">
         <HeroSlider posts={featuredPosts} />
+      </div>
+
+      {/* Dark breaking-news strip — visible on all screen sizes */}
+      <div className="animate-dark-shimmer border-b border-red-900/40 md:hidden">
+        <div className="flex items-stretch">
+          <div className="flex shrink-0 items-center gap-2 bg-red-700 px-4 py-3">
+            <span className="animate-live-dot h-2 w-2 rounded-full bg-white" />
+            <span className="text-[11px] font-black tracking-widest text-white">מבזק</span>
+          </div>
+          <div className="flex flex-1 items-center overflow-hidden px-4">
+            <p className="animate-breaking-badge line-clamp-1 text-sm font-bold text-gray-200">
+              {latestPosts[0]?.title || 'עקבו אחרינו לקבלת עדכונים שוטפים מצפת והגליל'}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="container mx-auto px-4">
         <div className="mb-8 grid gap-5 lg:grid-cols-[1.3fr_0.7fr] sm:mb-10 sm:gap-6">
           <div className="overflow-hidden rounded-[1.5rem] border border-gray-200 bg-white shadow-sm sm:rounded-[2rem]">
             <div className="border-b border-gray-100 px-4 py-4 sm:px-6 sm:py-5">
-              <div className="mb-3 inline-flex rounded-full bg-red-50 px-4 py-1 text-xs font-black text-red-700">מהדורה ראשית</div>
+              <div className="mb-3 inline-flex animate-breaking-badge items-center gap-2 rounded-full bg-red-700 px-4 py-1 text-xs font-black text-white">
+                <span className="animate-live-dot h-1.5 w-1.5 rounded-full bg-white" /> מהדורה ראשית
+              </div>
               <h2 className="news-headline text-2xl font-black text-gray-900 sm:text-3xl">חדשות אחרונות מצפת והגליל</h2>
             </div>
             <div className="grid grid-cols-1 gap-5 p-4 sm:grid-cols-2 sm:gap-8 sm:p-6">
               {latestPosts.map(post => (
-                <PostCard key={post.id} post={post} />
+                <div key={post.id} className="animate-stagger-in">
+                  <PostCard post={post} />
+                </div>
               ))}
             </div>
           </div>
@@ -98,16 +118,19 @@ export const Home: React.FC = () => {
         <div className="flex flex-col gap-8 lg:flex-row lg:gap-16 sm:gap-10">
           <div className="lg:w-2/3">
             <div className="mb-12 sm:mb-16">
-              <div className="mb-6 flex items-end justify-between gap-3 border-b-2 border-red-100 pb-3 sm:mb-8">
-                <div className="relative">
-                  <h2 className="news-headline text-2xl font-black leading-none text-gray-900 sm:text-3xl">עוד כותרות</h2>
-                  <div className="absolute -bottom-4 right-0 h-1.5 w-24 rounded-full bg-red-700" />
+              {/* Dark section title bar */}
+              <div className="mb-6 flex items-center justify-between gap-3 overflow-hidden rounded-2xl bg-[#111827] px-5 py-4 shadow-xl sm:mb-8 sm:rounded-[1.5rem] sm:px-6 sm:py-5">
+                <div className="flex items-center gap-3">
+                  <span className="animate-live-dot h-2.5 w-2.5 rounded-full bg-red-500" />
+                  <h2 className="news-headline text-2xl font-black leading-none text-white sm:text-3xl">עוד כותרות</h2>
                 </div>
-                <Link to={`/category/${Category.NEWS}`} className="rounded-full border border-red-100 px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-50">לכל המבזקים</Link>
+                <Link to={`/category/${Category.NEWS}`} className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-black text-white/80 transition hover:bg-white/20">לכל המבזקים</Link>
               </div>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-8">
-                {latestPosts.map(post => (
-                  <PostCard key={`${post.id}-repeat`} post={post} />
+                {latestPosts.map((post, idx) => (
+                  <div key={`${post.id}-repeat`} className="animate-stagger-in" style={{ animationDelay: `${idx * 0.07}s` }}>
+                    <PostCard post={post} />
+                  </div>
                 ))}
               </div>
             </div>
@@ -117,24 +140,42 @@ export const Home: React.FC = () => {
             </div>
 
             <div className="space-y-14 sm:space-y-20">
-              {categoriesToShow.map((cat) => {
+              {categoriesToShow.map((cat, catIdx) => {
                 const catPosts = posts.filter(p => p.category === cat).slice(0, 4);
                 if (catPosts.length === 0) return null;
                 const colorClass = CATEGORY_COLORS[cat] || 'bg-gray-600';
                 const textColorClass = colorClass.replace('bg-', 'text-');
+                const isDarkSection = catIdx % 3 === 2;
                 return (
                   <section key={cat} className="category-section">
-                    <div className="mb-6 flex items-end justify-between gap-3 border-b border-gray-100 pb-3 sm:mb-8">
-                      <div className="flex items-center gap-3">
-                        <span className={`h-7 w-2 rounded-full sm:h-8 ${colorClass}`} />
-                        <h2 className="news-headline text-xl font-black leading-none text-gray-900 sm:text-2xl">{cat}</h2>
+                    {isDarkSection ? (
+                      /* Every 3rd category gets a dark header bar */
+                      <div className="mb-6 flex items-center justify-between gap-3 overflow-hidden rounded-2xl bg-[#111827] px-5 py-4 shadow-xl sm:mb-8 sm:rounded-[1.5rem] sm:px-6 sm:py-5">
+                        <div className="flex items-center gap-3">
+                          <span className={`h-7 w-2 rounded-full sm:h-8 ${colorClass}`} />
+                          <h2 className="news-headline text-xl font-black leading-none text-white sm:text-2xl">{cat}</h2>
+                        </div>
+                        <Link to={`/category/${cat}`} className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-sm font-black text-white/80 transition hover:bg-white/20 sm:px-4">
+                          עוד ב{cat} <ArrowLeft size={16} className="mr-1 inline" />
+                        </Link>
                       </div>
-                      <Link to={`/category/${cat}`} className={`${textColorClass} rounded-full bg-white px-3 py-2 text-sm font-black transition hover:opacity-80 sm:px-4`}>
-                        עוד ב{cat} <ArrowLeft size={16} className="mr-1 inline" />
-                      </Link>
-                    </div>
+                    ) : (
+                      <div className="mb-6 flex items-end justify-between gap-3 border-b border-gray-100 pb-3 sm:mb-8">
+                        <div className="flex items-center gap-3">
+                          <span className={`h-7 w-2 rounded-full sm:h-8 ${colorClass}`} />
+                          <h2 className="news-headline text-xl font-black leading-none text-gray-900 sm:text-2xl">{cat}</h2>
+                        </div>
+                        <Link to={`/category/${cat}`} className={`${textColorClass} rounded-full bg-white px-3 py-2 text-sm font-black transition hover:opacity-80 sm:px-4`}>
+                          עוד ב{cat} <ArrowLeft size={16} className="mr-1 inline" />
+                        </Link>
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 gap-5 md:grid-cols-2 sm:gap-8">
-                      {catPosts.map(post => <PostCard key={post.id} post={post} layout="list" />)}
+                      {catPosts.map((post, idx) => (
+                        <div key={post.id} className="animate-stagger-in" style={{ animationDelay: `${idx * 0.07}s` }}>
+                          <PostCard post={post} layout="list" />
+                        </div>
+                      ))}
                     </div>
                   </section>
                 );
@@ -146,19 +187,21 @@ export const Home: React.FC = () => {
           </div>
 
           <aside className="lg:w-1/3 flex flex-col gap-10">
-            <div className="sticky top-24 rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-sm sm:top-28 sm:rounded-[2rem] sm:p-6">
-              <div className="mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
-                <div className="rounded-full bg-red-50 p-2 text-red-700"><TrendingUp size={20} /></div>
-                <h3 className="text-xl font-black text-gray-900">הכי נקראים</h3>
+            {/* Dark "הכי נקראים" card */}
+            <div className="sticky top-24 overflow-hidden rounded-[1.5rem] bg-[#111827] shadow-2xl sm:top-28 sm:rounded-[2rem]">
+              <div className="flex items-center gap-3 border-b border-white/10 px-4 py-4 sm:px-6 sm:py-5">
+                <div className="rounded-full bg-red-700/30 p-2 text-red-400"><TrendingUp size={20} /></div>
+                <h3 className="text-xl font-black text-white">הכי נקראים</h3>
+                <span className="animate-live-dot mr-auto h-2 w-2 rounded-full bg-red-500" />
               </div>
-              <ul className="divide-y divide-gray-50">
+              <ul className="divide-y divide-white/5 px-4 py-2 sm:px-6">
                 {[...posts].sort((a, b) => b.views - a.views).slice(0, 5).map((post, idx) => (
-                  <li key={post.id} className="group py-4 first:pt-0 last:pb-0">
+                  <li key={post.id} className="group py-4 first:pt-3 last:pb-3">
                     <Link to={`/article/${post.id}`} className="flex gap-4 items-start">
-                      <span className={`text-3xl font-black leading-none ${idx < 3 ? 'text-red-700/20' : 'text-gray-200'}`}>0{idx + 1}</span>
+                      <span className={`text-3xl font-black leading-none ${idx === 0 ? 'text-red-500' : idx < 3 ? 'text-red-700/50' : 'text-white/15'}`}>0{idx + 1}</span>
                       <div>
-                        <h4 className="text-sm font-black text-gray-800 transition group-hover:text-red-700 line-clamp-2">{post.title}</h4>
-                        <span className="mt-1 block text-xs font-bold text-gray-400">{post.category}</span>
+                        <h4 className="text-sm font-black text-gray-200 transition group-hover:text-red-400 line-clamp-2">{post.title}</h4>
+                        <span className="mt-1 block text-xs font-bold text-gray-500">{post.category}</span>
                       </div>
                     </Link>
                   </li>
