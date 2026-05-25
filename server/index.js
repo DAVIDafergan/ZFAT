@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const rateLimit = require('express-rate-limit');
 const Post = require('./models/Post');
 const { normalizeShortCode } = require('./utils/shortLink');
 const escapeHtml = require('./utils/escapeHtml');
@@ -18,6 +19,14 @@ const allowedOrigins = [
   'http://127.0.0.1:3000',
   ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim()).filter(Boolean) : []),
 ];
+
+const shortLinkLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'יותר מדי בקשות לקישורים קצרים' },
+});
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -43,7 +52,7 @@ app.use('/api/board-listings', require('./routes/boardListings'));
 
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 
-app.get('/p/:shortCode', async (req, res) => {
+app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
   try {
     const requestedCode = normalizeShortCode(req.params.shortCode);
     if (!requestedCode) return res.status(404).send('Short link not found');

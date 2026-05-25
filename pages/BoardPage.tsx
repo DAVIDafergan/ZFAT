@@ -24,7 +24,7 @@ export const BoardPage: React.FC = () => {
       <PageHero
         eyebrow="לוח בתנופה"
         title="דירות להשכרה ולמכירה בצפת"
-        description="עמוד מודגש ומעוצב בסגנון מקצועי ללוח הנדל\"ן של צפת. כל מודעה כוללת תמונה, מיקום, מחיר, גודל, פרטים נוספים, מרפסת ויצירת קשר ישירה בוואטסאפ."
+        description={'עמוד מודגש ומעוצב בסגנון מקצועי ללוח הנדל"ן של צפת. כל מודעה כוללת תמונה, מיקום, מחיר, גודל, פרטים נוספים, מרפסת ויצירת קשר ישירה בוואטסאפ.'}
         accent="from-red-900 via-red-800 to-[#111827]"
       >
         <div className="grid gap-4 rounded-[2rem] border border-white/15 bg-white/10 p-4 backdrop-blur-sm md:grid-cols-[1.6fr_0.9fr]">

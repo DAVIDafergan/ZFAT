@@ -1,10 +1,16 @@
 const express = require('express');
+const mongoose = require('mongoose');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const WeeklyPaper = require('../models/WeeklyPaper');
 const auth = require('../middleware/auth');
 const { adminOnly } = require('../middleware/adminOnly');
+const validateObjectId = require('../middleware/validateObjectId');
 
-router.get('/', async (req, res) => {
+const listLimiter = rateLimit({ windowMs: 60 * 1000, limit: 90, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי בקשות לעיתון השבועי' } });
+const mutateLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי פעולות ניהול עיתון' } });
+
+router.get('/', listLimiter, async (req, res) => {
   try {
     const papers = await WeeklyPaper.find({ isActive: true }).sort({ weekKey: -1, publishedAt: -1 });
     res.json(papers);
@@ -13,7 +19,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', auth, adminOnly, async (req, res) => {
+router.post('/', mutateLimiter, auth, adminOnly, async (req, res) => {
   try {
     const paper = new WeeklyPaper(req.body);
     await paper.save();
@@ -23,9 +29,10 @@ router.post('/', auth, adminOnly, async (req, res) => {
   }
 });
 
-router.put('/:id', auth, adminOnly, async (req, res) => {
+router.put('/:id', mutateLimiter, auth, adminOnly, validateObjectId(), async (req, res) => {
   try {
-    const paper = await WeeklyPaper.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
+    const paper = await WeeklyPaper.findByIdAndUpdate(objectId, req.body, { new: true, runValidators: true });
     if (!paper) return res.status(404).json({ message: 'העיתון לא נמצא' });
     res.json(paper);
   } catch (err) {
@@ -33,9 +40,10 @@ router.put('/:id', auth, adminOnly, async (req, res) => {
   }
 });
 
-router.delete('/:id', auth, adminOnly, async (req, res) => {
+router.delete('/:id', mutateLimiter, auth, adminOnly, validateObjectId(), async (req, res) => {
   try {
-    const paper = await WeeklyPaper.findByIdAndDelete(req.params.id);
+    const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
+    const paper = await WeeklyPaper.findByIdAndDelete(objectId);
     if (!paper) return res.status(404).json({ message: 'העיתון לא נמצא' });
     res.json({ message: 'העיתון נמחק' });
   } catch (err) {

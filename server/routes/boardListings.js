@@ -1,10 +1,16 @@
 const express = require('express');
+const mongoose = require('mongoose');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const BoardListing = require('../models/BoardListing');
 const auth = require('../middleware/auth');
 const { adminOnly } = require('../middleware/adminOnly');
+const validateObjectId = require('../middleware/validateObjectId');
 
-router.get('/', async (req, res) => {
+const listLimiter = rateLimit({ windowMs: 60 * 1000, limit: 90, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי בקשות ללוח בתנופה' } });
+const mutateLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי פעולות ניהול לוח' } });
+
+router.get('/', listLimiter, async (req, res) => {
   try {
     const listings = await BoardListing.find({ isActive: true }).sort({ createdAt: -1 });
     res.json(listings);
@@ -13,7 +19,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', auth, adminOnly, async (req, res) => {
+router.post('/', mutateLimiter, auth, adminOnly, async (req, res) => {
   try {
     const listing = new BoardListing(req.body);
     await listing.save();
@@ -23,9 +29,10 @@ router.post('/', auth, adminOnly, async (req, res) => {
   }
 });
 
-router.put('/:id', auth, adminOnly, async (req, res) => {
+router.put('/:id', mutateLimiter, auth, adminOnly, validateObjectId(), async (req, res) => {
   try {
-    const listing = await BoardListing.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
+    const listing = await BoardListing.findByIdAndUpdate(objectId, req.body, { new: true, runValidators: true });
     if (!listing) return res.status(404).json({ message: 'המודעה לא נמצאה' });
     res.json(listing);
   } catch (err) {
@@ -33,9 +40,10 @@ router.put('/:id', auth, adminOnly, async (req, res) => {
   }
 });
 
-router.delete('/:id', auth, adminOnly, async (req, res) => {
+router.delete('/:id', mutateLimiter, auth, adminOnly, validateObjectId(), async (req, res) => {
   try {
-    const listing = await BoardListing.findByIdAndDelete(req.params.id);
+    const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
+    const listing = await BoardListing.findByIdAndDelete(objectId);
     if (!listing) return res.status(404).json({ message: 'המודעה לא נמצאה' });
     res.json({ message: 'המודעה נמחקה' });
   } catch (err) {
