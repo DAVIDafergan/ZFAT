@@ -17,6 +17,7 @@ const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI;
 const publicSiteUrl = (process.env.PUBLIC_SITE_URL || process.env.FRONTEND_URL || 'https://zfat-production.up.railway.app').replace(/\/$/, '');
 const distDir = path.join(__dirname, '../dist');
 const distIndexPath = path.join(distDir, 'index.html');
+const hasDistIndex = fs.existsSync(distIndexPath);
 const defaultAdminName = (process.env.ADMIN_NAME || 'ניהול').trim();
 const defaultAdminEmail = (process.env.ADMIN_EMAIL || 'ZP@GMAIL.COM').trim().toLowerCase();
 const defaultAdminPassword = process.env.ADMIN_PASSWORD || '1234567';
@@ -40,6 +41,17 @@ const shortLinkLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: 'יותר מדי בקשות לקישורים קצרים' },
 });
+const spaFallbackLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'יותר מדי בקשות לדפי האתר' },
+});
+
+if (!hasDistIndex) {
+  console.error(`[Startup] Missing frontend build file at ${distIndexPath}`);
+}
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -145,10 +157,9 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
 
 app.use(express.static(distDir));
 
-app.get('*', (req, res, next) => {
+app.get('*', spaFallbackLimiter, (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
-  if (!fs.existsSync(distIndexPath)) {
-    console.error(`[Startup] Missing frontend build file at ${distIndexPath}`);
+  if (!hasDistIndex) {
     return res.status(503).json({ message: 'Frontend build not available yet' });
   }
   return res.sendFile(distIndexPath);
