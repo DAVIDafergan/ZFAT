@@ -13,6 +13,16 @@ import { API_URL, USE_SERVER, normalizeShareCode } from './siteConfig';
 
 const getToken = () => localStorage.getItem('zfat_jwt');
 
+class ApiRequestError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.status = status;
+  }
+}
+
 const authHeaders = (): Record<string, string> => {
   const token = getToken();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -134,10 +144,11 @@ const shouldUseServer = () => USE_SERVER;
 
 const fetchJson = async (path: string, init?: RequestInit) => {
   const response = await fetch(`${API_URL}${path}`, init);
+  const data = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    throw new ApiRequestError(data?.message || `Request failed: ${response.status}`, response.status);
   }
-  return response.json();
+  return data;
 };
 
 export const api = {
@@ -153,14 +164,16 @@ export const api = {
         ]);
         const messagesRes = await fetch(`${API_URL}/api/messages`, { headers: authHeaders() }).catch(() => null);
         const subscribersRes = await fetch(`${API_URL}/api/subscribers`, { headers: authHeaders() }).catch(() => null);
+        const usersRes = await fetch(`${API_URL}/api/auth/users`, { headers: authHeaders() }).catch(() => null);
         const messages = messagesRes?.ok ? await messagesRes.json() : [];
         const subscribers = subscribersRes?.ok ? await subscribersRes.json() : [];
+        const users = usersRes?.ok ? await usersRes.json() : [];
 
         return {
           posts: (posts.data || posts).map(normalizePost),
           ads: (ads || []).map(normalizeAd),
           comments: (comments || []).map(normalizeComment),
-          registeredUsers: [],
+          registeredUsers: (users || []).map(normalizeUser),
           contactMessages: (messages || []).map(normalizeMessage),
           newsletterSubscribers: (subscribers || []).map(normalizeSubscriber),
           weeklyPapers: (weeklyPapers || []).map(normalizeWeeklyPaper),
@@ -367,7 +380,7 @@ export const api = {
         const data = await fetchJson('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: usernameOrEmail, password: pass }),
+          body: JSON.stringify({ email: usernameOrEmail, usernameOrEmail, password: pass }),
         });
         if (data.token) localStorage.setItem('zfat_jwt', data.token);
         return data.user ? normalizeUser({ ...data.user, isAuthenticated: true }) : null;
@@ -378,30 +391,40 @@ export const api = {
 
     await delay(250);
     const users = getStorage<User[]>('zfat_users_db', INITIAL_USERS);
-    const found = users.find(u => (u.email === usernameOrEmail || u.name === usernameOrEmail) && u.password === pass);
+    const normalizedIdentifier = usernameOrEmail.trim().toLowerCase();
+    const found = users.find(u => ((u.email || '').toLowerCase() === normalizedIdentifier || u.name === usernameOrEmail.trim()) && u.password === pass);
     return found ? { ...found, isAuthenticated: true } : null;
   },
 
-  register: async (user: User): Promise<boolean> => {
+  register: async (user: User): Promise<User> => {
     if (shouldUseServer()) {
-      try {
-        const data = await fetchJson('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(user),
-        });
-        if (data.token) localStorage.setItem('zfat_jwt', data.token);
-        return Boolean(data.token);
-      } catch {
-        return false;
-      }
+      const data = await fetchJson('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user),
+      });
+      if (data.token) localStorage.setItem('zfat_jwt', data.token);
+      return normalizeUser({ ...data.user, isAuthenticated: true });
     }
 
     await delay(250);
     const users = getStorage<User[]>('zfat_users_db', INITIAL_USERS);
-    if (users.some(u => u.email === user.email)) return false;
-    setStorage('zfat_users_db', [...users, user]);
-    return true;
+    const normalizedUser = { ...user, name: user.name.trim(), email: user.email?.trim().toLowerCase() };
+    if (users.some(u => u.email?.toLowerCase() === normalizedUser.email?.toLowerCase())) {
+      throw new ApiRequestError('כתובת האימייל כבר רשומה במערכת', 409);
+    }
+    setStorage('zfat_users_db', [...users, normalizedUser]);
+    return normalizeUser(normalizedUser);
+  },
+
+  fetchUsers: async (): Promise<User[]> => {
+    if (shouldUseServer()) {
+      const users = await fetchJson('/api/auth/users', { headers: authHeaders() });
+      return (users || []).map(normalizeUser);
+    }
+
+    await delay(150);
+    return getStorage<User[]>('zfat_users_db', INITIAL_USERS).map(normalizeUser);
   },
 
   verifyToken: async (): Promise<User | null> => {

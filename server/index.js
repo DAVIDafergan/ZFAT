@@ -3,7 +3,9 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const rateLimit = require('express-rate-limit');
+const bcrypt = require('bcryptjs');
 const Post = require('./models/Post');
+const User = require('./models/User');
 const { normalizeShortCode } = require('./utils/shortLink');
 const escapeHtml = require('./utils/escapeHtml');
 
@@ -11,6 +13,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI || 'mongodb://localhost:27017/zfat-news';
 const publicSiteUrl = (process.env.PUBLIC_SITE_URL || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+const defaultAdminName = (process.env.ADMIN_NAME || 'ניהול').trim();
+const defaultAdminEmail = (process.env.ADMIN_EMAIL || 'ZP@GMAIL.COM').trim().toLowerCase();
+const defaultAdminPassword = process.env.ADMIN_PASSWORD || '1234567';
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -51,6 +56,20 @@ app.use('/api/weekly-papers', require('./routes/weeklyPapers'));
 app.use('/api/board-listings', require('./routes/boardListings'));
 
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
+
+const ensureDefaultAdmin = async () => {
+  const existingAdmin = await User.findOne({ email: defaultAdminEmail });
+  if (existingAdmin) return;
+
+  const hashedPassword = await bcrypt.hash(defaultAdminPassword, 12);
+  await User.create({
+    name: defaultAdminName,
+    email: defaultAdminEmail,
+    password: hashedPassword,
+    role: 'admin',
+  });
+  console.log(`✅ Default admin ensured: ${defaultAdminEmail}`);
+};
 
 app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
   try {
@@ -105,6 +124,9 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('✅ Connected to MongoDB');
+    return ensureDefaultAdmin();
+  })
+  .then(() => {
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
     });

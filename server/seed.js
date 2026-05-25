@@ -8,8 +8,9 @@ const WeeklyPaper = require('./models/WeeklyPaper');
 const BoardListing = require('./models/BoardListing');
 const { generateShortCode } = require('./utils/shortLink');
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@zfat.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@SecurePass123!';
+const ADMIN_NAME = process.env.ADMIN_NAME || 'ניהול';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'ZP@GMAIL.COM';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '1234567';
 const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI || 'mongodb://localhost:27017/zfat-news';
 
 const samplePosts = [
@@ -105,11 +106,12 @@ async function seed() {
     await mongoose.connect(MONGO_URI);
     console.log('✅ Connected to MongoDB');
 
-    const existingAdmin = await User.findOne({ email: ADMIN_EMAIL });
+    const normalizedAdminEmail = ADMIN_EMAIL.trim().toLowerCase();
+    const existingAdmin = await User.findOne({ email: normalizedAdminEmail });
     if (!existingAdmin) {
       const hashed = await bcrypt.hash(ADMIN_PASSWORD, 12);
-      await User.create({ name: 'מנהל ראשי', email: ADMIN_EMAIL, password: hashed, role: 'admin' });
-      console.log(`✅ Admin user created: ${ADMIN_EMAIL}`);
+      await User.create({ name: ADMIN_NAME, email: normalizedAdminEmail, password: hashed, role: 'admin' });
+      console.log(`✅ Admin user created: ${normalizedAdminEmail}`);
     } else {
       console.log('ℹ️  Admin user already exists');
     }
