@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
   return (
     <>
       <div className="h-20 lg:h-28" />
-      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${isScrolled ? 'border-b border-white/10 bg-[#7f1217]/92 py-2 shadow-[0_14px_40px_rgba(0,0,0,0.38)] backdrop-blur-md' : 'bg-[#a31319]/96 py-3 shadow-xl'}`}>
+      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${isScrolled ? 'border-b border-white/20 bg-[#a31319]/78 py-2 shadow-[0_14px_40px_rgba(0,0,0,0.38)] backdrop-blur-lg' : 'border-b border-white/10 bg-[#a31319]/96 py-3 shadow-xl'}`}>
         <div className="container mx-auto px-4">
           <div className="mb-3 hidden items-center justify-between text-xs font-bold text-white/80 lg:flex">
             <div className="flex items-center gap-3">
@@ -181,8 +181,8 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
       </header>
 
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden" role="dialog" aria-modal="true">
-          <div className="mr-auto h-full w-[88%] max-w-sm bg-white p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden" role="dialog" aria-modal="true" onClick={() => setIsMenuOpen(false)}>
+          <div className="ml-auto h-full w-[88%] max-w-sm border-l border-red-100 bg-gradient-to-b from-white via-red-50/40 to-white p-6 shadow-2xl animate-fade-in" onClick={(event) => event.stopPropagation()}>
             <div className="mb-8 flex items-center justify-between">
               <div className="rounded-2xl bg-[#a31319] px-3 py-2 shadow-lg">
                 <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-12 w-auto drop-shadow-[0_0_16px_rgba(255,255,255,0.42)]" />

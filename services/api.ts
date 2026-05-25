@@ -143,7 +143,12 @@ const normalizeBoardListing = (listing: any): BoardListing => ({
 const shouldUseServer = () => USE_SERVER;
 
 const fetchJson = async (path: string, init?: RequestInit) => {
-  const response = await fetch(`${API_URL}${path}`, init);
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, init);
+  } catch {
+    throw new ApiRequestError('לא ניתן להתחבר לשרת כרגע. ודאו שה-Backend פעיל ונסו שוב.', 503);
+  }
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     throw new ApiRequestError(data?.message || `Request failed: ${response.status}`, response.status);
@@ -384,8 +389,11 @@ export const api = {
         });
         if (data.token) localStorage.setItem('zfat_jwt', data.token);
         return data.user ? normalizeUser({ ...data.user, isAuthenticated: true }) : null;
-      } catch {
-        return null;
+      } catch (error) {
+        if (error instanceof ApiRequestError && [400, 401, 404].includes(error.status)) {
+          return null;
+        }
+        throw error;
       }
     }
 
