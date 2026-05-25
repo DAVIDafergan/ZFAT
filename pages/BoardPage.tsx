@@ -40,6 +40,7 @@ const isSmartQueryMatch = (queryTokens: string[], listing: { title: string; loca
 
 export const BoardPage: React.FC = () => {
   const { boardListings, ads } = useApp();
+  const [showSmartFilters, setShowSmartFilters] = useState(false);
   const [query, setQuery] = useState('');
   const [dealFilter, setDealFilter] = useState<DealFilter>('all');
   const [locationFilter, setLocationFilter] = useState('all');
@@ -160,73 +161,86 @@ export const BoardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="mb-8 rounded-[1.5rem] border border-[#d9dce5] bg-white/90 p-4 shadow-xl shadow-slate-200/70 backdrop-blur-sm sm:rounded-[2rem] sm:p-6">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#0f172a] px-3 py-2 text-xs font-black text-white sm:text-sm">
-              <Sparkles size={15} className="text-amber-300" />
-              חיפוש חכם וסינון מתקדם
-            </div>
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-100"
-            >
-              <X size={15} />
-              ניקוי פילטרים
-            </button>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div>
-              <label htmlFor="location-filter" className="mb-1 block text-xs font-black text-gray-600">אזור</label>
-              <select id="location-filter" value={locationFilter} onChange={(event) => setLocationFilter(event.target.value)} className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300 focus:bg-white">
-                <option value="all">כל האזורים</option>
-                {locationOptions.map((location) => (
-                  <option key={location} value={location}>{location}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="balcony-filter" className="mb-1 block text-xs font-black text-gray-600">מרפסת</label>
-              <select id="balcony-filter" value={balconyFilter} onChange={(event) => setBalconyFilter(event.target.value as BalconyFilter)} className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300 focus:bg-white">
-                <option value="all">לא משנה</option>
-                <option value="with">עם מרפסת</option>
-                <option value="without">ללא מרפסת</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="sort-mode" className="mb-1 block text-xs font-black text-gray-600">מיון</label>
-              <select id="sort-mode" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)} className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300 focus:bg-white">
-                <option value="newest">הכי חדשות</option>
-                <option value="priceAsc">מחיר: נמוך לגבוה</option>
-                <option value="priceDesc">מחיר: גבוה לנמוך</option>
-                <option value="sizeDesc">גודל: מהגדול לקטן</option>
-              </select>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 px-3 py-3">
-              <p className="mb-2 inline-flex items-center gap-1 text-xs font-black text-gray-600"><SlidersHorizontal size={13} /> תוצאות</p>
-              <p className="text-2xl font-black text-gray-900">{filteredListings.length}</p>
-              <p className="text-xs font-bold text-gray-500">מודעות תואמות לסינון</p>
-            </div>
-          </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div>
-              <label htmlFor="min-price" className="mb-1 block text-xs font-black text-gray-600">מחיר מינימום</label>
-              <input id="min-price" type="number" min={0} value={minPrice} onChange={(event) => setMinPrice(event.target.value)} placeholder="₪0" className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300" />
-            </div>
-            <div>
-              <label htmlFor="max-price" className="mb-1 block text-xs font-black text-gray-600">מחיר מקסימום</label>
-              <input id="max-price" type="number" min={0} value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} placeholder="ללא הגבלה" className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300" />
-            </div>
-            <div>
-              <label htmlFor="min-size" className="mb-1 block text-xs font-black text-gray-600">גודל מינימום (מ״ר)</label>
-              <input id="min-size" type="number" min={0} value={minSize} onChange={(event) => setMinSize(event.target.value)} placeholder="לדוגמה 60" className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300" />
-            </div>
-            <div>
-              <label htmlFor="max-size" className="mb-1 block text-xs font-black text-gray-600">גודל מקסימום (מ״ר)</label>
-              <input id="max-size" type="number" min={0} value={maxSize} onChange={(event) => setMaxSize(event.target.value)} placeholder="ללא הגבלה" className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300" />
-            </div>
-          </div>
+        <div className="mb-8">
+          <button
+            type="button"
+            onClick={() => setShowSmartFilters((prev) => !prev)}
+            className="inline-flex items-center gap-2 rounded-full border border-[#d9dce5] bg-white px-5 py-3 text-sm font-black text-[#0f172a] shadow-sm transition hover:border-red-200 hover:bg-red-50"
+          >
+            <Sparkles size={15} className="text-amber-500" />
+            מסננים חכמים
+          </button>
         </div>
+
+        {showSmartFilters && (
+          <div className="mb-8 rounded-[1.5rem] border border-[#d9dce5] bg-white/90 p-4 shadow-xl shadow-slate-200/70 backdrop-blur-sm sm:rounded-[2rem] sm:p-6">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-4">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#0f172a] px-3 py-2 text-xs font-black text-white sm:text-sm">
+                <Sparkles size={15} className="text-amber-300" />
+                חיפוש חכם וסינון מתקדם
+              </div>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-100"
+              >
+                <X size={15} />
+                ניקוי פילטרים
+              </button>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <label htmlFor="location-filter" className="mb-1 block text-xs font-black text-gray-600">אזור</label>
+                <select id="location-filter" value={locationFilter} onChange={(event) => setLocationFilter(event.target.value)} className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300 focus:bg-white">
+                  <option value="all">כל האזורים</option>
+                  {locationOptions.map((location) => (
+                    <option key={location} value={location}>{location}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="balcony-filter" className="mb-1 block text-xs font-black text-gray-600">מרפסת</label>
+                <select id="balcony-filter" value={balconyFilter} onChange={(event) => setBalconyFilter(event.target.value as BalconyFilter)} className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300 focus:bg-white">
+                  <option value="all">לא משנה</option>
+                  <option value="with">עם מרפסת</option>
+                  <option value="without">ללא מרפסת</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="sort-mode" className="mb-1 block text-xs font-black text-gray-600">מיון</label>
+                <select id="sort-mode" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)} className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300 focus:bg-white">
+                  <option value="newest">הכי חדשות</option>
+                  <option value="priceAsc">מחיר: נמוך לגבוה</option>
+                  <option value="priceDesc">מחיר: גבוה לנמוך</option>
+                  <option value="sizeDesc">גודל: מהגדול לקטן</option>
+                </select>
+              </div>
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 px-3 py-3">
+                <p className="mb-2 inline-flex items-center gap-1 text-xs font-black text-gray-600"><SlidersHorizontal size={13} /> תוצאות</p>
+                <p className="text-2xl font-black text-gray-900">{filteredListings.length}</p>
+                <p className="text-xs font-bold text-gray-500">מודעות תואמות לסינון</p>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <label htmlFor="min-price" className="mb-1 block text-xs font-black text-gray-600">מחיר מינימום</label>
+                <input id="min-price" type="number" min={0} value={minPrice} onChange={(event) => setMinPrice(event.target.value)} placeholder="₪0" className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300" />
+              </div>
+              <div>
+                <label htmlFor="max-price" className="mb-1 block text-xs font-black text-gray-600">מחיר מקסימום</label>
+                <input id="max-price" type="number" min={0} value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} placeholder="ללא הגבלה" className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300" />
+              </div>
+              <div>
+                <label htmlFor="min-size" className="mb-1 block text-xs font-black text-gray-600">גודל מינימום (מ״ר)</label>
+                <input id="min-size" type="number" min={0} value={minSize} onChange={(event) => setMinSize(event.target.value)} placeholder="לדוגמה 60" className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300" />
+              </div>
+              <div>
+                <label htmlFor="max-size" className="mb-1 block text-xs font-black text-gray-600">גודל מקסימום (מ״ר)</label>
+                <input id="max-size" type="number" min={0} value={maxSize} onChange={(event) => setMaxSize(event.target.value)} placeholder="ללא הגבלה" className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-3 text-sm font-bold text-gray-800 outline-none transition focus:border-red-300" />
+              </div>
+            </div>
+          </div>
+        )}
 
         {filteredListings.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 sm:gap-8">
