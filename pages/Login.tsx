@@ -9,7 +9,7 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, user } = useApp();
+  const { login, user, authLoading } = useApp();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -18,11 +18,11 @@ export const Login: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      const success = await login(username, password);
-      if (success) {
+      const result = await login(username, password);
+      if (result.success) {
         navigate('/');
       } else {
-        setError('שם משתמש או סיסמה שגויים');
+        setError(result.error || 'שם משתמש או סיסמה שגויים');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'ההתחברות נכשלה. נסו שוב.');
@@ -89,10 +89,10 @@ export const Login: React.FC = () => {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || authLoading}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-700 to-red-800 py-3.5 font-bold text-white shadow-lg transition-all hover:from-red-800 hover:to-red-900 disabled:cursor-not-allowed disabled:opacity-80"
             >
-              {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : 'כניסה'}
+              {isSubmitting || authLoading ? <Loader2 className="animate-spin" size={20} /> : 'כניסה'}
             </button>
           </form>
         

@@ -93,6 +93,16 @@ export const AdminDashboard: React.FC = () => {
     return () => window.clearTimeout(timeout);
   }, [toastMessage]);
 
+  useEffect(() => {
+    if (!user) {
+      navigate('/login', { replace: true });
+      return;
+    }
+    if (user.role !== 'admin') {
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
+
   const flashPosts = useMemo(() => posts.filter((post) => post.category === Category.NEWS), [posts]);
 
   const showToast = (message: string) => setToastMessage(message);

@@ -10,7 +10,7 @@ export const Register: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register } = useApp();
+  const { register, authLoading } = useApp();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,6 +39,8 @@ export const Register: React.FC = () => {
         } else {
           setError(result.error || 'כתובת האימייל כבר רשומה במערכת');
         }
+    } catch (err) {
+        setError(err instanceof Error ? err.message : 'ההרשמה נכשלה. נסו שוב.');
     } finally {
         setIsSubmitting(false);
     }
@@ -112,10 +114,10 @@ export const Register: React.FC = () => {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || authLoading}
               className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-700 to-red-800 py-3.5 font-bold text-white shadow-lg transition-all hover:from-red-800 hover:to-red-900 disabled:cursor-not-allowed disabled:opacity-80"
             >
-              {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : 'הרשמה'}
+              {isSubmitting || authLoading ? <Loader2 className="animate-spin" size={20} /> : 'הרשמה'}
             </button>
           </form>
         

@@ -381,7 +381,7 @@ export const api = {
     setStorage('zfat_board_listings', listings.filter(listing => listing.id !== id));
   },
 
-  login: async (usernameOrEmail: string, pass: string): Promise<User | null> => {
+  login: async (usernameOrEmail: string, pass: string): Promise<User> => {
     if (shouldUseServer()) {
       try {
         const data = await fetchJson('/api/auth/login', {
@@ -389,11 +389,19 @@ export const api = {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: usernameOrEmail, usernameOrEmail, password: pass }),
         });
-        if (data.token) localStorage.setItem('zfat_jwt', data.token);
-        return data.user ? normalizeUser({ ...data.user, isAuthenticated: true }) : null;
+        if (!data?.token || !data?.user) {
+          throw new ApiRequestError('התקבלה תגובה לא תקינה מהשרת', 502);
+        }
+        localStorage.setItem('zfat_jwt', data.token);
+        return normalizeUser({ ...data.user, isAuthenticated: true });
       } catch (error) {
-        if (error instanceof ApiRequestError && [400, 401, 404].includes(error.status)) {
-          return null;
+        if (error instanceof ApiRequestError) {
+          if ([400, 401, 404].includes(error.status)) {
+            throw new ApiRequestError('אימייל או סיסמה שגויים', error.status);
+          }
+          if (error.status === 429) {
+            throw new ApiRequestError('יותר מדי ניסיונות התחברות. נסו שוב בעוד כמה דקות.', error.status);
+          }
         }
         throw error;
       }
@@ -403,7 +411,10 @@ export const api = {
     const users = getStorage<User[]>('zfat_users_db', INITIAL_USERS);
     const normalizedIdentifier = usernameOrEmail.trim().toLowerCase();
     const found = users.find(u => ((u.email || '').toLowerCase() === normalizedIdentifier || u.name === usernameOrEmail.trim()) && u.password === pass);
-    return found ? { ...found, isAuthenticated: true } : null;
+    if (!found) {
+      throw new ApiRequestError('שם משתמש או סיסמה שגויים', 401);
+    }
+    return { ...found, isAuthenticated: true };
   },
 
   register: async (user: User): Promise<User> => {

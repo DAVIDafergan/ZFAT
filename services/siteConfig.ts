@@ -11,19 +11,19 @@ const readEnv = (key: string) => {
 };
 
 const trimSlash = (value: string) => value.replace(/\/$/, '');
+const DEFAULT_API_URL = 'https://zfat-production.up.railway.app';
 
 export const API_URL = (() => {
   const configured = readEnv('VITE_API_URL');
   if (configured) return trimSlash(configured);
-  if (typeof window !== 'undefined') return trimSlash(window.location.origin);
-  return 'http://localhost:3001';
+  return DEFAULT_API_URL;
 })();
 
 export const SITE_URL = (() => {
   const configured = readEnv('VITE_PUBLIC_SITE_URL') || readEnv('VITE_API_URL');
   if (configured) return trimSlash(configured);
   if (typeof window !== 'undefined') return trimSlash(window.location.origin);
-  return 'http://localhost:5173';
+  return DEFAULT_API_URL;
 })();
 
 export const USE_SERVER = readEnv('VITE_USE_SERVER') !== 'false';
