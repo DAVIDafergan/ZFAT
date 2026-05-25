@@ -100,9 +100,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
             </button>
 
             <Link to="/" className="flex flex-1 items-center justify-center lg:flex-none lg:justify-start" aria-label="דף הבית">
-              <div className={`rounded-2xl px-3 py-2 transition-all ${isScrolled ? 'bg-white/10 ring-1 ring-white/15 shadow-[0_12px_30px_rgba(0,0,0,0.28)]' : 'shadow-[0_10px_24px_rgba(0,0,0,0.18)]'}`}>
-                <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-12 w-auto drop-shadow-[0_0_16px_rgba(255,255,255,0.42)] md:h-14 lg:h-16" />
-              </div>
+              <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-12 w-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.40)] transition-all md:h-14 lg:h-16" />
             </Link>
 
             <nav className="hidden flex-1 items-center justify-center lg:flex">
