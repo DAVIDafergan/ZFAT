@@ -144,6 +144,11 @@ const App: React.FC = () => {
     setPosts((prev) => [post, ...prev]);
   };
 
+  const updatePost = async (id: string, updates: Partial<Post>) => {
+    await api.updatePost(id, updates);
+    setPosts((prev) => prev.map((post) => (post.id === id ? { ...post, ...updates } : post)));
+  };
+
   const deletePost = async (id: string) => {
     await api.deletePost(id);
     setPosts((prev) => prev.filter((post) => post.id !== id));
@@ -311,6 +316,7 @@ const App: React.FC = () => {
       isLoading,
       authLoading,
       addPost,
+      updatePost,
       deletePost,
       incrementViews,
       updateAd,
