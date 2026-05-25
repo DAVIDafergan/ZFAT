@@ -1,4 +1,3 @@
-
 export enum Category {
   NEWS = 'מבזקים',
   COMMUNITY = 'קהילה וחברה',
@@ -15,13 +14,13 @@ export interface Post {
   id: string;
   title: string;
   excerpt: string;
-  content: string; // HTML content simulation
+  content: string;
   category: Category;
   author: string;
   date: string;
   imageUrl: string;
   tags: string[];
-  isFeatured: boolean; // For main slider
+  isFeatured: boolean;
   views: number;
   shortLinkCode: string;
 }
@@ -29,7 +28,7 @@ export interface Post {
 export interface AdSlide {
   id: string;
   imageUrl: string;
-  videoUrl?: string; // Added video support
+  videoUrl?: string;
   linkUrl: string;
 }
 
@@ -44,9 +43,9 @@ export interface Ad {
 export interface User {
   id: string;
   name: string;
-  email?: string; // Added email
-  password?: string; // For simulation only
-  role: 'admin' | 'editor' | 'writer' | 'user'; // Added 'user'
+  email?: string;
+  password?: string;
+  role: 'admin' | 'editor' | 'writer' | 'user';
   isAuthenticated: boolean;
   joinedDate?: string;
 }
@@ -59,14 +58,14 @@ export interface Comment {
   content: string;
   date: string;
   likes: number;
-  likedBy: string[]; // User IDs who liked this
+  likedBy: string[];
 }
 
 export interface ContactMessage {
   id: string;
   name: string;
   email: string;
-  phone?: string; // Added phone number
+  phone?: string;
   subject: string;
   message: string;
   date: string;
@@ -80,8 +79,37 @@ export interface NewsletterSubscriber {
   isActive: boolean;
 }
 
+export interface WeeklyPaper {
+  id: string;
+  title: string;
+  weekKey: string;
+  description: string;
+  pdfUrl: string;
+  coverImageUrl: string;
+  publishedAt: string;
+  isActive: boolean;
+}
+
+export type BoardListingDealType = 'rent' | 'sale';
+
+export interface BoardListing {
+  id: string;
+  title: string;
+  imageUrl: string;
+  location: string;
+  dealType: BoardListingDealType;
+  price: number;
+  sizeSqm: number;
+  details: string;
+  hasBalcony: boolean;
+  contactName: string;
+  contactPhone: string;
+  isActive: boolean;
+  createdAt?: string;
+}
+
 export interface AccessibilitySettings {
-  fontSize: number; // 0=normal, 1=large, 2=extra large
+  fontSize: number;
   highContrast: boolean;
   grayscale: boolean;
   highlightLinks: boolean;
@@ -98,4 +126,9 @@ export const CATEGORY_COLORS: Record<Category, string> = {
   [Category.WEATHER]: 'bg-cyan-600',
   [Category.INFRASTRUCTURE]: 'bg-yellow-600',
   [Category.LOCAL]: 'bg-red-700',
+};
+
+export const DEAL_TYPE_LABELS: Record<BoardListingDealType, string> = {
+  rent: 'להשכרה',
+  sale: 'למכירה',
 };

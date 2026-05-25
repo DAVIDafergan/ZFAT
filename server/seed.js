@@ -4,9 +4,13 @@ const bcrypt = require('bcryptjs');
 const User = require('./models/User');
 const Post = require('./models/Post');
 const Ad = require('./models/Ad');
+const WeeklyPaper = require('./models/WeeklyPaper');
+const BoardListing = require('./models/BoardListing');
+const { generateShortCode } = require('./utils/shortLink');
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@zfat.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@SecurePass123!';
+const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI || 'mongodb://localhost:27017/zfat-news';
 
 const samplePosts = [
   {
@@ -19,7 +23,7 @@ const samplePosts = [
     tags: ['נדלן', 'צפת', 'בנייה'],
     isFeatured: true,
     views: 1250,
-    shortLinkCode: 'zfbt001'
+    shortLinkCode: '100001'
   },
   {
     title: 'פסטיבל הכליזמר השנתי: 50,000 מבקרים צפויים בצפת החודש',
@@ -31,7 +35,7 @@ const samplePosts = [
     tags: ['פסטיבל', 'כליזמר', 'תרבות', 'צפת'],
     isFeatured: true,
     views: 2100,
-    shortLinkCode: 'zfbt002'
+    shortLinkCode: '100002'
   },
   {
     title: 'כוחות הביטחון סיכלו ניסיון פגיעה בכביש 90 — שני מחבלים נוטרלו',
@@ -43,31 +47,7 @@ const samplePosts = [
     tags: ['ביטחון', 'גליל', 'צה"ל'],
     isFeatured: false,
     views: 4500,
-    shortLinkCode: 'zfbt003'
-  },
-  {
-    title: 'הורים מודאגים: תלמידי בית ספר "הגליל" ילמדו בגן אירועים בשל בעיות מבניות',
-    excerpt: 'לאחר שהתגלו סדקים בקירות, הוחלט להעביר את תלמידי בית הספר לאולם אירועים סמוך.',
-    content: '<p>הורי תלמידי בית ספר "הגליל" בצפת הובאו לידיעה שבניית בית הספר הוכרזה כלא בטוחה לאחר שהתגלו סדקים בקירות.</p>',
-    category: 'קהילה וחברה',
-    author: 'מרים לוי',
-    imageUrl: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800',
-    tags: ['חינוך', 'צפת', 'קהילה'],
-    isFeatured: false,
-    views: 890,
-    shortLinkCode: 'zfbt004'
-  },
-  {
-    title: 'גל חום חריג צפוי בגליל: טמפרטורות של עד 42 מעלות',
-    excerpt: 'שירות המטאורולוגי מתריע על גל חום חריג שצפוי להכות באזור הגליל בימים הקרובים.',
-    content: '<p>שירות המטאורולוגי הישראלי הוציא התראת מזג אוויר חמור עם צפי לגל חום שיכה באזור הגליל בימים הקרובים.</p>',
-    category: 'מזג אוויר',
-    author: 'דב שמעון',
-    imageUrl: 'https://images.unsplash.com/photo-1504370805625-d32c54b16100?w=800',
-    tags: ['מזג אוויר', 'גל חום', 'גליל'],
-    isFeatured: false,
-    views: 3200,
-    shortLinkCode: 'zfbt005'
+    shortLinkCode: '100003'
   }
 ];
 
@@ -92,9 +72,37 @@ const sampleAds = [
   }
 ];
 
+const sampleWeeklyPapers = [
+  {
+    title: 'העיתון השבועי - מהדורת סוף השבוע',
+    weekKey: '2026-W21',
+    description: 'מהדורה מלאה עם כותרות השבוע, טורי דעה וכתבות נדל"ן.',
+    pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    coverImageUrl: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200',
+    publishedAt: new Date(),
+    isActive: true,
+  }
+];
+
+const sampleBoardListings = [
+  {
+    title: 'דירת 4 חדרים להשכרה בשכונת כנען',
+    imageUrl: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200',
+    location: 'שכונת כנען, צפת',
+    dealType: 'rent',
+    price: 4300,
+    sizeSqm: 98,
+    details: 'קומה גבוהה, נוף פתוח, חניה צמודה ומיזוג מלא.',
+    hasBalcony: true,
+    contactName: 'יועץ נדל"ן הגליל',
+    contactPhone: '0509553090',
+    isActive: true,
+  }
+];
+
 async function seed() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/zfat-news');
+    await mongoose.connect(MONGO_URI);
     console.log('✅ Connected to MongoDB');
 
     const existingAdmin = await User.findOne({ email: ADMIN_EMAIL });
@@ -108,7 +116,7 @@ async function seed() {
 
     const postCount = await Post.countDocuments();
     if (postCount === 0) {
-      await Post.insertMany(samplePosts);
+      await Post.insertMany(samplePosts.map(post => ({ ...post, shortLinkCode: post.shortLinkCode || generateShortCode() })));
       console.log(`✅ ${samplePosts.length} sample posts created`);
     } else {
       console.log(`ℹ️  Posts already exist (${postCount})`);
@@ -120,6 +128,18 @@ async function seed() {
       console.log(`✅ ${sampleAds.length} sample ads created`);
     } else {
       console.log(`ℹ️  Ads already exist (${adCount})`);
+    }
+
+    const paperCount = await WeeklyPaper.countDocuments();
+    if (paperCount === 0) {
+      await WeeklyPaper.insertMany(sampleWeeklyPapers);
+      console.log(`✅ ${sampleWeeklyPapers.length} weekly papers created`);
+    }
+
+    const listingCount = await BoardListing.countDocuments();
+    if (listingCount === 0) {
+      await BoardListing.insertMany(sampleBoardListings);
+      console.log(`✅ ${sampleBoardListings.length} board listings created`);
     }
 
     console.log('\n🎉 Seed complete!');

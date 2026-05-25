@@ -1,4 +1,4 @@
-import { Post, Category, Ad, Comment, User, ContactMessage, NewsletterSubscriber } from '../types';
+import { Post, Category, Ad, Comment, User, ContactMessage, NewsletterSubscriber, WeeklyPaper, BoardListing } from '../types';
 
 export const INITIAL_POSTS: Post[] = [
   // Weather
@@ -635,4 +635,51 @@ export const INITIAL_SUBSCRIBERS: NewsletterSubscriber[] = [
         joinedDate: '2023-10-01',
         isActive: true
     }
+];
+
+
+export const INITIAL_WEEKLY_PAPERS: WeeklyPaper[] = [
+  {
+    id: 'paper-1',
+    title: 'העיתון השבועי - מהדורת השבוע',
+    weekKey: '2026-W21',
+    description: 'מהדורת סוף השבוע עם כתבות עומק, קהילה ונדל"ן בצפת.',
+    pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    coverImageUrl: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&auto=format&fit=crop',
+    publishedAt: '2026-05-23',
+    isActive: true
+  }
+];
+
+export const INITIAL_BOARD_LISTINGS: BoardListing[] = [
+  {
+    id: 'listing-1',
+    title: 'דירת 4 חדרים מרווחת בנוף כינרת',
+    imageUrl: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200&auto=format&fit=crop',
+    location: 'שכונת נוף כינרת, צפת',
+    dealType: 'rent',
+    price: 4200,
+    sizeSqm: 96,
+    details: 'משופצת, מוארת, קרובה למוסדות חינוך וליציאה מהעיר.',
+    hasBalcony: true,
+    contactName: 'יוסי לוי',
+    contactPhone: '0509553090',
+    isActive: true,
+    createdAt: '2026-05-20'
+  },
+  {
+    id: 'listing-2',
+    title: 'פנטהאוז 5 חדרים למכירה במרכז הישן',
+    imageUrl: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200&auto=format&fit=crop',
+    location: 'העיר העתיקה, צפת',
+    dealType: 'sale',
+    price: 1780000,
+    sizeSqm: 132,
+    details: 'נוף פתוח, חניה פרטית, מחסן ומרפסת שמש רחבה.',
+    hasBalcony: true,
+    contactName: 'משרד תיווך הגליל',
+    contactPhone: '0523456789',
+    isActive: true,
+    createdAt: '2026-05-18'
+  }
 ];

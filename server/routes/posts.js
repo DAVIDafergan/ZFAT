@@ -1,19 +1,25 @@
 const express = require('express');
+const mongoose = require('mongoose');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const Post = require('../models/Post');
 const auth = require('../middleware/auth');
 const { editorOrAbove, adminOnly } = require('../middleware/adminOnly');
+const { generateShortCode, normalizeShortCode } = require('../utils/shortLink');
+const validateObjectId = require('../middleware/validateObjectId');
 
-// GET /api/posts — all posts with pagination
-router.get('/', async (req, res) => {
+const listLimiter = rateLimit({ windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי בקשות לכתבות' } });
+const mutateLimiter = rateLimit({ windowMs: 60 * 1000, limit: 40, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי פעולות ניהול כתבות' } });
+
+router.get('/', listLimiter, async (req, res) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 20;
+    const limit = parseInt(req.query.limit, 10) || 50;
     const skip = (page - 1) * limit;
 
     const [posts, total] = await Promise.all([
       Post.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
-      Post.countDocuments()
+      Post.countDocuments(),
     ]);
 
     res.json({ data: posts, page, total, pages: Math.ceil(total / limit) });
@@ -22,10 +28,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/posts/:id
-router.get('/:id', async (req, res) => {
+router.get('/:id', listLimiter, validateObjectId(), async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
+    const post = await Post.findById(objectId);
     if (!post) return res.status(404).json({ message: 'כתבה לא נמצאה' });
     res.json(post);
   } catch (err) {
@@ -33,10 +39,13 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/posts — create post (editor+)
-router.post('/', auth, editorOrAbove, async (req, res) => {
+router.post('/', mutateLimiter, auth, editorOrAbove, async (req, res) => {
   try {
-    const post = new Post(req.body);
+    const payload = {
+      ...req.body,
+      shortLinkCode: normalizeShortCode(req.body.shortLinkCode, Date.now().toString()) || generateShortCode(),
+    };
+    const post = new Post(payload);
     await post.save();
     res.status(201).json(post);
   } catch (err) {
@@ -44,21 +53,27 @@ router.post('/', auth, editorOrAbove, async (req, res) => {
   }
 });
 
-// PUT /api/posts/:id — update post (editor+)
-router.put('/:id', auth, editorOrAbove, async (req, res) => {
+router.put('/:id', mutateLimiter, auth, editorOrAbove, validateObjectId(), async (req, res) => {
   try {
-    const post = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
+    const updates = {
+      ...req.body,
+      ...(req.body.shortLinkCode ? { shortLinkCode: normalizeShortCode(req.body.shortLinkCode, req.params.id) } : {}),
+    };
+    const post = await Post.findById(objectId);
     if (!post) return res.status(404).json({ message: 'כתבה לא נמצאה' });
+    post.set(updates);
+    await post.save();
     res.json(post);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
-// DELETE /api/posts/:id — delete (admin only)
-router.delete('/:id', auth, adminOnly, async (req, res) => {
+router.delete('/:id', mutateLimiter, auth, adminOnly, validateObjectId(), async (req, res) => {
   try {
-    const post = await Post.findByIdAndDelete(req.params.id);
+    const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
+    const post = await Post.findByIdAndDelete(objectId);
     if (!post) return res.status(404).json({ message: 'כתבה לא נמצאה' });
     res.json({ message: 'כתבה נמחקה' });
   } catch (err) {
@@ -66,14 +81,10 @@ router.delete('/:id', auth, adminOnly, async (req, res) => {
   }
 });
 
-// PATCH /api/posts/:id/views — increment views (no auth)
-router.patch('/:id/views', async (req, res) => {
+router.patch('/:id/views', listLimiter, validateObjectId(), async (req, res) => {
   try {
-    const post = await Post.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { views: 1 } },
-      { new: true }
-    );
+    const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
+    const post = await Post.findByIdAndUpdate(objectId, { $inc: { views: 1 } }, { new: true });
     res.json({ views: post?.views || 0 });
   } catch (err) {
     res.status(500).json({ message: err.message });
