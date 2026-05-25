@@ -105,17 +105,43 @@ ZFAT/
 
 ## פריסה ל-Railway
 
+### Backend (Express)
+
+ב-Railway יש ליצור שירות Backend נפרד מה-frontend ולהגדיר:
+
+- **Root Directory:** `server/`
+- **Start Command:** `npm start` (הסקריפט מפעיל `node index.js`)
+- **Port:** השרת מאזין אוטומטית ל-`process.env.PORT`
+
 בפרודקשן מומלץ להגדיר:
 
 ```env
 MONGO_URL=<railway mongo url>
+JWT_SECRET=<strong secret>
 FRONTEND_URL=<frontend origin>
 PUBLIC_SITE_URL=<public site/backend origin used for share previews>
 ```
 
-אם החזית מדברת לשרת דרך כתובת שונה, אפשר להגדיר גם ב-frontend:
+ה-Backend מחזיר תגובות JSON למסלולי ה-API ולמסלולי הבדיקה:
+
+- `GET /`
+- `GET /health`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+
+ה-Backend לא אמור לפרוס או לשרת את ה-build של Vite מתוך Railway. אם צריך frontend בפרודקשן, יש לפרוס אותו כשירות נפרד.
+
+### Frontend (Vite)
+
+אם החזית מדברת לשרת דרך כתובת שונה, אפשר להגדיר ב-frontend:
 
 ```env
 VITE_API_URL=<backend url>
 VITE_PUBLIC_SITE_URL=<public url for /p/:shortCode shares>
+```
+
+את ה-frontend אפשר לפרוס בנפרד מהתיקייה הראשית של המאגר עם:
+
+```bash
+npm run build
 ```
