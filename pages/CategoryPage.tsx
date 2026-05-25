@@ -21,13 +21,13 @@ export const CategoryPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f7f5f1] pb-14">
-      <div className={`relative mb-8 overflow-hidden ${headerBgClass} py-14 text-white`}>
+      <div className={`relative mb-6 overflow-hidden ${headerBgClass} py-10 text-white sm:mb-8 sm:py-14`}>
         <div className="absolute inset-0 bg-gradient-to-l from-black/25 via-transparent to-black/20" />
         <div className="absolute left-8 top-4 h-28 w-28 rounded-full bg-white/20 blur-3xl" />
         <div className="absolute bottom-0 right-10 h-36 w-36 rounded-full bg-black/20 blur-3xl" />
         <div className="container mx-auto px-4">
-          <h1 className="news-headline mb-2 text-4xl font-black md:text-5xl">{decodedCategory}</h1>
-          <p className="text-lg font-bold text-white/90">כל הכתבות והעדכונים בנושא {decodedCategory}</p>
+          <h1 className="news-headline mb-2 text-3xl font-black sm:text-4xl md:text-5xl">{decodedCategory}</h1>
+          <p className="text-sm font-bold text-white/90 sm:text-lg">כל הכתבות והעדכונים בנושא {decodedCategory}</p>
         </div>
       </div>
 
@@ -38,7 +38,7 @@ export const CategoryPage: React.FC = () => {
 
         {categoryPosts.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 sm:gap-6">
               {firstChunk.map((post) => (
                 <PostCard key={post.id} post={post} />
               ))}
@@ -48,7 +48,7 @@ export const CategoryPage: React.FC = () => {
               <AdUnit ad={midAd} className="w-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm" />
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 sm:gap-6">
               {secondChunk.map((post) => (
                 <PostCard key={post.id} post={post} />
               ))}

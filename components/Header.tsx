@@ -29,6 +29,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
   const navigate = useNavigate();
   const isAdmin = user?.role === 'admin';
   const primaryCategories = Object.values(Category).slice(0, 4);
+  const mobileMenuCategories = Object.values(Category);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 16);
@@ -77,8 +78,8 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
 
   return (
     <>
-      <div className="h-20 sm:h-24 lg:h-28" />
-      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${isScrolled ? 'border-b border-white/20 bg-[#5b0007]/88 py-2 shadow-[0_18px_52px_rgba(0,0,0,0.46)] backdrop-blur-xl supports-[backdrop-filter]:bg-[#5b0007]/72' : 'border-b border-[#4b0006] bg-[#5b0007] py-3 shadow-[0_10px_32px_rgba(0,0,0,0.34)]'}`}>
+      <div className="h-[4.75rem] sm:h-24 lg:h-28" />
+      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${isScrolled ? 'border-b border-white/10 bg-[#5b0007]/96 py-2 shadow-[0_18px_44px_rgba(0,0,0,0.40)] backdrop-blur-md supports-[backdrop-filter]:bg-[#5b0007]/92' : 'border-b border-[#4b0006] bg-[#5b0007] py-3 shadow-[0_10px_32px_rgba(0,0,0,0.34)]'}`}>
         <div className="container mx-auto px-4">
           <div className="mb-3 hidden items-center justify-between text-xs font-bold text-white/80 lg:flex">
             <div className="flex items-center gap-3">
@@ -97,12 +98,27 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
 
           <div className="flex items-center justify-between gap-3">
             <button type="button" className="rounded-full p-2 text-white transition-all duration-300 hover:bg-white/15 hover:scale-105 lg:hidden" onClick={() => setIsMenuOpen(true)} aria-label="פתח תפריט ניווט" aria-expanded={isMenuOpen}>
-              <Menu size={28} />
+              <Menu size={24} />
             </button>
 
             <Link to="/" className="flex flex-1 items-center justify-center lg:flex-none lg:justify-start" aria-label="דף הבית">
-              <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-12 w-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.40)] transition-all md:h-14 lg:h-16" />
+              <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-10 w-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.40)] transition-all sm:h-12 md:h-14 lg:h-16" />
             </Link>
+
+            <div className="flex items-center gap-2 lg:hidden">
+              {user ? (
+                <Link
+                  to={isAdmin ? '/admin' : '/'}
+                  className="inline-flex min-w-[4.5rem] items-center justify-center rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20"
+                >
+                  {isAdmin ? 'ניהול' : user.name}
+                </Link>
+              ) : (
+                <Link to="/login" className="inline-flex min-w-[4.5rem] items-center justify-center rounded-full bg-white px-3 py-2 text-xs font-black text-[#5b0007] transition hover:bg-red-50">
+                  התחברות
+                </Link>
+              )}
+            </div>
 
             <nav className="hidden flex-1 items-center justify-center lg:flex">
               <ul className="flex items-center gap-6 text-sm font-extrabold text-white xl:text-base">
@@ -110,7 +126,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
                   <li key={cat}>
                     <Link
                       to={`/category/${cat}`}
-                      className={`inline-flex items-center rounded-full px-4 py-2 font-black text-white transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 ${CATEGORY_COLORS[cat]} shadow-md`}
+                      className="relative transition-all duration-300 hover:text-red-100 after:absolute after:-bottom-1 after:right-0 after:h-0.5 after:w-0 after:bg-white/80 after:transition-all hover:after:w-full"
                     >
                       {cat}
                     </Link>
@@ -187,26 +203,63 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
       </header>
 
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm lg:hidden" role="dialog" aria-modal="true" onClick={() => setIsMenuOpen(false)}>
-          <div className="ml-auto h-full w-[92%] max-w-sm border-l border-red-100 bg-gradient-to-b from-white via-red-50/40 to-white p-5 shadow-2xl animate-fade-in-up sm:p-6" onClick={(event) => event.stopPropagation()}>
-            <div className="mb-8 flex items-center justify-between">
+        <div className="animate-overlay-in fixed inset-0 z-[60] bg-black/60 backdrop-blur-[2px] lg:hidden" role="dialog" aria-modal="true" onClick={() => setIsMenuOpen(false)}>
+          <div className="animate-drawer-in ml-auto flex h-full w-[84%] max-w-[20rem] flex-col border-l border-red-100 bg-gradient-to-b from-white via-red-50/35 to-white p-4 shadow-2xl sm:p-5" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-5 flex items-center justify-between gap-3">
               <div className="rounded-2xl bg-[#8B0000] px-3 py-2 shadow-lg">
-                <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-12 w-auto drop-shadow-[0_0_16px_rgba(255,255,255,0.42)]" />
+                <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-10 w-auto drop-shadow-[0_0_16px_rgba(255,255,255,0.42)]" />
               </div>
               <button type="button" className="rounded-full bg-gray-100 p-2 text-gray-700" onClick={() => setIsMenuOpen(false)} aria-label="סגור תפריט">
-                <X size={22} />
+                <X size={20} />
               </button>
             </div>
-            <div className="space-y-2">
-              {[...Object.values(Category), ...quickLinks.map((item) => item.label)].map((label, index) => {
-                const to = index < Object.values(Category).length ? `/category/${Object.values(Category)[index]}` : quickLinks[index - Object.values(Category).length].to;
-                return (
-                  <Link key={label} to={to} className="block rounded-2xl px-4 py-3 text-base font-black text-gray-800 transition hover:bg-red-50 hover:text-red-700">
-                    {label}
+            <div className="flex-1 space-y-5 overflow-y-auto pb-4">
+              <div>
+                <p className="mb-2 px-1 text-[11px] font-black tracking-[0.18em] text-gray-400">קטגוריות</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {mobileMenuCategories.map((cat) => (
+                    <Link key={cat} to={`/category/${cat}`} className="flex min-h-[3rem] items-center rounded-2xl border border-transparent bg-white/80 px-3 py-2 text-sm font-bold leading-5 text-gray-800 transition hover:border-red-100 hover:bg-red-50 hover:text-red-700">
+                      {cat}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 px-1 text-[11px] font-black tracking-[0.18em] text-gray-400">ניווט מהיר</p>
+                <div className="space-y-1.5">
+                  {quickLinks.map(({ label, to }) => (
+                    <Link key={label} to={to} className="block rounded-2xl px-3 py-2.5 text-sm font-bold text-gray-800 transition hover:bg-red-50 hover:text-red-700">
+                      {label}
+                    </Link>
+                  ))}
+                  {isAdmin && <Link to="/admin" className="block rounded-2xl px-3 py-2.5 text-sm font-bold text-gray-800 transition hover:bg-red-50 hover:text-red-700">מערכת ניהול</Link>}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 border-t border-gray-100 pt-4">
+              {user ? (
+                <>
+                  {isAdmin && (
+                    <Link to="/admin" className="inline-flex items-center justify-center rounded-full bg-red-700 px-3 py-2.5 text-sm font-black text-white transition hover:bg-red-800">
+                      ניהול
+                    </Link>
+                  )}
+                  <button type="button" onClick={logout} className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-3 py-2.5 text-sm font-black text-gray-700 transition hover:border-red-200 hover:text-red-700">
+                    יציאה
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="inline-flex items-center justify-center rounded-full bg-red-700 px-3 py-2.5 text-sm font-black text-white transition hover:bg-red-800">
+                    התחברות
                   </Link>
-                );
-              })}
-              {isAdmin && <Link to="/admin" className="block rounded-2xl px-4 py-3 text-base font-black text-gray-800 transition hover:bg-red-50 hover:text-red-700">מערכת ניהול</Link>}
+                  <Link to="/register" className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-3 py-2.5 text-sm font-black text-gray-700 transition hover:border-red-200 hover:text-red-700">
+                    הרשמה
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

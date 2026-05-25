@@ -10,7 +10,7 @@ interface WeeklyPaperCardProps {
 
 export const WeeklyPaperCard: React.FC<WeeklyPaperCardProps> = ({ paper, onOpen }) => {
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+    <article className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl sm:rounded-[2rem]">
       <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
         {paper.coverImageUrl ? (
           <img src={paper.coverImageUrl} alt={paper.title} className="h-full w-full object-cover" />
@@ -19,13 +19,13 @@ export const WeeklyPaperCard: React.FC<WeeklyPaperCardProps> = ({ paper, onOpen 
             <BookOpen size={42} />
           </div>
         )}
-        <span className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-red-700 shadow-sm">
+        <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-black text-red-700 shadow-sm sm:right-4 sm:top-4 sm:px-3 sm:text-xs">
           {formatWeekLabel(paper.weekKey)}
         </span>
       </div>
-      <div className="flex flex-1 flex-col p-6">
-        <h2 className="news-headline mb-2 text-2xl font-black text-gray-900">{paper.title}</h2>
-        <p className="mb-5 text-sm font-medium leading-7 text-gray-600">{paper.description}</p>
+      <div className="flex flex-1 flex-col p-4 sm:p-6">
+        <h2 className="news-headline mb-2 text-xl font-black text-gray-900 sm:text-2xl">{paper.title}</h2>
+        <p className="mb-4 text-sm font-medium leading-6 text-gray-600 sm:mb-5 sm:leading-7">{paper.description}</p>
         <div className="mt-auto flex flex-wrap gap-3">
           <button onClick={() => onOpen(paper)} className="inline-flex items-center gap-2 rounded-full bg-red-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-red-800">
             <BookOpen size={16} /> עיון בעיתון
