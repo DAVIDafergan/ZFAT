@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
   return (
     <>
       <div className="h-20 lg:h-28" />
-      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${isScrolled ? 'border-b border-white/20 bg-[#a31319]/78 py-2 shadow-[0_14px_40px_rgba(0,0,0,0.38)] backdrop-blur-lg' : 'border-b border-white/10 bg-[#a31319]/96 py-3 shadow-xl'}`}>
+      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${isScrolled ? 'border-b border-white/20 bg-[#8B0000]/88 py-2 shadow-[0_14px_40px_rgba(0,0,0,0.40)] backdrop-blur-[12px]' : 'border-b border-[#6b0000]/40 bg-[#8B0000] py-3 shadow-[0_4px_24px_rgba(0,0,0,0.28)]'}`}>
         <div className="container mx-auto px-4">
           <div className="mb-3 hidden items-center justify-between text-xs font-bold text-white/80 lg:flex">
             <div className="flex items-center gap-3">
@@ -182,7 +182,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden" role="dialog" aria-modal="true" onClick={() => setIsMenuOpen(false)}>
           <div className="ml-auto h-full w-[88%] max-w-sm border-l border-red-100 bg-gradient-to-b from-white via-red-50/40 to-white p-6 shadow-2xl animate-fade-in" onClick={(event) => event.stopPropagation()}>
             <div className="mb-8 flex items-center justify-between">
-              <div className="rounded-2xl bg-[#a31319] px-3 py-2 shadow-lg">
+              <div className="rounded-2xl bg-[#8B0000] px-3 py-2 shadow-lg">
                 <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-12 w-auto drop-shadow-[0_0_16px_rgba(255,255,255,0.42)]" />
               </div>
               <button type="button" className="rounded-full bg-gray-100 p-2 text-gray-700" onClick={() => setIsMenuOpen(false)} aria-label="סגור תפריט">
