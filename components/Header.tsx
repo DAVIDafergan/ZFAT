@@ -123,6 +123,16 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
                     </Link>
                   </li>
                 ))}
+                <li>
+                  <Link to="/weekly-paper" className="relative transition-all duration-300 hover:text-red-100 after:absolute after:-bottom-1 after:right-0 after:h-0.5 after:w-0 after:bg-white/80 after:transition-all hover:after:w-full">
+                    העיתון השבועי
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/board" className="relative transition-all duration-300 hover:text-red-100 after:absolute after:-bottom-1 after:right-0 after:h-0.5 after:w-0 after:bg-white/80 after:transition-all hover:after:w-full">
+                    לוח בתנופה
+                  </Link>
+                </li>
                 <li className="group relative">
                   <button type="button" className="inline-flex items-center gap-1 transition hover:text-red-100" aria-haspopup="true">
                     עוד <ChevronDown size={15} />
@@ -222,6 +232,18 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
                       {cat}
                     </Link>
                   ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 px-1 text-[11px] font-black tracking-[0.18em] text-gray-400">תוכן מרכזי</p>
+                <div className="space-y-1.5">
+                  <Link to="/weekly-paper" className="block rounded-2xl bg-white/80 px-3 py-2.5 text-sm font-bold text-gray-800 transition hover:bg-red-50 hover:text-red-700">
+                    העיתון השבועי
+                  </Link>
+                  <Link to="/board" className="block rounded-2xl bg-white/80 px-3 py-2.5 text-sm font-bold text-gray-800 transition hover:bg-red-50 hover:text-red-700">
+                    לוח בתנופה
+                  </Link>
                 </div>
               </div>
 

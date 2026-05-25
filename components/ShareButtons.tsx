@@ -74,7 +74,6 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({ title, description =
           {copied ? 'הועתק' : 'העתק קישור'}
         </button>
       </div>
-      {canUseNativeShare && <p className="mt-3 text-xs font-bold text-white/50">בטלפון ניתן לשתף גם דרך כפתור "שתפו מהטלפון".</p>}
     </div>
   );
 };

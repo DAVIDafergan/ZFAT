@@ -41,13 +41,13 @@ export const Home: React.FC = () => {
       </div>
 
       <div className="container mx-auto px-4">
-        <div className="mb-8 grid gap-5 lg:grid-cols-[1.3fr_0.7fr] sm:mb-10 sm:gap-6">
-          <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0b0f19] shadow-[0_22px_60px_rgba(2,6,23,0.35)] sm:rounded-[2rem]">
-            <div className="border-b border-white/10 px-4 py-4 sm:px-6 sm:py-5">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1 text-xs font-black text-white/85">
+        <div className="mb-8 grid gap-6 lg:grid-cols-[1.3fr_0.7fr] sm:mb-10 sm:gap-6">
+          <div className="-mx-4 overflow-hidden bg-[#0b0f19] sm:mx-0 sm:rounded-[2rem] sm:border sm:border-white/10 sm:shadow-[0_22px_60px_rgba(2,6,23,0.35)]">
+            <div className="border-b border-white/10 px-4 py-5 sm:px-6 sm:py-5">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1 text-xs font-black text-white/85 sm:mb-3">
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> מהדורה ראשית
               </div>
-              <h2 className="news-headline text-2xl font-black text-white sm:text-3xl">חדשות אחרונות מצפת והגליל</h2>
+              <h2 className="news-headline text-2xl font-black leading-snug text-white sm:text-3xl">חדשות אחרונות מצפת והגליל</h2>
             </div>
             <div className="space-y-3 p-4 sm:space-y-4 sm:p-6">
               {(newsPosts.length > 0 ? newsPosts : latestPosts).map((post, index) => (
@@ -75,7 +75,7 @@ export const Home: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 px-0.5 sm:space-y-6 sm:px-0">
             {leadPaper && (
               <Link to="/weekly-paper" className="block overflow-hidden rounded-[1.5rem] bg-[#111827] p-4 text-white shadow-xl transition hover:-translate-y-1 sm:rounded-[2rem] sm:p-6">
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-black text-white/80">
