@@ -62,13 +62,18 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
     ).slice(0, 5);
   }, [searchQuery, posts]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const query = searchQuery.trim();
+  const submitSearch = (queryValue: string) => {
+    const query = queryValue.trim();
     if (!query) return;
     onSearch(query);
     navigate(`/search?q=${encodeURIComponent(query)}`);
     setIsSearchFocused(false);
+    setIsMenuOpen(false);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submitSearch(searchQuery);
   };
 
   const handleSuggestionClick = (postId: string) => {
@@ -79,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
   return (
     <>
       <div className="h-[4.75rem] sm:h-24 lg:h-28" />
-      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${isScrolled ? 'border-b border-white/10 bg-[#5b0007]/96 py-2 shadow-[0_18px_44px_rgba(0,0,0,0.40)] backdrop-blur-md supports-[backdrop-filter]:bg-[#5b0007]/92' : 'border-b border-[#4b0006] bg-[#5b0007] py-3 shadow-[0_10px_32px_rgba(0,0,0,0.34)]'}`}>
+      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${isScrolled ? 'border-b border-white/10 bg-[#77000c]/96 py-2 shadow-[0_18px_44px_rgba(0,0,0,0.40)] backdrop-blur-xl supports-[backdrop-filter]:bg-[#77000c]/93' : 'border-b border-white/12 bg-[#6d000b]/84 py-3 shadow-[0_10px_32px_rgba(0,0,0,0.28)] backdrop-blur-lg supports-[backdrop-filter]:bg-[#6d000b]/80'}`}>
         <div className="container mx-auto px-4">
           <div className="mb-3 hidden items-center justify-between text-xs font-bold text-white/80 lg:flex">
             <div className="flex items-center gap-3">
@@ -150,14 +155,14 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
 
             <div className="hidden items-center gap-3 lg:flex">
               <div ref={searchRef} className="relative">
-                <form onSubmit={handleSearchSubmit} className={`flex h-11 items-center overflow-hidden rounded-full border transition-all duration-500 ${isSearchFocused || searchQuery ? 'w-[300px] border-white/40 bg-white shadow-xl' : 'w-11 border-white/20 bg-white/10 hover:bg-white/15'}`}>
-                  <button type={isSearchFocused || searchQuery ? 'submit' : 'button'} onClick={() => { setIsSearchFocused(true); setTimeout(() => searchInputRef.current?.focus(), 0); }} className={`flex h-11 w-11 items-center justify-center ${isSearchFocused || searchQuery ? 'text-red-700' : 'text-white'}`} aria-label="חפש באתר">
+                <form onSubmit={handleSearchSubmit} className={`flex h-12 items-center overflow-hidden rounded-full border px-1.5 transition-all duration-300 ${isSearchFocused ? 'w-[21rem] border-white/60 bg-white shadow-2xl' : 'w-[19rem] border-white/25 bg-white/14 shadow-[0_8px_24px_rgba(0,0,0,0.16)] hover:bg-white/18'}`}>
+                  <button type="submit" onClick={() => { setIsSearchFocused(true); setTimeout(() => searchInputRef.current?.focus(), 0); }} className={`flex h-9 min-w-9 items-center justify-center rounded-full transition ${isSearchFocused ? 'bg-red-700 text-white shadow-md' : 'text-white'}`} aria-label="חפש באתר">
                     <Search size={19} />
                   </button>
-                  <input ref={searchInputRef} value={searchQuery} onFocus={() => setIsSearchFocused(true)} onChange={(event) => setSearchQuery(event.target.value)} placeholder="חיפוש כתבות, נושאים ותגיות" className={`w-full bg-transparent pl-4 pr-1 text-sm font-bold outline-none ${isSearchFocused || searchQuery ? 'text-gray-800 opacity-100' : 'opacity-0'}`} aria-label="חיפוש" />
+                  <input ref={searchInputRef} value={searchQuery} onFocus={() => setIsSearchFocused(true)} onChange={(event) => setSearchQuery(event.target.value)} placeholder="חפשו כתבות, נושאים ותגיות" className={`w-full bg-transparent px-3 text-sm font-bold outline-none transition ${isSearchFocused ? 'text-gray-800 placeholder:text-gray-400' : 'text-white placeholder:text-white/70'}`} aria-label="חיפוש" />
                 </form>
                 {isSearchFocused && suggestions.length > 0 && (
-                  <div className="absolute right-0 top-full mt-3 w-96 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-2xl">
+                  <div className="absolute right-0 top-full mt-3 w-96 max-w-[calc(100vw-2rem)] overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-2xl">
                     {suggestions.map((post) => (
                       <button key={post.id} onClick={() => handleSuggestionClick(post.id)} className="flex w-full items-center gap-4 border-b border-gray-50 px-4 py-3 text-right transition hover:bg-red-50 last:border-b-0">
                         <img src={post.imageUrl} alt="" className="h-12 w-12 rounded-xl object-cover" />
@@ -213,6 +218,18 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
                 <X size={20} />
               </button>
             </div>
+            <form onSubmit={handleSearchSubmit} className="mb-5 flex items-center gap-2 rounded-[1.25rem] border border-gray-200 bg-white px-2 py-2 shadow-sm">
+              <button type="submit" className="flex h-10 w-10 items-center justify-center rounded-full bg-red-700 text-white" aria-label="חפש באתר">
+                <Search size={18} />
+              </button>
+              <input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="חפשו כתבות ותגיות"
+                className="w-full bg-transparent px-2 text-sm font-bold text-gray-800 outline-none placeholder:text-gray-400"
+                aria-label="חיפוש"
+              />
+            </form>
             <div className="flex-1 space-y-5 overflow-y-auto pb-4">
               <div>
                 <p className="mb-2 px-1 text-[11px] font-black tracking-[0.18em] text-gray-400">קטגוריות</p>
