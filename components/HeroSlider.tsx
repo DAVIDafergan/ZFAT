@@ -31,12 +31,6 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ posts }) => {
         <div className={`absolute inset-0 bg-gradient-to-l ${categoryTint}/40 via-transparent to-black/20`} />
       </div>
 
-      {/* LIVE badge */}
-      <div className="absolute right-4 top-4 flex items-center gap-2 rounded-full bg-red-700/90 px-3 py-1.5 shadow-lg backdrop-blur-sm">
-        <span className="animate-live-dot h-2 w-2 rounded-full bg-white" />
-        <span className="text-[11px] font-black tracking-widest text-white">LIVE</span>
-      </div>
-
       <div className="absolute inset-0 flex items-end">
         <div className="container mx-auto w-full px-4 pb-5 sm:pb-8 md:pb-14">
           <div key={currentIndex} className="animate-headline-in max-w-3xl rounded-[1.5rem] border border-white/20 bg-black/45 p-4 text-white shadow-2xl backdrop-blur-[3px] sm:rounded-[2rem] sm:p-6 md:p-10">

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User as UserIcon, LogOut, ChevronDown, Newspaper, Building2 } from 'lucide-react';
+import { Menu, X, Search, User as UserIcon, LogOut, ChevronDown } from 'lucide-react';
 import { Category, User, Post, CATEGORY_COLORS } from '../types';
 import { useApp } from '../context/AppContext';
 import { LOGO_URL } from '../services/siteConfig';
@@ -9,12 +9,6 @@ interface HeaderProps {
   onSearch: (query: string) => void;
   user: User | null;
 }
-
-const quickLinks = [
-  { label: 'העיתון השבועי', to: '/weekly-paper', icon: Newspaper },
-  { label: 'לוח בתנופה', to: '/board', icon: Building2 },
-  { label: 'צור קשר', to: '/contact' },
-];
 
 export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -83,21 +77,13 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
 
   return (
     <>
-      <div className="h-[calc(4.75rem+env(safe-area-inset-top))] sm:h-24 lg:h-28" />
+      <div className="h-[calc(4.15rem+env(safe-area-inset-top))] sm:h-24 lg:h-28" />
       <header className={`fixed inset-x-0 top-0 z-50 pt-[env(safe-area-inset-top)] transition-all duration-500 ${isScrolled ? 'border-b border-white/15 bg-[#8b0000]/98 py-2 shadow-[0_12px_28px_rgba(0,0,0,0.22)] backdrop-blur-[3px] supports-[backdrop-filter]:bg-[#8b0000]/95' : 'border-b border-white/20 bg-[#8b0000] py-3 shadow-none backdrop-blur-0'}`}>
         <div className="container mx-auto px-4">
           <div className="mb-3 hidden items-center justify-between text-xs font-bold text-white/80 lg:flex">
             <div className="flex items-center gap-3">
               <span className="rounded-full bg-white/10 px-3 py-1">מהדורה דיגיטלית</span>
               <span>חדשות, קהילה, נדל"ן והעיתון השבועי</span>
-            </div>
-            <div className="flex items-center gap-4">
-              {quickLinks.map(({ label, to, icon: Icon }) => (
-                <Link key={label} to={to} className="inline-flex items-center gap-1.5 hover:text-white">
-                  {Icon ? <Icon size={14} /> : null}
-                  {label}
-                </Link>
-              ))}
             </div>
           </div>
 
@@ -136,9 +122,6 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
                       {cat}
                     </Link>
                   </li>
-                ))}
-                {quickLinks.map(({ label, to }) => (
-                  <li key={label}><Link to={to} className="relative transition-all duration-300 hover:text-red-100 after:absolute after:-bottom-1 after:right-0 after:h-0.5 after:w-0 after:bg-white/80 after:transition-all hover:after:w-full">{label}</Link></li>
                 ))}
                 <li className="group relative">
                   <button type="button" className="inline-flex items-center gap-1 transition hover:text-red-100" aria-haspopup="true">
@@ -242,17 +225,14 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
                 </div>
               </div>
 
-              <div>
-                <p className="mb-2 px-1 text-[11px] font-black tracking-[0.18em] text-gray-400">ניווט מהיר</p>
-                <div className="space-y-1.5">
-                  {quickLinks.map(({ label, to }) => (
-                    <Link key={label} to={to} className="block rounded-2xl px-3 py-2.5 text-sm font-bold text-gray-800 transition hover:bg-red-50 hover:text-red-700">
-                      {label}
-                    </Link>
-                  ))}
-                  {isAdmin && <Link to="/admin" className="block rounded-2xl px-3 py-2.5 text-sm font-bold text-gray-800 transition hover:bg-red-50 hover:text-red-700">מערכת ניהול</Link>}
+              {isAdmin && (
+                <div>
+                  <p className="mb-2 px-1 text-[11px] font-black tracking-[0.18em] text-gray-400">ניווט מהיר</p>
+                  <div className="space-y-1.5">
+                    <Link to="/admin" className="block rounded-2xl px-3 py-2.5 text-sm font-bold text-gray-800 transition hover:bg-red-50 hover:text-red-700">מערכת ניהול</Link>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-t border-gray-100 pt-4">
