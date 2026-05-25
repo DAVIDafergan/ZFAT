@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
   return (
     <>
       <div className="h-20 lg:h-28" />
-      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${isScrolled ? 'border-b border-white/10 bg-[#8f1217]/92 py-2 shadow-2xl backdrop-blur-md' : 'bg-[#a31319] py-3 shadow-xl'}`}>
+      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${isScrolled ? 'border-b border-white/10 bg-[#7f1217]/92 py-2 shadow-[0_14px_40px_rgba(0,0,0,0.38)] backdrop-blur-md' : 'bg-[#a31319]/96 py-3 shadow-xl'}`}>
         <div className="container mx-auto px-4">
           <div className="mb-3 hidden items-center justify-between text-xs font-bold text-white/80 lg:flex">
             <div className="flex items-center gap-3">
@@ -99,13 +99,9 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
               <Menu size={28} />
             </button>
 
-            <Link to="/" className="flex flex-1 items-center justify-center lg:flex-none lg:justify-start">
-              <div className="flex items-center gap-3">
-                <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-12 w-auto md:h-14 lg:h-16" />
-                <div className="hidden leading-none text-white md:block">
-                  <p className="news-headline text-3xl font-black tracking-tight">צפת בתנופה</p>
-                  <p className="text-xs font-bold tracking-[0.35em] text-white/75">THE LOCAL PAPER</p>
-                </div>
+            <Link to="/" className="flex flex-1 items-center justify-center lg:flex-none lg:justify-start" aria-label="דף הבית">
+              <div className={`rounded-2xl px-3 py-2 transition-all ${isScrolled ? 'bg-white/10 ring-1 ring-white/15 shadow-[0_12px_30px_rgba(0,0,0,0.28)]' : 'shadow-[0_10px_24px_rgba(0,0,0,0.18)]'}`}>
+                <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-12 w-auto drop-shadow-[0_0_16px_rgba(255,255,255,0.42)] md:h-14 lg:h-16" />
               </div>
             </Link>
 
@@ -188,7 +184,9 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden" role="dialog" aria-modal="true">
           <div className="mr-auto h-full w-[88%] max-w-sm bg-white p-6 shadow-2xl">
             <div className="mb-8 flex items-center justify-between">
-              <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-12 w-auto" />
+              <div className="rounded-2xl bg-[#a31319] px-3 py-2 shadow-lg">
+                <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-12 w-auto drop-shadow-[0_0_16px_rgba(255,255,255,0.42)]" />
+              </div>
               <button type="button" className="rounded-full bg-gray-100 p-2 text-gray-700" onClick={() => setIsMenuOpen(false)} aria-label="סגור תפריט">
                 <X size={22} />
               </button>

@@ -76,6 +76,14 @@ const App: React.FC = () => {
   const [footerEmail, setFooterEmail] = useState('');
   const [footerNewsletterStatus, setFooterNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
+  const mergeRegisteredUser = (incomingUser: User) => {
+    setRegisteredUsers((prev) => {
+      const normalizedEmail = (incomingUser.email || '').toLowerCase();
+      const nextUsers = prev.filter((currentUser) => currentUser.id !== incomingUser.id && (currentUser.email || '').toLowerCase() !== normalizedEmail);
+      return [...nextUsers, incomingUser];
+    });
+  };
+
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
@@ -92,6 +100,9 @@ const App: React.FC = () => {
         const authenticatedUser = await api.verifyToken();
         if (authenticatedUser) {
           setUser(authenticatedUser);
+          if (authenticatedUser.role === 'admin') {
+            setRegisteredUsers(await api.fetchUsers());
+          }
         } else {
           const savedUser = localStorage.getItem('zfat_user');
           if (savedUser) setUser(JSON.parse(savedUser));
@@ -175,15 +186,23 @@ const App: React.FC = () => {
     const authenticatedUser = await api.login(usernameOrEmail, password);
     if (!authenticatedUser) return false;
     setUser(authenticatedUser);
+    if (authenticatedUser.role === 'admin') {
+      setRegisteredUsers(await api.fetchUsers());
+    } else {
+      mergeRegisteredUser(authenticatedUser);
+    }
     return true;
   };
 
-  const register = async (newUser: User): Promise<boolean> => {
-    const success = await api.register(newUser);
-    if (!success) return false;
-    setRegisteredUsers((prev) => [...prev, newUser]);
-    setUser({ ...newUser, isAuthenticated: true });
-    return true;
+  const register = async (newUser: User): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const createdUser = await api.register(newUser);
+      mergeRegisteredUser(createdUser);
+      setUser(createdUser);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'ההרשמה נכשלה. נסו שוב.' };
+    }
   };
 
   const logout = () => {

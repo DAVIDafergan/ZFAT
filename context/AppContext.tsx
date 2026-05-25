@@ -37,7 +37,7 @@ export interface AppState {
 
   login: (usernameOrEmail: string, password: string) => Promise<boolean>;
   logout: () => void;
-  register: (user: User) => Promise<boolean>;
+  register: (user: User) => Promise<{ success: boolean; error?: string }>;
 
   addComment: (comment: Comment) => Promise<void>;
   toggleLikeComment: (commentId: string) => Promise<void>;

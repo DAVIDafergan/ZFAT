@@ -1,6 +1,6 @@
 export const SITE_NAME = 'צפת בתנופה';
 export const SITE_TAGLINE = 'חדשות צפת, קהילה, נדל"ן והעיתון השבועי';
-export const LOGO_URL = 'https://github.com/user-attachments/assets/a1878587-9bc6-475e-8ccc-85c15ac3f713';
+export const LOGO_URL = 'https://github.com/user-attachments/assets/8ea523f7-40f8-4cdc-9144-abff2da50d6a';
 
 const readEnv = (key: string) => {
   try {

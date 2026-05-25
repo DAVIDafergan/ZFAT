@@ -24,20 +24,20 @@ export const Register: React.FC = () => {
     
     setIsSubmitting(true);
     try {
-        const success = await register({
+        const result = await register({
           id: Date.now().toString(),
-          name,
-          email,
+          name: name.trim(),
+          email: email.trim(),
           password,
           role: 'user',
           isAuthenticated: true,
           joinedDate: new Date().toISOString().split('T')[0]
         });
 
-        if (success) {
+        if (result.success) {
           navigate('/');
         } else {
-          setError('כתובת האימייל כבר רשומה במערכת');
+          setError(result.error || 'כתובת האימייל כבר רשומה במערכת');
         }
     } finally {
         setIsSubmitting(false);
