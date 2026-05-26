@@ -6,11 +6,15 @@ const postSchema = new mongoose.Schema({
   content: { type: String, default: '' },
   category: {
     type: String,
-    enum: ['מבזקים', 'קהילה וחברה', 'פוליטיקה', 'ביטחון', 'תרבות ואומנות', 'משפט ופלילים', 'מזג אוויר', 'תשתיות ותנועה', 'צפת והגליל'],
+    enum: ['מבזקים', 'קהילה וחברה', 'כלכלה', 'פוליטיקה', 'ביטחון', 'תרבות ואומנות', 'משפט ופלילים', 'מזג אוויר', 'תשתיות ותנועה', 'צפת והגליל'],
     default: 'מבזקים'
   },
   author: { type: String, default: 'מערכת' },
   imageUrl: { type: String, default: '' },
+  images: [{
+    url: { type: String, default: '' },
+    photographer: { type: String, default: '' },
+  }],
   tags: [{ type: String }],
   isFeatured: { type: Boolean, default: false },
   views: { type: Number, default: 0 },

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Category, Post, Ad, AdSlide, AdArea, WeeklyPaper, BoardListing, BoardListingDealType, DEAL_TYPE_LABELS } from '../types';
+import { Category, Post, PostImage, Ad, AdSlide, AdArea, WeeklyPaper, BoardListing, BoardListingDealType, DEAL_TYPE_LABELS } from '../types';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -94,6 +94,8 @@ export const AdminDashboard: React.FC = () => {
     isFeatured: false,
   });
   const [tagsInput, setTagsInput] = useState('');
+  const [mainImagePhotographer, setMainImagePhotographer] = useState('');
+  const [additionalPostImages, setAdditionalPostImages] = useState<PostImage[]>([]);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [postsPage, setPostsPage] = useState(1);
   const [editingAdId, setEditingAdId] = useState<string | null>(null);
@@ -122,6 +124,8 @@ export const AdminDashboard: React.FC = () => {
   }, [user, navigate]);
 
   const showToast = (message: string) => setToastMessage(message);
+  const isDataUrl = (value: string) => value.trim().startsWith('data:');
+  const displayUploadValue = (value: string) => (isDataUrl(value) ? '' : value);
   const totalPostsPages = Math.max(1, Math.ceil(posts.length / POSTS_PAGE_SIZE));
   const paginatedPosts = useMemo(() => {
     const start = (postsPage - 1) * POSTS_PAGE_SIZE;
@@ -153,6 +157,14 @@ export const AdminDashboard: React.FC = () => {
     e.preventDefault();
     if (!newPost.title || !newPost.content) return;
 
+    const primaryImageUrl = (newPost.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200').trim();
+    const normalizedAdditionalImages = additionalPostImages
+      .map((image) => ({ url: image.url?.trim() || '', photographer: image.photographer?.trim() || '' }))
+      .filter((image) => Boolean(image.url));
+    const nextImages: PostImage[] = [
+      { url: primaryImageUrl, photographer: mainImagePhotographer.trim() },
+      ...normalizedAdditionalImages,
+    ];
     const nextTags = tagsInput.split(',').map((tag) => tag.trim()).filter(Boolean);
     if (editingPostId) {
       const current = posts.find((post) => post.id === editingPostId);
@@ -164,7 +176,8 @@ export const AdminDashboard: React.FC = () => {
         category: newPost.category as Category,
         author: current.author || user?.name || 'Admin',
         date: current.date || new Date().toLocaleDateString('he-IL'),
-        imageUrl: newPost.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200',
+        imageUrl: primaryImageUrl,
+        images: nextImages,
         tags: nextTags,
         isFeatured: Boolean(newPost.isFeatured),
         shortLinkCode: current.shortLinkCode || normalizeShareCode('', current.id),
@@ -179,7 +192,8 @@ export const AdminDashboard: React.FC = () => {
         category: newPost.category as Category,
         author: user?.name || 'Admin',
         date: new Date().toLocaleDateString('he-IL'),
-        imageUrl: newPost.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200',
+        imageUrl: primaryImageUrl,
+        images: nextImages,
         tags: nextTags,
         isFeatured: Boolean(newPost.isFeatured),
         views: 0,
@@ -191,6 +205,8 @@ export const AdminDashboard: React.FC = () => {
 
     setNewPost({ title: '', category: Category.NEWS, excerpt: '', content: '', imageUrl: '', tags: [], isFeatured: false });
     setTagsInput('');
+    setMainImagePhotographer('');
+    setAdditionalPostImages([]);
     setEditingPostId(null);
   };
 
@@ -204,6 +220,12 @@ export const AdminDashboard: React.FC = () => {
       tags: post.tags,
       isFeatured: post.isFeatured,
     });
+    const existingImages = Array.isArray(post.images) ? post.images.filter((image) => image.url) : [];
+    const fallbackMain = post.imageUrl ? [{ url: post.imageUrl, photographer: '' }] : [];
+    const normalizedImages = existingImages.length > 0 ? existingImages : fallbackMain;
+    const firstImage = normalizedImages[0];
+    setMainImagePhotographer(firstImage?.photographer || '');
+    setAdditionalPostImages(normalizedImages.slice(1));
     setTagsInput(post.tags.join(', '));
     setEditingPostId(post.id);
     setActiveTab('posts');
@@ -213,6 +235,8 @@ export const AdminDashboard: React.FC = () => {
   const resetPostForm = () => {
     setNewPost({ title: '', category: Category.NEWS, excerpt: '', content: '', imageUrl: '', tags: [], isFeatured: false });
     setTagsInput('');
+    setMainImagePhotographer('');
+    setAdditionalPostImages([]);
     setEditingPostId(null);
   };
 
@@ -258,8 +282,20 @@ export const AdminDashboard: React.FC = () => {
     showToast('הקמפיין הוסר בהצלחה');
   };
 
+  const addAdditionalPostImage = () => {
+    setAdditionalPostImages((prev) => [...prev, { url: '', photographer: '' }]);
+  };
+
+  const updateAdditionalPostImage = (index: number, updates: Partial<PostImage>) => {
+    setAdditionalPostImages((prev) => prev.map((image, imageIndex) => (imageIndex === index ? { ...image, ...updates } : image)));
+  };
+
+  const removeAdditionalPostImage = (index: number) => {
+    setAdditionalPostImages((prev) => prev.filter((_, imageIndex) => imageIndex !== index));
+  };
+
   const addSlide = () => {
-    setEditingSlides((prev) => [...prev, { id: Date.now().toString(), imageUrl: 'https://via.placeholder.com/800x200', linkUrl: '#' }]);
+    setEditingSlides((prev) => [...prev, { id: Date.now().toString(), imageUrl: 'https://via.placeholder.com/800x200', linkUrl: '' }]);
   };
 
   const removeSlide = (index: number) => {
@@ -289,7 +325,6 @@ export const AdminDashboard: React.FC = () => {
 
   const handleWeeklyPaperSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!paperForm.title || !paperForm.weekKey || !paperForm.pdfUrl) return;
     const paper: WeeklyPaper = {
       id: Date.now().toString(),
       title: paperForm.title,
@@ -307,10 +342,9 @@ export const AdminDashboard: React.FC = () => {
 
   const handleBoardListingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!boardForm.title || !boardForm.location || !boardForm.contactPhone) return;
     const listing: BoardListing = {
       id: Date.now().toString(),
-      title: boardForm.title,
+      title: boardForm.title || 'מודעה ללא כותרת',
       imageUrl: boardForm.imageUrl || 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200',
       location: boardForm.location,
       dealType: boardForm.dealType,
@@ -330,7 +364,7 @@ export const AdminDashboard: React.FC = () => {
 
   const handleCreateAdSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newAdForm.title.trim() || !newAdForm.linkUrl.trim()) return;
+    if (!newAdForm.title.trim()) return;
     if (!newAdForm.imageUrl.trim() && !newAdForm.videoUrl.trim()) return;
 
     const newAd: Ad = {
@@ -342,7 +376,7 @@ export const AdminDashboard: React.FC = () => {
         id: `slide-${Date.now()}`,
         imageUrl: newAdForm.imageUrl.trim(),
         videoUrl: newAdForm.videoUrl.trim() || '',
-        linkUrl: newAdForm.linkUrl.trim(),
+        linkUrl: newAdForm.linkUrl.trim() || '',
       }],
     };
 
@@ -448,12 +482,58 @@ export const AdminDashboard: React.FC = () => {
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (url) => setNewPost({ ...newPost, imageUrl: url }))} />
                     </label>
                     {newPost.imageUrl && <div className="mt-2 h-32 overflow-hidden rounded border border-gray-200 bg-gray-50"><img src={newPost.imageUrl} alt="preview" className="h-full w-full object-contain" /></div>}
+                    <input
+                      type="text"
+                      value={mainImagePhotographer}
+                      onChange={(e) => setMainImagePhotographer(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
+                      placeholder="שם הצלם לתמונה הראשית (אופציונלי)"
+                    />
                   </div>
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-bold text-gray-700">תגיות (מופרדות בפסיק)</label>
                   <input type="text" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="צפת, שלג, עירייה..." />
                 </div>
+              </div>
+
+              <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <label className="block text-sm font-bold text-gray-700">תמונות נוספות לכתבה + קרדיט צילום</label>
+                  <button type="button" onClick={addAdditionalPostImage} className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-black text-gray-700 transition hover:border-red-200 hover:text-red-700">
+                    <Plus size={14} /> הוסף תמונה
+                  </button>
+                </div>
+                {additionalPostImages.length === 0 && (
+                  <p className="text-xs font-bold text-gray-500">אין כרגע תמונות נוספות.</p>
+                )}
+                {additionalPostImages.map((image, index) => (
+                  <div key={`${index}-${image.url}`} className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-3 md:grid-cols-[1fr_1fr_auto]">
+                    <div>
+                      <input
+                        type="text"
+                        value={image.url}
+                        onChange={(e) => updateAdditionalPostImage(index, { url: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-red-500"
+                        placeholder="קישור או העלאת תמונה"
+                      />
+                      <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-2 text-xs font-black text-gray-700 transition hover:bg-gray-200">
+                        <Upload size={14} /> העלה תמונה
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (url) => updateAdditionalPostImage(index, { url }))} />
+                      </label>
+                    </div>
+                    <input
+                      type="text"
+                      value={image.photographer || ''}
+                      onChange={(e) => updateAdditionalPostImage(index, { photographer: e.target.value })}
+                      className="h-fit w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-red-500"
+                      placeholder="שם הצלם"
+                    />
+                    <button type="button" onClick={() => removeAdditionalPostImage(index)} className="self-start rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-black text-red-700 transition hover:bg-red-100">
+                      הסר
+                    </button>
+                  </div>
+                ))}
               </div>
 
               <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-4">
@@ -565,7 +645,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-bold text-gray-700">קישור בלחיצה</label>
-                  <input type="url" value={newAdForm.linkUrl} onChange={(e) => setNewAdForm({ ...newAdForm, linkUrl: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="https://example.com" required />
+                  <input type="url" value={newAdForm.linkUrl} onChange={(e) => setNewAdForm({ ...newAdForm, linkUrl: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="https://example.com (אופציונלי)" />
                 </div>
                 <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-4">
                   <input type="checkbox" id="new-ad-active" checked={newAdForm.isActive} onChange={(e) => setNewAdForm({ ...newAdForm, isActive: e.target.checked })} className="h-5 w-5 rounded text-red-600 focus:ring-red-500" />
@@ -574,12 +654,13 @@ export const AdminDashboard: React.FC = () => {
                 <div>
                   <label className="mb-2 block text-sm font-bold text-gray-700">תמונה (חובה לתצוגה מיטבית)</label>
                   <div className="flex gap-2">
-                    <input type="text" value={newAdForm.imageUrl} onChange={(e) => setNewAdForm({ ...newAdForm, imageUrl: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="קישור תמונה" />
+                    <input type="text" value={displayUploadValue(newAdForm.imageUrl)} onChange={(e) => setNewAdForm({ ...newAdForm, imageUrl: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="קישור תמונה" />
                     <label className="flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-600 transition hover:bg-gray-50" title="העלה תמונה">
                       <Upload size={16} />
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (url) => setNewAdForm({ ...newAdForm, imageUrl: url }))} />
                     </label>
                   </div>
+                  {isDataUrl(newAdForm.imageUrl) && <p className="mt-1 text-xs font-bold text-emerald-700">התמונה הועלתה מהמחשב ונשמרת כפי שהיא.</p>}
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-bold text-gray-700">וידאו (אופציונלי)</label>
@@ -613,7 +694,7 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                     <p className="mb-3 text-xs font-black text-red-700">מידה מומלצת: {AD_PLACEMENT_MAP[ad.area]?.recommendedSize || '1200x250'}px</p>
                     <div className="relative mb-4 aspect-video overflow-hidden rounded-lg bg-gray-200">
-                      {ad.slides.length > 0 && <img src={ad.slides[0].imageUrl} alt="preview" className="h-full w-full object-cover opacity-70" />}
+                      {ad.slides.length > 0 && <img src={ad.slides[0].imageUrl} alt="preview" className="h-full w-full bg-black object-contain opacity-70" />}
                       <div className="absolute inset-0 flex items-center justify-center bg-black/30 font-black text-white">{ad.slides.length} שקופיות</div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -666,7 +747,7 @@ export const AdminDashboard: React.FC = () => {
                     <div key={slide.id} draggable onDragStart={(e) => handleDragStart(e, index)} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, index)} className={`flex flex-col gap-4 rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all sm:flex-row sm:items-start sm:gap-6 sm:p-6 ${draggedSlideIndex === index ? 'ring-2 ring-red-300 opacity-50' : 'hover:border-red-200'}`}>
                       <div className="hidden cursor-grab text-gray-400 hover:text-gray-600 sm:mt-8 sm:block"><GripVertical size={24} /></div>
                       <div className="h-24 w-full shrink-0 overflow-hidden rounded-lg border border-gray-300 bg-gray-200 sm:w-32">
-                        <img src={slide.imageUrl} alt="preview" className="h-full w-full object-cover" />
+                        <img src={slide.imageUrl} alt="preview" className="h-full w-full bg-black object-contain" />
                       </div>
                       <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
@@ -686,7 +767,7 @@ export const AdminDashboard: React.FC = () => {
                           <label className="mb-1 block text-xs font-black text-gray-500">קישור</label>
                           <div className="relative">
                             <LinkIcon size={14} className="absolute right-3 top-3 text-gray-400" />
-                            <input type="text" value={slide.linkUrl} onChange={(e) => updateSlide(index, 'linkUrl', e.target.value)} className="w-full rounded border border-gray-300 bg-white py-2 pl-3 pr-9 text-sm outline-none focus:ring-1 focus:ring-red-500" />
+                            <input type="text" value={slide.linkUrl || ''} onChange={(e) => updateSlide(index, 'linkUrl', e.target.value)} className="w-full rounded border border-gray-300 bg-white py-2 pl-3 pr-9 text-sm outline-none focus:ring-1 focus:ring-red-500" />
                           </div>
                         </div>
                         <div className="md:col-span-2">
@@ -719,11 +800,11 @@ export const AdminDashboard: React.FC = () => {
               <form onSubmit={handleWeeklyPaperSubmit} className="space-y-5">
                 <div>
                   <label className="mb-2 block text-sm font-bold text-gray-700">כותרת</label>
-                  <input type="text" value={paperForm.title} onChange={(e) => setPaperForm({ ...paperForm, title: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="העיתון השבועי - מהדורת סוף השבוע" required />
+                  <input type="text" value={paperForm.title} onChange={(e) => setPaperForm({ ...paperForm, title: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="העיתון השבועי - מהדורת סוף השבוע" />
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-bold text-gray-700">שבוע</label>
-                  <input type="week" value={paperForm.weekKey} onChange={(e) => setPaperForm({ ...paperForm, weekKey: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" required />
+                  <input type="week" value={paperForm.weekKey} onChange={(e) => setPaperForm({ ...paperForm, weekKey: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-bold text-gray-700">תיאור קצר</label>
@@ -734,22 +815,24 @@ export const AdminDashboard: React.FC = () => {
                   <div className="space-y-2">
                     <div className="relative">
                       <FileText size={18} className="absolute right-3 top-3 text-gray-400" />
-                      <input type="text" value={paperForm.pdfUrl} onChange={(e) => setPaperForm({ ...paperForm, pdfUrl: e.target.value })} className="w-full rounded-lg border border-gray-300 pl-4 pr-10 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="קישור ישיר ל-PDF או קובץ שהועלה" required />
+                      <input type="text" value={displayUploadValue(paperForm.pdfUrl)} onChange={(e) => setPaperForm({ ...paperForm, pdfUrl: e.target.value })} className="w-full rounded-lg border border-gray-300 pl-4 pr-10 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="קישור ישיר ל-PDF או קובץ שהועלה" />
                     </div>
                     <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-3 text-sm font-black text-gray-700 transition hover:bg-gray-200">
                       <Upload size={16} /> העלה PDF מהמחשב
                       <input type="file" accept="application/pdf" className="hidden" onChange={(e) => handleFileUpload(e, (url) => setPaperForm({ ...paperForm, pdfUrl: url }))} />
                     </label>
+                    {isDataUrl(paperForm.pdfUrl) && <p className="text-xs font-bold text-emerald-700">קובץ ה-PDF הועלה ונשמר כפי שהוא.</p>}
                   </div>
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-bold text-gray-700">תמונת שער</label>
                   <div className="space-y-2">
-                    <input type="text" value={paperForm.coverImageUrl} onChange={(e) => setPaperForm({ ...paperForm, coverImageUrl: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="קישור לתמונה או העלאה" />
+                    <input type="text" value={displayUploadValue(paperForm.coverImageUrl)} onChange={(e) => setPaperForm({ ...paperForm, coverImageUrl: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="קישור לתמונה או העלאה" />
                     <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-3 text-sm font-black text-gray-700 transition hover:bg-gray-200">
                       <Upload size={16} /> העלה תמונת שער
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (url) => setPaperForm({ ...paperForm, coverImageUrl: url }))} />
                     </label>
+                    {isDataUrl(paperForm.coverImageUrl) && <p className="text-xs font-bold text-emerald-700">תמונת השער הועלתה ונשמרת כפי שהיא.</p>}
                   </div>
                 </div>
                 <button type="submit" className="flex items-center gap-2 rounded-lg bg-red-700 px-8 py-3 font-black text-white shadow-lg transition hover:bg-red-800"><Save size={18} /> פרסם מהדורה</button>
@@ -784,11 +867,11 @@ export const AdminDashboard: React.FC = () => {
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-bold text-gray-700">כותרת המודעה</label>
-                    <input type="text" value={boardForm.title} onChange={(e) => setBoardForm({ ...boardForm, title: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" required />
+                    <input type="text" value={boardForm.title} onChange={(e) => setBoardForm({ ...boardForm, title: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-bold text-gray-700">מיקום</label>
-                    <input type="text" value={boardForm.location} onChange={(e) => setBoardForm({ ...boardForm, location: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="שכונה / רחוב" required />
+                    <input type="text" value={boardForm.location} onChange={(e) => setBoardForm({ ...boardForm, location: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="שכונה / רחוב" />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -800,22 +883,22 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-bold text-gray-700">מחיר</label>
-                    <input type="number" value={boardForm.price} onChange={(e) => setBoardForm({ ...boardForm, price: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" required />
+                    <input type="number" value={boardForm.price} onChange={(e) => setBoardForm({ ...boardForm, price: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-bold text-gray-700">גודל במ"ר</label>
-                    <input type="number" value={boardForm.sizeSqm} onChange={(e) => setBoardForm({ ...boardForm, sizeSqm: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" required />
+                    <input type="number" value={boardForm.sizeSqm} onChange={(e) => setBoardForm({ ...boardForm, sizeSqm: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-bold text-gray-700">איש קשר</label>
-                    <input type="text" value={boardForm.contactName} onChange={(e) => setBoardForm({ ...boardForm, contactName: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" required />
+                    <input type="text" value={boardForm.contactName} onChange={(e) => setBoardForm({ ...boardForm, contactName: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
                   </div>
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-bold text-gray-700">טלפון / וואטסאפ</label>
-                  <input type="tel" value={boardForm.contactPhone} onChange={(e) => setBoardForm({ ...boardForm, contactPhone: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" required />
+                  <input type="tel" value={boardForm.contactPhone} onChange={(e) => setBoardForm({ ...boardForm, contactPhone: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-bold text-gray-700">פרטים נוספים</label>
