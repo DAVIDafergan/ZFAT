@@ -45,6 +45,11 @@ router.post('/', mutateLimiter, auth, editorOrAbove, async (req, res) => {
       ...req.body,
       shortLinkCode: normalizeShortCode(req.body.shortLinkCode, Date.now().toString()) || generateShortCode(),
     };
+    if (payload.isFeatured) {
+      payload.featuredAt = new Date();
+    } else {
+      payload.featuredAt = null;
+    }
     const post = new Post(payload);
     await post.save();
     res.status(201).json(post);
@@ -62,6 +67,16 @@ router.put('/:id', mutateLimiter, auth, editorOrAbove, validateObjectId(), async
     };
     const post = await Post.findById(objectId);
     if (!post) return res.status(404).json({ message: 'כתבה לא נמצאה' });
+
+    // Track when a post is first featured; clear the timestamp when unfeatured
+    if ('isFeatured' in updates) {
+      if (updates.isFeatured && !post.isFeatured) {
+        updates.featuredAt = new Date();
+      } else if (!updates.isFeatured) {
+        updates.featuredAt = null;
+      }
+    }
+
     post.set(updates);
     await post.save();
     res.json(post);
