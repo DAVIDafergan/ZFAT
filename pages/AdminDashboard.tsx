@@ -325,10 +325,6 @@ export const AdminDashboard: React.FC = () => {
 
   const handleWeeklyPaperSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isDataUrl(paperForm.pdfUrl)) {
-      showToast('לפרסום עיתון יש להזין קישור ישיר ל-PDF (לא קובץ Base64 מקומי)');
-      return;
-    }
     const paper: WeeklyPaper = {
       id: Date.now().toString(),
       title: paperForm.title,
