@@ -38,9 +38,65 @@ export const Article: React.FC = () => {
   const shareUrl = buildShortPostUrl(post.shortLinkCode, post.id);
   const postImages = (Array.isArray(post.images) && post.images.length > 0
     ? post.images.filter((image) => image.url)
-    : [{ url: post.imageUrl, photographer: '' }].filter((image) => image.url));
-  const leadImage = postImages[0] || { url: post.imageUrl, photographer: '' };
+    : post.imageUrl ? [{ url: post.imageUrl, photographer: '' }] : []);
+  const leadImage = postImages[0] || null;
   const galleryImages = postImages.slice(1);
+
+  // Interleave gallery images between content paragraphs
+  const renderContentWithImages = () => {
+    const content = post.content;
+    if (galleryImages.length === 0) {
+      return <div className="article-content max-w-none text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: content }} />;
+    }
+    // Split content after each </p> tag
+    const rawParts = content.split('</p>');
+    const parts = rawParts.map((p, i) => i < rawParts.length - 1 ? p + '</p>' : p).filter(Boolean);
+
+    if (parts.length <= 1) {
+      return (
+        <>
+          <div className="article-content max-w-none text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: content }} />
+          <div className="mt-8 space-y-6">
+            {galleryImages.map((image, index) => (
+              <figure key={`${image.url}-${index}`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                <img src={image.url} alt={`${post.title} - תמונה ${index + 2}`} className="max-h-[500px] w-full object-cover" />
+                <figcaption className="bg-gray-50 px-4 py-2 text-xs font-bold text-gray-600">צילום: {image.photographer || 'ללא קרדיט'}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </>
+      );
+    }
+
+    const step = Math.max(1, Math.floor(parts.length / (galleryImages.length + 1)));
+    const elements: React.ReactNode[] = [];
+    let lastPartIndex = 0;
+
+    galleryImages.forEach((image, imageIndex) => {
+      const insertAfterIndex = Math.min((imageIndex + 1) * step, parts.length - 1);
+      const textSegment = parts.slice(lastPartIndex, insertAfterIndex).join('');
+      if (textSegment.trim()) {
+        elements.push(
+          <div key={`text-${imageIndex}`} className="article-content max-w-none text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: textSegment }} />
+        );
+      }
+      elements.push(
+        <figure key={`img-${imageIndex}`} className="my-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <img src={image.url} alt={`${post.title} - תמונה ${imageIndex + 2}`} className="max-h-[500px] w-full object-cover" />
+          <figcaption className="bg-gray-50 px-4 py-2 text-xs font-bold text-gray-600">צילום: {image.photographer || 'ללא קרדיט'}</figcaption>
+        </figure>
+      );
+      lastPartIndex = insertAfterIndex;
+    });
+
+    const remaining = parts.slice(lastPartIndex).join('');
+    if (remaining.trim()) {
+      elements.push(
+        <div key="text-final" className="article-content max-w-none text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: remaining }} />
+      );
+    }
+    return <>{elements}</>;
+  };
 
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,24 +131,13 @@ export const Article: React.FC = () => {
             <h1 className="news-headline mb-4 text-3xl font-black leading-tight text-gray-900 sm:mb-6 sm:text-4xl md:text-6xl">{post.title}</h1>
             <p className="mb-6 border-r-4 border-red-600 pr-4 text-lg leading-8 text-gray-600 sm:mb-8 sm:pr-5 sm:text-xl md:text-2xl">{post.excerpt}</p>
 
-            <div className="mb-8 rounded-[2rem] overflow-hidden shadow-lg">
-              <img src={leadImage.url} alt={post.title} className="max-h-[560px] w-full object-cover" />
-              <div className="flex flex-wrap items-center justify-between gap-2 bg-gray-950 px-4 py-3 text-[11px] font-bold text-gray-300 sm:gap-4 sm:text-xs">
-                <span>צילום: {leadImage.photographer || 'דוברות / רשתות חברתיות'}</span>
-                <span>זמין לשיתוף בלחיצה אחת</span>
-              </div>
-            </div>
-
-            {galleryImages.length > 0 && (
-              <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {galleryImages.map((image, index) => (
-                  <figure key={`${image.url}-${index}`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-                    <img src={image.url} alt={`${post.title} - תמונה ${index + 2}`} className="h-64 w-full object-cover" />
-                    <figcaption className="bg-gray-50 px-4 py-2 text-xs font-bold text-gray-600">
-                      צילום: {image.photographer || 'ללא קרדיט'}
-                    </figcaption>
-                  </figure>
-                ))}
+            {leadImage && (
+              <div className="mb-8 rounded-[2rem] overflow-hidden shadow-lg">
+                <img src={leadImage.url} alt={post.title} className="max-h-[560px] w-full object-cover" />
+                <div className="flex flex-wrap items-center justify-between gap-2 bg-gray-950 px-4 py-3 text-[11px] font-bold text-gray-300 sm:gap-4 sm:text-xs">
+                  <span>צילום: {leadImage.photographer || 'דוברות / רשתות חברתיות'}</span>
+                  <span>זמין לשיתוף בלחיצה אחת</span>
+                </div>
               </div>
             )}
 
@@ -102,7 +147,7 @@ export const Article: React.FC = () => {
 
             <AdUnit ad={inlineAd} className="mb-8 rounded-2xl overflow-hidden border border-gray-100 shadow-sm" />
 
-            <div className="article-content max-w-none text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: post.content }} />
+            {renderContentWithImages()}
 
             <div className="mt-12 flex flex-wrap gap-2">
               {post.tags.map(tag => (
