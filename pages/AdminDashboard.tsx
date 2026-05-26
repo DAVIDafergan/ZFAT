@@ -157,14 +157,14 @@ export const AdminDashboard: React.FC = () => {
     e.preventDefault();
     if (!newPost.title || !newPost.content) return;
 
-    const primaryImageUrl = (newPost.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200').trim();
+    const primaryImageUrl = (newPost.imageUrl || '').trim();
     const normalizedAdditionalImages = additionalPostImages
       .map((image) => ({ url: image.url?.trim() || '', photographer: image.photographer?.trim() || '' }))
       .filter((image) => Boolean(image.url));
     const nextImages: PostImage[] = [
       { url: primaryImageUrl, photographer: mainImagePhotographer.trim() },
       ...normalizedAdditionalImages,
-    ];
+    ].filter((image) => Boolean(image.url));
     const nextTags = tagsInput.split(',').map((tag) => tag.trim()).filter(Boolean);
     if (editingPostId) {
       const current = posts.find((post) => post.id === editingPostId);
