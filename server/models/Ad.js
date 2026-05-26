@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const adSlideSchema = new mongoose.Schema({
   imageUrl: { type: String, default: '' },
   videoUrl: { type: String, default: '' },
-  linkUrl: { type: String, default: '#' }
+  linkUrl: { type: String, default: '' }
 }, { _id: false });
 
 const adSchema = new mongoose.Schema({

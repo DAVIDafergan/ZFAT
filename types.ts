@@ -1,6 +1,7 @@
 export enum Category {
   NEWS = 'מבזקים',
   COMMUNITY = 'קהילה וחברה',
+  ECONOMY = 'כלכלה',
   POLITICS = 'פוליטיקה',
   SECURITY = 'ביטחון',
   CULTURE = 'תרבות ואומנות',
@@ -8,6 +9,11 @@ export enum Category {
   WEATHER = 'מזג אוויר',
   INFRASTRUCTURE = 'תשתיות ותנועה',
   LOCAL = 'צפת והגליל'
+}
+
+export interface PostImage {
+  url: string;
+  photographer?: string;
 }
 
 export interface Post {
@@ -23,13 +29,14 @@ export interface Post {
   isFeatured: boolean;
   views: number;
   shortLinkCode: string;
+  images?: PostImage[];
 }
 
 export interface AdSlide {
   id: string;
   imageUrl: string;
   videoUrl?: string;
-  linkUrl: string;
+  linkUrl?: string;
 }
 
 export type AdArea =
@@ -134,6 +141,7 @@ export interface AccessibilitySettings {
 export const CATEGORY_COLORS: Record<Category, string> = {
   [Category.NEWS]: 'bg-red-600',
   [Category.COMMUNITY]: 'bg-green-600',
+  [Category.ECONOMY]: 'bg-emerald-700',
   [Category.POLITICS]: 'bg-blue-600',
   [Category.SECURITY]: 'bg-orange-600',
   [Category.CULTURE]: 'bg-purple-600',

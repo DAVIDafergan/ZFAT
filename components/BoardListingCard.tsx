@@ -9,6 +9,7 @@ interface BoardListingCardProps {
 
 export const BoardListingCard: React.FC<BoardListingCardProps> = ({ listing }) => {
   const whatsappUrl = buildListingWhatsappUrl(listing.title, listing.contactPhone);
+  const hasPhone = Boolean(listing.contactPhone?.trim());
   const createdAt = listing.createdAt ? Date.parse(listing.createdAt) : NaN;
   const publishedDate = Number.isNaN(createdAt)
     ? null
@@ -47,16 +48,24 @@ export const BoardListingCard: React.FC<BoardListingCardProps> = ({ listing }) =
         <p className="min-h-[64px] text-sm leading-6 text-gray-600 sm:min-h-[72px] sm:leading-7">{listing.details}</p>
         <div className="flex flex-col gap-3 rounded-3xl border border-[#d7dee7] bg-gradient-to-l from-white via-slate-50 to-[#f5f7fb] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-black text-gray-900">{listing.contactName}</p>
-            <p className="text-sm font-medium text-gray-600" dir="ltr">{listing.contactPhone}</p>
+            <p className="text-sm font-black text-gray-900">{listing.contactName || 'ללא איש קשר'}</p>
+            <p className="text-sm font-medium text-gray-600" dir="ltr">{listing.contactPhone || 'לא הוזן מספר טלפון'}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <a href={`tel:${listing.contactPhone}`} className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700">
-              <Phone size={15} /> התקשר
-            </a>
-            <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#22c55e] px-4 py-2 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#16a34a]">
-              <Building2 size={15} /> פתח וואטסאפ
-            </a>
+            {hasPhone ? (
+              <>
+                <a href={`tel:${listing.contactPhone}`} className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700">
+                  <Phone size={15} /> התקשר
+                </a>
+                <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#22c55e] px-4 py-2 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#16a34a]">
+                  <Building2 size={15} /> פתח וואטסאפ
+                </a>
+              </>
+            ) : (
+              <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-500">
+                אין פרטי טלפון למודעה
+              </span>
+            )}
           </div>
         </div>
       </div>

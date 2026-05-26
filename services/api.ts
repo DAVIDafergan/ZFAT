@@ -45,20 +45,36 @@ const setStorage = (key: string, data: unknown) => {
 
 const resolveId = (item: { id?: string; _id?: string }) => item.id || item._id || '';
 
-const normalizePost = (post: any): Post => ({
-  id: resolveId(post),
-  title: post.title || '',
-  excerpt: post.excerpt || '',
-  content: post.content || '',
-  category: post.category,
-  author: post.author || 'מערכת',
-  date: post.date || (post.createdAt ? new Date(post.createdAt).toLocaleDateString('he-IL') : new Date().toLocaleDateString('he-IL')),
-  imageUrl: post.imageUrl || '',
-  tags: Array.isArray(post.tags) ? post.tags : [],
-  isFeatured: Boolean(post.isFeatured),
-  views: Number(post.views || 0),
-  shortLinkCode: normalizeShareCode(post.shortLinkCode, resolveId(post)),
-});
+const normalizePost = (post: any): Post => {
+  const normalizedImages = Array.isArray(post.images)
+    ? post.images
+      .map((image: any) => ({
+        url: image?.url || '',
+        photographer: image?.photographer || '',
+      }))
+      .filter((image: { url: string }) => Boolean(image.url))
+    : [];
+  const fallbackImageUrl = post.imageUrl || normalizedImages[0]?.url || '';
+  const images = normalizedImages.length > 0
+    ? normalizedImages
+    : (fallbackImageUrl ? [{ url: fallbackImageUrl, photographer: '' }] : []);
+
+  return {
+    id: resolveId(post),
+    title: post.title || '',
+    excerpt: post.excerpt || '',
+    content: post.content || '',
+    category: post.category,
+    author: post.author || 'מערכת',
+    date: post.date || (post.createdAt ? new Date(post.createdAt).toLocaleDateString('he-IL') : new Date().toLocaleDateString('he-IL')),
+    imageUrl: fallbackImageUrl,
+    tags: Array.isArray(post.tags) ? post.tags : [],
+    isFeatured: Boolean(post.isFeatured),
+    views: Number(post.views || 0),
+    shortLinkCode: normalizeShareCode(post.shortLinkCode, resolveId(post)),
+    images,
+  };
+};
 
 const normalizeAd = (ad: any): Ad => ({
   id: resolveId(ad),
@@ -70,7 +86,7 @@ const normalizeAd = (ad: any): Ad => ({
         id: resolveId(slide) || `${resolveId(ad)}-${index}`,
         imageUrl: slide.imageUrl || '',
         videoUrl: slide.videoUrl || '',
-        linkUrl: slide.linkUrl || '#',
+        linkUrl: slide.linkUrl || '',
       }))
     : [],
 });

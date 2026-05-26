@@ -36,6 +36,11 @@ export const Article: React.FC = () => {
   const categoryColor = CATEGORY_COLORS[post.category] || 'bg-gray-600';
   const relatedPosts = posts.filter(p => p.category === post.category && p.id !== post.id).slice(0, 3);
   const shareUrl = buildShortPostUrl(post.shortLinkCode, post.id);
+  const postImages = (Array.isArray(post.images) && post.images.length > 0
+    ? post.images.filter((image) => image.url)
+    : [{ url: post.imageUrl, photographer: '' }].filter((image) => image.url));
+  const leadImage = postImages[0] || { url: post.imageUrl, photographer: '' };
+  const galleryImages = postImages.slice(1);
 
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,12 +76,25 @@ export const Article: React.FC = () => {
             <p className="mb-6 border-r-4 border-red-600 pr-4 text-lg leading-8 text-gray-600 sm:mb-8 sm:pr-5 sm:text-xl md:text-2xl">{post.excerpt}</p>
 
             <div className="mb-8 rounded-[2rem] overflow-hidden shadow-lg">
-              <img src={post.imageUrl} alt={post.title} className="max-h-[560px] w-full object-cover" />
+              <img src={leadImage.url} alt={post.title} className="max-h-[560px] w-full object-cover" />
               <div className="flex flex-wrap items-center justify-between gap-2 bg-gray-950 px-4 py-3 text-[11px] font-bold text-gray-300 sm:gap-4 sm:text-xs">
-                <span>צילום: דוברות / רשתות חברתיות</span>
+                <span>צילום: {leadImage.photographer || 'דוברות / רשתות חברתיות'}</span>
                 <span>זמין לשיתוף בלחיצה אחת</span>
               </div>
             </div>
+
+            {galleryImages.length > 0 && (
+              <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {galleryImages.map((image, index) => (
+                  <figure key={`${image.url}-${index}`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                    <img src={image.url} alt={`${post.title} - תמונה ${index + 2}`} className="h-64 w-full object-cover" />
+                    <figcaption className="bg-gray-50 px-4 py-2 text-xs font-bold text-gray-600">
+                      צילום: {image.photographer || 'ללא קרדיט'}
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            )}
 
             <div className="mb-8">
               <ShareButtons title={post.title} description={post.excerpt} shareUrl={shareUrl} />

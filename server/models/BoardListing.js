@@ -1,20 +1,20 @@
 const mongoose = require('mongoose');
 
 const boardListingSchema = new mongoose.Schema({
-  title: { type: String, required: true },
+  title: { type: String, default: '' },
   imageUrl: { type: String, default: '' },
-  location: { type: String, required: true },
+  location: { type: String, default: '' },
   dealType: {
     type: String,
     enum: ['rent', 'sale'],
-    required: true,
+    default: 'rent',
   },
-  price: { type: Number, required: true, min: 0 },
-  sizeSqm: { type: Number, required: true, min: 0 },
+  price: { type: Number, default: 0, min: 0 },
+  sizeSqm: { type: Number, default: 0, min: 0 },
   details: { type: String, default: '' },
   hasBalcony: { type: Boolean, default: false },
-  contactName: { type: String, required: true },
-  contactPhone: { type: String, required: true },
+  contactName: { type: String, default: '' },
+  contactPhone: { type: String, default: '' },
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
