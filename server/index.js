@@ -218,6 +218,25 @@ mongoose.connect(MONGO_URI)
       console.error('❌ Startup server error:', error);
       process.exit(1);
     });
+
+    // Auto-unfeature posts that have been in the slider for more than 24 hours
+    const UNFEATURE_INTERVAL_MS = 5 * 60 * 1000; // check every 5 minutes
+    const FEATURED_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+    const autoUnfeatureJob = setInterval(async () => {
+      try {
+        const cutoff = new Date(Date.now() - FEATURED_MAX_AGE_MS);
+        const result = await Post.updateMany(
+          { isFeatured: true, featuredAt: { $lte: cutoff } },
+          { $set: { isFeatured: false, featuredAt: null } }
+        );
+        if (result.modifiedCount > 0) {
+          console.log(`🕐 Auto-unfeature: ${result.modifiedCount} post(s) removed from main slider after 24h`);
+        }
+      } catch (err) {
+        console.error('❌ Auto-unfeature job error:', err);
+      }
+    }, UNFEATURE_INTERVAL_MS);
+    autoUnfeatureJob.unref();
   })
   .catch(err => {
     console.error('❌ Startup error:', err);
