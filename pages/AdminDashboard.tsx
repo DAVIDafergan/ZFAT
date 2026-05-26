@@ -325,6 +325,10 @@ export const AdminDashboard: React.FC = () => {
 
   const handleWeeklyPaperSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isDataUrl(paperForm.pdfUrl)) {
+      showToast('לפרסום עיתון יש להזין קישור ישיר ל-PDF (לא קובץ Base64 מקומי)');
+      return;
+    }
     const paper: WeeklyPaper = {
       id: Date.now().toString(),
       title: paperForm.title,
@@ -335,9 +339,13 @@ export const AdminDashboard: React.FC = () => {
       publishedAt: new Date().toISOString(),
       isActive: true,
     };
-    await createWeeklyPaper(paper);
-    setPaperForm(initialPaperForm);
-    showToast('העיתון השבועי עלה לאתר');
+    try {
+      await createWeeklyPaper(paper);
+      setPaperForm(initialPaperForm);
+      showToast('העיתון השבועי עלה לאתר');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'פרסום העיתון נכשל. נסו שוב.');
+    }
   };
 
   const handleBoardListingSubmit = async (e: React.FormEvent) => {
@@ -821,7 +829,7 @@ export const AdminDashboard: React.FC = () => {
                       <Upload size={16} /> העלה PDF מהמחשב
                       <input type="file" accept="application/pdf" className="hidden" onChange={(e) => handleFileUpload(e, (url) => setPaperForm({ ...paperForm, pdfUrl: url }))} />
                     </label>
-                    {isDataUrl(paperForm.pdfUrl) && <p className="text-xs font-bold text-emerald-700">קובץ ה-PDF הועלה ונשמר כפי שהוא.</p>}
+                    {isDataUrl(paperForm.pdfUrl) && <p className="text-xs font-bold text-amber-700">קובץ מקומי זוהה. לפרסום יציב מומלץ להזין קישור ישיר ל-PDF.</p>}
                   </div>
                 </div>
                 <div>

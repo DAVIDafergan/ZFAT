@@ -174,6 +174,10 @@ const fetchJson = async (path: string, init?: RequestInit) => {
   return data;
 };
 
+const shouldFallbackToLocal = (error: unknown) => (
+  !(error instanceof ApiRequestError) || error.status >= 500
+);
+
 export const api = {
   fetchInitialData: async () => {
     if (shouldUseServer()) {
@@ -367,12 +371,17 @@ export const api = {
         });
         return;
       } catch (error) {
+        if (!shouldFallbackToLocal(error)) throw error;
         console.warn('Falling back to local weekly paper creation', error);
       }
     }
 
-    const papers = getStorage<WeeklyPaper[]>('zfat_weekly_papers', INITIAL_WEEKLY_PAPERS);
-    setStorage('zfat_weekly_papers', [paper, ...papers]);
+    try {
+      const papers = getStorage<WeeklyPaper[]>('zfat_weekly_papers', INITIAL_WEEKLY_PAPERS);
+      setStorage('zfat_weekly_papers', [paper, ...papers]);
+    } catch (error) {
+      throw new ApiRequestError('העיתון גדול מדי לשמירה מקומית. העלו קישור ל-PDF במקום קובץ מלא.', 413);
+    }
   },
 
   deleteWeeklyPaper: async (id: string) => {
