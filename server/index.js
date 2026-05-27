@@ -159,7 +159,7 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
   }
 });
 
-app.get('/api/posts/:id/og-image', async (req, res) => {
+app.get('/api/posts/:id/og-image', spaFallbackLimiter, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id).select('imageUrl').lean();
     if (!post || !post.imageUrl) return res.status(404).end();
