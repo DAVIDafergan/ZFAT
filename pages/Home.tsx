@@ -54,7 +54,7 @@ export const Home: React.FC = () => {
                 <Link key={post.id} to={`/article/${post.id}`} className="group block">
                   <article className="flex items-start gap-3 rounded-[1.2rem] border border-white/10 bg-[#101827] p-3 transition hover:border-red-500/40 hover:bg-[#131d2f] sm:gap-4 sm:p-4">
                     <div className="w-full">
-                      <h3 className="line-clamp-2 text-sm font-black leading-6 text-white transition group-hover:text-red-300 sm:text-base">
+                      <h3 className="line-clamp-2 text-base font-black leading-6 text-white transition group-hover:text-red-300 sm:text-lg">
                         {post.title}
                       </h3>
                       <p className="mt-1 line-clamp-2 text-xs leading-5 text-white/65 sm:text-sm">
