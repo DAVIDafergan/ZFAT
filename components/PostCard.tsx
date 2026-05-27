@@ -95,7 +95,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, layout = 'grid' }) => 
           <Eye size={12} /> <span>{post.views}</span>
         </div>
         <Link to={`/article/${post.id}`} className="mb-3 block">
-          <h3 className="news-headline text-lg font-black leading-tight text-gray-900 transition group-hover:text-red-700 sm:text-xl">{post.title}</h3>
+          <h3 className="news-headline line-clamp-2 text-lg font-black leading-tight text-gray-900 transition group-hover:text-red-700 sm:text-xl">{post.title}</h3>
         </Link>
         <p className="mb-4 line-clamp-3 flex-1 text-sm leading-6 text-gray-500 sm:mb-5 sm:leading-7">{displayExcerpt}</p>
         <div className="mt-auto flex items-center justify-between border-t border-gray-50 pt-3 sm:pt-4">

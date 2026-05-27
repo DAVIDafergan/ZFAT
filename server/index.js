@@ -122,7 +122,11 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
 
     const title = escapeHtml(post.title || 'צפת בתנופה');
     const description = escapeHtml(post.excerpt || 'כתבה מתוך אתר צפת בתנופה');
-    const image = escapeHtml(post.imageUrl || `${publicSiteUrl}/favicon.ico`);
+    const rawImage = post.imageUrl || '';
+    const isDataUrl = rawImage.startsWith('data:');
+    const image = isDataUrl
+      ? `${publicSiteUrl}/api/posts/${post._id}/og-image`
+      : escapeHtml(rawImage || `${publicSiteUrl}/favicon.ico`);
     const articleUrl = `${publicSiteUrl}/#/article/${post._id}`;
     const shortUrl = `${publicSiteUrl}/p/${requestedCode}`;
 
@@ -152,6 +156,27 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
 </html>`);
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+app.get('/api/posts/:id/og-image', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id).select('imageUrl').lean();
+    if (!post || !post.imageUrl) return res.status(404).end();
+
+    if (post.imageUrl.startsWith('data:')) {
+      const matches = post.imageUrl.match(/^data:([^;]+);base64,(.+)$/s);
+      if (!matches) return res.status(404).end();
+      const contentType = matches[1];
+      const buffer = Buffer.from(matches[2], 'base64');
+      res.set('Content-Type', contentType);
+      res.set('Cache-Control', 'public, max-age=86400');
+      return res.send(buffer);
+    }
+
+    return res.redirect(302, post.imageUrl);
+  } catch (err) {
+    res.status(500).end();
   }
 });
 
