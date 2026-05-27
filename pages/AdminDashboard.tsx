@@ -146,11 +146,39 @@ export const AdminDashboard: React.FC = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') callback(reader.result);
+    const CHUNK_SIZE = 2 * 1024 * 1024; // 2 MB per chunk
+    const totalSize = file.size;
+    const chunks: ArrayBuffer[] = [];
+    let offset = 0;
+
+    const readNextChunk = () => {
+      const end = Math.min(offset + CHUNK_SIZE, totalSize);
+      const slice = file.slice(offset, end);
+      const reader = new FileReader();
+      reader.onload = () => {
+        chunks.push(reader.result as ArrayBuffer);
+        offset = end;
+        if (offset < totalSize) {
+          readNextChunk();
+        } else {
+          const combined = new Uint8Array(totalSize);
+          let pos = 0;
+          for (const chunk of chunks) {
+            combined.set(new Uint8Array(chunk), pos);
+            pos += chunk.byteLength;
+          }
+          const blob = new Blob([combined], { type: file.type });
+          const finalReader = new FileReader();
+          finalReader.onloadend = () => {
+            if (typeof finalReader.result === 'string') callback(finalReader.result);
+          };
+          finalReader.readAsDataURL(blob);
+        }
+      };
+      reader.readAsArrayBuffer(slice);
     };
-    reader.readAsDataURL(file);
+
+    readNextChunk();
   };
 
   const handlePostSubmit = async (e: React.FormEvent) => {
