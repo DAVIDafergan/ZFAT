@@ -237,15 +237,15 @@ export const api = {
     };
   },
 
-  addPost: async (post: Post) => {
+  addPost: async (post: Post): Promise<Post> => {
     if (shouldUseServer()) {
       try {
-        await fetchJson('/api/posts', {
+        const created = await fetchJson('/api/posts', {
           method: 'POST',
           headers: authHeaders(),
           body: JSON.stringify(post),
         });
-        return;
+        return normalizePost(created);
       } catch (error) {
         console.warn('Falling back to local post creation', error);
       }
@@ -254,6 +254,7 @@ export const api = {
     await delay(200);
     const posts = getStorage('zfat_posts', INITIAL_POSTS);
     setStorage('zfat_posts', [post, ...posts]);
+    return post;
   },
 
   updatePost: async (id: string, updates: Partial<Post>) => {

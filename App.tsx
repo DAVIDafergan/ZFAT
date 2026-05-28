@@ -140,8 +140,8 @@ const App: React.FC = () => {
   }, [accessibility]);
 
   const addPost = async (post: Post) => {
-    await api.addPost(post);
-    setPosts((prev) => [post, ...prev]);
+    const saved = await api.addPost(post);
+    setPosts((prev) => [saved, ...prev]);
   };
 
   const updatePost = async (id: string, updates: Partial<Post>) => {
