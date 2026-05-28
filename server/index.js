@@ -81,6 +81,7 @@ app.use('/api/messages', require('./routes/messages'));
 app.use('/api/subscribers', require('./routes/subscribers'));
 app.use('/api/weekly-papers', require('./routes/weeklyPapers'));
 app.use('/api/board-listings', require('./routes/boardListings'));
+app.use('/api/uploads', require('./routes/uploads'));
 
 app.get('/health', (req, res) => {
   const database = getMongoStatus();

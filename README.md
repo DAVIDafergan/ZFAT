@@ -5,6 +5,7 @@
 ## מה חדש במערכת
 
 - חיבור מלא ל-MongoDB עם תמיכה ב-`MONGO_URL` ל-Railway
+- העלאת קבצי ניהול (תמונות / PDF / וידאו) ישירות ל-AWS S3 דרך `/api/uploads`
 - עמוד **העיתון השבועי** עם העלאת PDF מהניהול, חיפוש לפי שבוע, קריאה אונליין והורדה
 - עמוד **לוח בתנופה** למודעות דירות להשכרה ולמכירה בצפת, כולל מעבר ישיר לוואטסאפ עם הודעה מוכנה
 - קישורי שיתוף קצרים וממוספרים לכתבות עם תצוגת Open Graph במסלול `/p/:shortCode`
@@ -43,6 +44,12 @@ MONGO_URL=<railway mongo url>
 JWT_SECRET=change_me
 FRONTEND_URL=https://zfat-production.up.railway.app
 PUBLIC_SITE_URL=https://zfat-production.up.railway.app
+AWS_S3_REGION=eu-north-1
+AWS_S3_BUCKET=<your bucket>
+AWS_ACCESS_KEY_ID=<access key>
+AWS_SECRET_ACCESS_KEY=<secret key>
+AWS_S3_PUBLIC_BASE_URL=https://<your bucket>.s3.eu-north-1.amazonaws.com
+AWS_S3_UPLOAD_PREFIX=uploads
 ```
 
 > השרת תומך גם ב-`MONGODB_URI`, אבל `MONGO_URL` הוא המשתנה המומלץ לפרודקשן ב-Railway.
@@ -120,6 +127,12 @@ MONGO_URL=<railway mongo url>
 JWT_SECRET=<strong secret>
 FRONTEND_URL=https://zfat-production.up.railway.app
 PUBLIC_SITE_URL=https://zfat-production.up.railway.app
+AWS_S3_REGION=eu-north-1
+AWS_S3_BUCKET=<your bucket>
+AWS_ACCESS_KEY_ID=<access key>
+AWS_SECRET_ACCESS_KEY=<secret key>
+AWS_S3_PUBLIC_BASE_URL=https://<your bucket>.s3.eu-north-1.amazonaws.com
+AWS_S3_UPLOAD_PREFIX=uploads
 ```
 
 ה-Backend מחזיר תגובות JSON למסלולי ה-API ולמסלולי הבדיקה:

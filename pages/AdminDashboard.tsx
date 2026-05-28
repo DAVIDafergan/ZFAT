@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { formatWeekLabel, normalizeShareCode } from '../services/siteConfig';
 import { AD_PLACEMENTS, AD_PLACEMENT_MAP } from '../services/adPlacements';
+import { api } from '../services/api';
 
 type TabKey = 'posts' | 'ads' | 'weekly-paper' | 'board' | 'users' | 'messages' | 'newsletter';
 
@@ -143,42 +144,28 @@ export const AdminDashboard: React.FC = () => {
     navigate('/');
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const CHUNK_SIZE = 2 * 1024 * 1024; // 2 MB per chunk
-    const totalSize = file.size;
-    const chunks: ArrayBuffer[] = [];
-    let offset = 0;
+    e.currentTarget.value = '';
 
-    const readNextChunk = () => {
-      const end = Math.min(offset + CHUNK_SIZE, totalSize);
-      const slice = file.slice(offset, end);
-      const reader = new FileReader();
-      reader.onload = () => {
-        chunks.push(reader.result as ArrayBuffer);
-        offset = end;
-        if (offset < totalSize) {
-          readNextChunk();
-        } else {
-          const combined = new Uint8Array(totalSize);
-          let pos = 0;
-          for (const chunk of chunks) {
-            combined.set(new Uint8Array(chunk), pos);
-            pos += chunk.byteLength;
-          }
-          const blob = new Blob([combined], { type: file.type });
-          const finalReader = new FileReader();
-          finalReader.onloadend = () => {
-            if (typeof finalReader.result === 'string') callback(finalReader.result);
-          };
-          finalReader.readAsDataURL(blob);
-        }
-      };
-      reader.readAsArrayBuffer(slice);
+    try {
+      const uploadedUrl = await api.uploadFile(file, 'admin');
+      callback(uploadedUrl);
+      showToast('הקובץ הועלה לשרת התמונות בהצלחה');
+      return;
+    } catch (error) {
+      console.warn('S3 upload failed, falling back to data URL', error);
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        callback(reader.result);
+        showToast('ההעלאה עברה למצב מקומי. בדקו חיבור S3 בשרת.');
+      }
     };
-
-    readNextChunk();
+    reader.readAsDataURL(file);
   };
 
   const handlePostSubmit = async (e: React.FormEvent) => {

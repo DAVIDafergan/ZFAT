@@ -436,6 +436,40 @@ export const api = {
     setStorage('zfat_board_listings', listings.filter(listing => listing.id !== id));
   },
 
+  uploadFile: async (file: File, folder = 'admin'): Promise<string> => {
+    if (!shouldUseServer()) {
+      throw new ApiRequestError('Server upload is disabled', 400);
+    }
+    const token = getToken();
+    if (!token) {
+      throw new ApiRequestError('אין הרשאה להעלאת קבצים', 401);
+    }
+
+    const body = new FormData();
+    body.append('file', file);
+    body.append('folder', folder);
+    const headers = authHeaders();
+    delete headers['Content-Type'];
+
+    let response: Response;
+    try {
+      response = await fetch(`${API_URL}/api/uploads`, {
+        method: 'POST',
+        headers,
+        body,
+      });
+    } catch {
+      throw new ApiRequestError('העלאת הקובץ נכשלה', 503);
+    }
+
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.url) {
+      throw new ApiRequestError(data?.message || 'העלאת הקובץ נכשלה', response.status);
+    }
+
+    return data.url;
+  },
+
   login: async (usernameOrEmail: string, pass: string): Promise<User> => {
     if (shouldUseServer()) {
       try {
