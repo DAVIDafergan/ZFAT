@@ -1,10 +1,19 @@
 const express = require('express');
 const multer = require('multer');
+const rateLimit = require('express-rate-limit');
 const auth = require('../middleware/auth');
 const { editorOrAbove } = require('../middleware/adminOnly');
 const { hasS3Config, uploadFileToS3 } = require('../utils/s3Upload');
 
 const router = express.Router();
+
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'יותר מדי העלאות קבצים' },
+});
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -24,7 +33,7 @@ const upload = multer({
   },
 });
 
-router.post('/', auth, editorOrAbove, upload.single('file'), async (req, res) => {
+router.post('/', uploadLimiter, auth, editorOrAbove, upload.single('file'), async (req, res) => {
   try {
     if (!hasS3Config) {
       return res.status(503).json({ message: 'S3 לא מוגדר בשרת' });

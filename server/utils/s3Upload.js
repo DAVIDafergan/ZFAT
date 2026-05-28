@@ -4,8 +4,15 @@ const crypto = require('crypto');
 
 const s3Region = process.env.AWS_S3_REGION || process.env.AWS_REGION || '';
 const s3Bucket = process.env.AWS_S3_BUCKET || '';
+const trimSlashes = (value = '') => {
+  let result = `${value}`.trim();
+  while (result.startsWith('/')) result = result.slice(1);
+  while (result.endsWith('/')) result = result.slice(0, -1);
+  return result;
+};
+
 const s3PublicBaseUrl = (process.env.AWS_S3_PUBLIC_BASE_URL || '').trim().replace(/\/$/, '');
-const s3UploadPrefix = (process.env.AWS_S3_UPLOAD_PREFIX || 'uploads').trim().replace(/^\/+|\/+$/g, '');
+const s3UploadPrefix = trimSlashes(process.env.AWS_S3_UPLOAD_PREFIX || 'uploads');
 
 const hasS3Config = Boolean(s3Region && s3Bucket && process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY);
 
@@ -20,14 +27,19 @@ const buildObjectUrl = (key) => {
   return `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${key}`;
 };
 
-const sanitizeFolder = (folder = 'admin') => (
-  `${folder}`
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9/_-]/g, '')
-    .replace(/^\/+|\/+$/g, '')
-    || 'admin'
-);
+const sanitizeFolder = (folder = 'admin') => {
+  const safeFolder = `${folder}`.trim().toLowerCase();
+  const sanitizedChars = safeFolder.split('').filter((char) => (
+    (char >= 'a' && char <= 'z')
+    || (char >= '0' && char <= '9')
+    || char === '_'
+    || char === '-'
+    || char === '/'
+  )).join('');
+
+  const cleanedPath = trimSlashes(sanitizedChars);
+  return cleanedPath || 'admin';
+};
 
 const buildObjectKey = (originalName, folder) => {
   const extension = path.extname(originalName || '').replace(/[^.a-zA-Z0-9]/g, '').toLowerCase();
