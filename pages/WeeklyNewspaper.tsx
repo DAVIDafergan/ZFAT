@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Search, X } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, Minus, Plus, Search, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { WeeklyPaper } from '../types';
 import { PageHero } from '../components/PageHero';
@@ -11,6 +11,9 @@ export const WeeklyNewspaper: React.FC = () => {
   const { weeklyPapers, ads } = useApp();
   const [query, setQuery] = useState('');
   const [selectedPaper, setSelectedPaper] = useState<WeeklyPaper | null>(weeklyPapers[0] || null);
+  const [hasAutoSelected, setHasAutoSelected] = useState(Boolean(weeklyPapers[0]));
+  const [currentPage, setCurrentPage] = useState(1);
+  const [zoom, setZoom] = useState(125);
   const topAd = ads.find((ad) => ad.area === 'weekly_top' && ad.isActive);
 
   const filteredPapers = useMemo(() => {
@@ -23,6 +26,25 @@ export const WeeklyNewspaper: React.FC = () => {
       return haystack.includes(normalized);
     });
   }, [query, weeklyPapers]);
+
+  useEffect(() => {
+    if (!hasAutoSelected && !selectedPaper && weeklyPapers.length > 0) {
+      setSelectedPaper(weeklyPapers[0]);
+      setCurrentPage(1);
+      setZoom(125);
+      setHasAutoSelected(true);
+    }
+  }, [hasAutoSelected, selectedPaper, weeklyPapers]);
+
+  const openPaper = (paper: WeeklyPaper) => {
+    setSelectedPaper(paper);
+    setCurrentPage(1);
+    setZoom(125);
+  };
+
+  const readerSrc = selectedPaper
+    ? `${selectedPaper.pdfUrl}#page=${currentPage}&zoom=${zoom}&view=FitH&pagemode=none`
+    : '';
 
   return (
     <div className="min-h-screen bg-[#f4f1ec] pb-16">
@@ -61,12 +83,51 @@ export const WeeklyNewspaper: React.FC = () => {
                 <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-gray-600 sm:leading-7">{selectedPaper.description}</p>
               </div>
               <div className="flex flex-wrap gap-3">
+                <a href={selectedPaper.pdfUrl} target="_blank" rel="noreferrer" className="rounded-full border border-gray-200 px-5 py-3 text-sm font-bold text-gray-700 transition hover:border-red-200 hover:text-red-700">פתיחה במסך מלא</a>
                 <a href={selectedPaper.pdfUrl} download target="_blank" rel="noreferrer" className="rounded-full bg-red-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-red-800">הורד PDF</a>
                 <button onClick={() => setSelectedPaper(null)} className="rounded-full border border-gray-200 px-5 py-3 text-sm font-bold text-gray-700 transition hover:border-red-200 hover:text-red-700">סגור תצוגה</button>
               </div>
             </div>
-            <div className="bg-gray-950 p-3 md:p-6">
-              <iframe src={selectedPaper.pdfUrl} title={selectedPaper.title} className="h-[78vh] w-full rounded-[1.5rem] border-0 bg-white" />
+            <div className="space-y-4 bg-gradient-to-b from-[#121212] to-[#2d2d2d] p-3 md:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 text-white sm:px-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    className="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-2 text-xs font-bold transition hover:border-white/40 hover:bg-white/10 sm:text-sm"
+                  >
+                    <ChevronRight size={16} /> עמוד קודם
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((prev) => prev + 1)}
+                    className="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-2 text-xs font-bold transition hover:border-white/40 hover:bg-white/10 sm:text-sm"
+                  >
+                    עמוד הבא <ChevronLeft size={16} />
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setZoom((prev) => Math.max(75, prev - 25))}
+                    className="rounded-full border border-white/20 p-2 transition hover:border-white/40 hover:bg-white/10"
+                    aria-label="הקטנת זום"
+                  >
+                    <Minus size={14} />
+                  </button>
+                  <span className="min-w-14 text-center text-sm font-black">{zoom}%</span>
+                  <button
+                    onClick={() => setZoom((prev) => Math.min(250, prev + 25))}
+                    className="rounded-full border border-white/20 p-2 transition hover:border-white/40 hover:bg-white/10"
+                    aria-label="הגדלת זום"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </div>
+              <div className="rounded-[1.25rem] bg-[#efe8de] p-2 shadow-[0_14px_40px_rgba(0,0,0,0.35)] sm:p-4">
+                <iframe src={readerSrc} title={selectedPaper.title} className="h-[70vh] min-h-[460px] w-full rounded-[1rem] border-0 bg-white md:h-[78vh]" />
+              </div>
+              <p className="text-center text-xs font-medium text-white/80 sm:text-sm">
+                בדפדפן נייד אפשר לבצע זום במחוות אצבעות או לפתוח במסך מלא לחוויית דפדוף מלאה.
+              </p>
             </div>
           </div>
         )}
@@ -74,7 +135,7 @@ export const WeeklyNewspaper: React.FC = () => {
         {filteredPapers.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 sm:gap-8">
             {filteredPapers.map((paper) => (
-              <WeeklyPaperCard key={paper.id} paper={paper} onOpen={setSelectedPaper} />
+              <WeeklyPaperCard key={paper.id} paper={paper} onOpen={openPaper} />
             ))}
           </div>
         ) : (
