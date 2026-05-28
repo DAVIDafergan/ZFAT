@@ -59,7 +59,7 @@ export const Article: React.FC = () => {
           <div className="mt-8 space-y-6">
             {galleryImages.map((image, index) => (
               <figure key={`${image.url}-${index}`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-                <img src={image.url} alt={`${post.title} - תמונה ${index + 2}`} className="max-h-[500px] w-full object-cover" />
+                <img src={image.url} alt={`${post.title} - תמונה ${index + 2}`} loading="lazy" decoding="async" className="max-h-[500px] w-full object-cover" />
                 <figcaption className="bg-gray-50 px-4 py-2 text-xs font-bold text-gray-600">צילום: {image.photographer || 'ללא קרדיט'}</figcaption>
               </figure>
             ))}
@@ -82,7 +82,7 @@ export const Article: React.FC = () => {
       }
       elements.push(
         <figure key={`img-${imageIndex}`} className="my-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <img src={image.url} alt={`${post.title} - תמונה ${imageIndex + 2}`} className="max-h-[500px] w-full object-cover" />
+          <img src={image.url} alt={`${post.title} - תמונה ${imageIndex + 2}`} loading="lazy" decoding="async" className="max-h-[500px] w-full object-cover" />
           <figcaption className="bg-gray-50 px-4 py-2 text-xs font-bold text-gray-600">צילום: {image.photographer || 'ללא קרדיט'}</figcaption>
         </figure>
       );
@@ -133,7 +133,7 @@ export const Article: React.FC = () => {
 
             {leadImage && (
               <div className="mb-8 rounded-[2rem] overflow-hidden shadow-lg">
-                <img src={leadImage.url} alt={post.title} className="max-h-[560px] w-full object-cover" />
+                <img src={leadImage.url} alt={post.title} loading="eager" decoding="async" fetchPriority="high" className="max-h-[560px] w-full object-cover" />
                 <div className="flex flex-wrap items-center justify-between gap-2 bg-gray-950 px-4 py-3 text-[11px] font-bold text-gray-300 sm:gap-4 sm:text-xs">
                   <span>צילום: {leadImage.photographer || 'דוברות / רשתות חברתיות'}</span>
                   <span>זמין לשיתוף בלחיצה אחת</span>

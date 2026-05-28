@@ -18,7 +18,7 @@ export const BoardListingCard: React.FC<BoardListingCardProps> = ({ listing }) =
   return (
     <article className="group animate-luxury-rise overflow-hidden rounded-[1.5rem] border border-[#dfe3eb] bg-white shadow-[0_18px_45px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[#c8ced9] hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)] sm:rounded-[2rem]">
       <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
-        <img src={listing.imageUrl} alt={listing.title} className="animate-luxury-pan h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+        <img src={listing.imageUrl} alt={listing.title} loading="lazy" decoding="async" className="animate-luxury-pan h-full w-full object-cover transition duration-700 group-hover:scale-110" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
         <div className="absolute right-3 top-3 flex gap-2 sm:right-4 sm:top-4">
           <span className="rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-black text-[#7a0b14] shadow sm:px-3 sm:text-xs">{DEAL_TYPE_LABELS[listing.dealType]}</span>

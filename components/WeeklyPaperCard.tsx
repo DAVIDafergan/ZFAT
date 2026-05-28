@@ -13,7 +13,7 @@ export const WeeklyPaperCard: React.FC<WeeklyPaperCardProps> = ({ paper, onOpen 
     <article className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl sm:rounded-[2rem]">
       <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
         {paper.coverImageUrl ? (
-          <img src={paper.coverImageUrl} alt={paper.title} className="h-full w-full object-cover" />
+          <img src={paper.coverImageUrl} alt={paper.title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full items-center justify-center bg-gradient-to-br from-red-100 to-white text-red-700">
             <BookOpen size={42} />

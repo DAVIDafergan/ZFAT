@@ -35,7 +35,7 @@ export const AdUnit: React.FC<AdUnitProps> = ({ ad, className = '', label = true
   const media = currentSlide.videoUrl ? (
     <video key={currentSlide.videoUrl} src={currentSlide.videoUrl} className="h-auto w-full bg-black object-contain animate-fade-in" autoPlay muted loop playsInline />
   ) : (
-    <img key={currentSlide.imageUrl} src={currentSlide.imageUrl} alt={ad.title} className="h-auto w-full bg-black object-contain animate-fade-in" />
+    <img key={currentSlide.imageUrl} src={currentSlide.imageUrl} alt={ad.title} loading="lazy" decoding="async" className="h-auto w-full bg-black object-contain animate-fade-in" />
   );
 
   return (
