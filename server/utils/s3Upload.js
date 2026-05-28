@@ -2,8 +2,8 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const path = require('path');
 const crypto = require('crypto');
 
-const s3Region = process.env.AWS_S3_REGION || process.env.AWS_REGION || '';
-const s3Bucket = process.env.AWS_S3_BUCKET || '';
+const s3Region = process.env.AWS_REGION || '';
+const s3Bucket = process.env.AWS_S3_BUCKET_NAME || '';
 const trimSlashes = (value = '') => {
   let result = `${value}`.trim();
   while (result.startsWith('/')) result = result.slice(1);

@@ -153,19 +153,10 @@ export const AdminDashboard: React.FC = () => {
       const uploadedUrl = await api.uploadFile(file, 'admin');
       callback(uploadedUrl);
       showToast('הקובץ הועלה לשרת התמונות בהצלחה');
-      return;
     } catch (error) {
-      console.warn('S3 upload failed, falling back to data URL', error);
+      const message = error instanceof Error ? error.message : 'העלאת הקובץ נכשלה';
+      showToast(`שגיאה בהעלאה: ${message}`);
     }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') {
-        callback(reader.result);
-        showToast('ההעלאה עברה למצב מקומי. בדקו חיבור S3 בשרת.');
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   const handlePostSubmit = async (e: React.FormEvent) => {
