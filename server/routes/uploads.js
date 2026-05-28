@@ -17,6 +17,24 @@ const uploadLimiter = rateLimit({
 });
 
 const MAX_UPLOAD_BYTES = 80 * 1024 * 1024;
+const PDF_CONTENT_TYPE = 'application/pdf';
+
+const resolveUploadContentType = (file) => {
+  const normalizedName = (file?.originalname || '').toLowerCase();
+  const fileExtension = path.extname(normalizedName);
+  const mimetype = file?.mimetype || '';
+
+  if (mimetype.startsWith('image/')) {
+    return mimetype;
+  }
+
+  const isPdfByExtension = fileExtension === '.pdf';
+  if (mimetype === PDF_CONTENT_TYPE || (isPdfByExtension && mimetype === 'application/octet-stream')) {
+    return PDF_CONTENT_TYPE;
+  }
+
+  return null;
+};
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -24,18 +42,11 @@ const upload = multer({
     fileSize: MAX_UPLOAD_BYTES,
   },
   fileFilter: (req, file, callback) => {
-    const normalizedName = (file.originalname || '').toLowerCase();
-    const fileExtension = path.extname(normalizedName);
-    const isPdfByExtension = fileExtension === '.pdf';
-    const allowed = (
-      file.mimetype.startsWith('image/')
-      || file.mimetype.startsWith('video/')
-      || file.mimetype === 'application/pdf'
-      || (isPdfByExtension && file.mimetype === 'application/octet-stream')
-    );
-    if (!allowed) {
+    const resolvedContentType = resolveUploadContentType(file);
+    if (!resolvedContentType) {
       return callback(new Error('סוג קובץ לא נתמך'));
     }
+    req.uploadContentType = resolvedContentType;
     return callback(null, true);
   },
 });
@@ -60,7 +71,7 @@ router.post('/', uploadLimiter, auth, editorOrAbove, uploadSingle, async (req, r
     const folder = typeof req.body?.folder === 'string' ? req.body.folder : 'admin';
     const uploaded = await uploadFileToS3({
       buffer: req.file.buffer,
-      contentType: req.file.mimetype,
+      contentType: req.uploadContentType || req.file.mimetype,
       originalName: req.file.originalname,
       folder,
     });
@@ -69,7 +80,7 @@ router.post('/', uploadLimiter, auth, editorOrAbove, uploadSingle, async (req, r
       url: uploaded.url,
       key: uploaded.key,
       size: req.file.size,
-      contentType: req.file.mimetype,
+      contentType: req.uploadContentType || req.file.mimetype,
     });
   } catch (err) {
     return res.status(500).json({ message: err.message || 'העלאה נכשלה' });
