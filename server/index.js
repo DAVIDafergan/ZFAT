@@ -181,13 +181,29 @@ app.get('/api/posts/:id/og-image', spaFallbackLimiter, async (req, res) => {
   }
 });
 
-app.use(express.static(distDir));
+app.use(express.static(distDir, {
+  index: false,
+  maxAge: '1y',
+  immutable: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+      return;
+    }
+    if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      return;
+    }
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+  },
+}));
 
 app.get('*', spaFallbackLimiter, (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   if (!hasDistIndex) {
     return res.status(503).json({ message: 'Frontend build not available yet' });
   }
+  res.setHeader('Cache-Control', 'no-cache');
   return res.sendFile(distIndexPath);
 });
 

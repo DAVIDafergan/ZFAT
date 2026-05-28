@@ -144,15 +144,19 @@ export const AdminDashboard: React.FC = () => {
     navigate('/');
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    callback: (url: string) => void,
+    folder = 'admin'
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.currentTarget.value = '';
 
     try {
-      const uploadedUrl = await api.uploadFile(file, 'admin');
+      const uploadedUrl = await api.uploadFile(file, folder);
       callback(uploadedUrl);
-      showToast('הקובץ הועלה לשרת התמונות בהצלחה');
+      showToast('הקובץ הועלה ל-S3 בהצלחה');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'העלאת הקובץ נכשלה';
       showToast(`שגיאה בהעלאה: ${message}`);
@@ -829,7 +833,7 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                     <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-3 text-sm font-black text-gray-700 transition hover:bg-gray-200">
                       <Upload size={16} /> העלה PDF מהמחשב
-                      <input type="file" accept="application/pdf" className="hidden" onChange={(e) => handleFileUpload(e, (url) => setPaperForm({ ...paperForm, pdfUrl: url }))} />
+                      <input type="file" accept="application/pdf" className="hidden" onChange={(e) => handleFileUpload(e, (url) => setPaperForm({ ...paperForm, pdfUrl: url }), 'weekly-paper')} />
                     </label>
                     {isDataUrl(paperForm.pdfUrl) && <p className="text-xs font-bold text-amber-700">קובץ מקומי זוהה. לפרסום יציב מומלץ להזין קישור ישיר ל-PDF.</p>}
                   </div>

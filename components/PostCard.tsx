@@ -55,7 +55,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, layout = 'grid' }) => 
       <article className="group flex gap-3 overflow-hidden rounded-[1.4rem] border border-transparent bg-white/95 p-3 shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:-translate-x-1 hover:shadow-xl sm:gap-5 sm:rounded-[1.75rem] sm:border-gray-100 sm:p-4 sm:shadow-sm">
         {post.imageUrl && (
           <Link to={`/article/${post.id}`} className="relative aspect-[4/3] w-[34%] shrink-0 overflow-hidden rounded-[1rem] shadow-inner md:w-1/4 md:rounded-[1.25rem]">
-            <img src={post.imageUrl} alt={post.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+            <img src={post.imageUrl} alt={post.title} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
             <span className={`absolute top-0 right-0 rounded-bl-2xl px-3 py-1 text-[10px] font-black text-white shadow-md md:text-xs ${categoryColor}`}>{post.category}</span>
           </Link>
         )}
@@ -83,7 +83,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, layout = 'grid' }) => 
     <article className="group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-transparent bg-white/95 shadow-[0_12px_26px_rgba(15,23,42,0.08)] transition hover:-translate-y-1.5 hover:shadow-xl sm:rounded-[2rem] sm:border-gray-100 sm:shadow-sm">
       {post.imageUrl && (
         <Link to={`/article/${post.id}`} className="relative block aspect-[16/10] overflow-hidden">
-          <img src={post.imageUrl} alt={post.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+          <img src={post.imageUrl} alt={post.title} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-70" />
           <span className={`absolute top-3 right-3 rounded-xl px-2.5 py-1 text-[10px] font-black text-white shadow-md sm:top-4 sm:right-4 sm:px-3 sm:py-1.5 sm:shadow-lg ${categoryColor}`}>{post.category}</span>
         </Link>

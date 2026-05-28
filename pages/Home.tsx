@@ -67,7 +67,7 @@ export const Home: React.FC = () => {
                       </div>
                     </div>
                     <div className="aspect-[4/3] w-[34%] shrink-0 overflow-hidden rounded-xl border border-white/10 sm:w-[32%]">
-                      <img src={post.imageUrl} alt={post.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                      <img src={post.imageUrl} alt={post.title} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" fetchPriority={index < 2 ? 'high' : 'auto'} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                     </div>
                   </article>
                 </Link>
@@ -153,7 +153,7 @@ export const Home: React.FC = () => {
                   {featuredListings.map((listing) => (
                     <article key={listing.id} className="rounded-[1.4rem] border border-gray-100 bg-gray-50 p-4 sm:rounded-[1.75rem] sm:p-5">
                       <div className="mb-4 aspect-[16/10] overflow-hidden rounded-[1.1rem] sm:rounded-[1.5rem]">
-                        <img src={listing.imageUrl} alt={listing.title} className="h-full w-full object-cover" />
+                        <img src={listing.imageUrl} alt={listing.title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                       </div>
                       <h3 className="news-headline text-xl font-black text-gray-900 sm:text-2xl">{listing.title}</h3>
                       <p className="mt-2 text-sm font-medium leading-6 text-gray-600 sm:leading-7">{listing.location} • ₪{listing.price.toLocaleString('he-IL')} • {listing.sizeSqm} מ"ר</p>
