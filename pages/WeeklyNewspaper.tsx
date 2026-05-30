@@ -14,6 +14,7 @@ export const WeeklyNewspaper: React.FC = () => {
   const [hasAutoSelected, setHasAutoSelected] = useState(Boolean(weeklyPapers[0]));
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(125);
+  const [isDesktopSpread, setIsDesktopSpread] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : false));
   const topAd = ads.find((ad) => ad.area === 'weekly_top' && ad.isActive);
 
   const filteredPapers = useMemo(() => {
@@ -36,15 +37,35 @@ export const WeeklyNewspaper: React.FC = () => {
     }
   }, [hasAutoSelected, selectedPaper, weeklyPapers]);
 
+  useEffect(() => {
+    const onResize = () => setIsDesktopSpread(window.innerWidth >= 1024);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
+    if (isDesktopSpread) {
+      setCurrentPage((prev) => (prev % 2 === 0 ? Math.max(1, prev - 1) : prev));
+    }
+  }, [isDesktopSpread]);
+
   const openPaper = (paper: WeeklyPaper) => {
     setSelectedPaper(paper);
     setCurrentPage(1);
     setZoom(125);
   };
 
-  const readerSrc = selectedPaper
-    ? `${selectedPaper.pdfUrl}#page=${currentPage}&zoom=${zoom}&view=FitH&pagemode=none`
-    : '';
+  const spreadStep = isDesktopSpread ? 2 : 1;
+  const spreadStartPage = isDesktopSpread && currentPage % 2 === 0 ? Math.max(1, currentPage - 1) : currentPage;
+
+  const createReaderSrc = (page: number) =>
+    selectedPaper
+      ? `${selectedPaper.pdfUrl}#page=${page}&zoom=${zoom}&view=FitH&pagemode=none&toolbar=0&navpanes=0`
+      : '';
+
+  const rightPageSrc = createReaderSrc(spreadStartPage);
+  const leftPageSrc = createReaderSrc(spreadStartPage + 1);
 
   return (
     <div className="min-h-screen bg-[#f4f1ec] pb-16">
@@ -92,19 +113,20 @@ export const WeeklyNewspaper: React.FC = () => {
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 text-white sm:px-4">
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - spreadStep))}
                     className="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-2 text-xs font-bold transition hover:border-white/40 hover:bg-white/10 sm:text-sm"
                   >
                     <ChevronRight size={16} /> עמוד קודם
                   </button>
                   <button
-                    onClick={() => setCurrentPage((prev) => prev + 1)}
+                    onClick={() => setCurrentPage((prev) => prev + spreadStep)}
                     className="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-2 text-xs font-bold transition hover:border-white/40 hover:bg-white/10 sm:text-sm"
                   >
                     עמוד הבא <ChevronLeft size={16} />
                   </button>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Search size={15} className="text-white/80" />
                   <button
                     onClick={() => setZoom((prev) => Math.max(75, prev - 25))}
                     className="rounded-full border border-white/20 p-2 transition hover:border-white/40 hover:bg-white/10"
@@ -120,13 +142,32 @@ export const WeeklyNewspaper: React.FC = () => {
                   >
                     <Plus size={14} />
                   </button>
+                  <input
+                    type="range"
+                    min={75}
+                    max={250}
+                    step={25}
+                    value={zoom}
+                    onChange={(event) => setZoom(Number(event.target.value))}
+                    className="w-24 accent-red-500 sm:w-32"
+                    aria-label="שליטת זום"
+                  />
                 </div>
               </div>
               <div className="rounded-[1.25rem] bg-[#efe8de] p-2 shadow-[0_14px_40px_rgba(0,0,0,0.35)] sm:p-4">
-                <iframe src={readerSrc} title={selectedPaper.title} className="h-[70vh] min-h-[460px] w-full rounded-[1rem] border-0 bg-white md:h-[78vh]" />
+                {isDesktopSpread ? (
+                  <div className="grid grid-cols-2 gap-3 rounded-[1rem] bg-[#e5ddd2] p-3">
+                    <iframe key={`${spreadStartPage}-${zoom}-right`} src={rightPageSrc} title={`${selectedPaper.title} עמוד ${spreadStartPage}`} className="h-[72vh] min-h-[520px] w-full rounded-[0.85rem] border-0 bg-white" />
+                    <iframe key={`${spreadStartPage + 1}-${zoom}-left`} src={leftPageSrc} title={`${selectedPaper.title} עמוד ${spreadStartPage + 1}`} className="h-[72vh] min-h-[520px] w-full rounded-[0.85rem] border-0 bg-white" />
+                  </div>
+                ) : (
+                  <iframe key={`${currentPage}-${zoom}-single`} src={rightPageSrc} title={selectedPaper.title} className="h-[70vh] min-h-[460px] w-full rounded-[1rem] border-0 bg-white md:h-[78vh]" />
+                )}
               </div>
               <p className="text-center text-xs font-medium text-white/80 sm:text-sm">
-                בדפדפן נייד אפשר לבצע זום במחוות אצבעות או לפתוח במסך מלא לחוויית דפדוף מלאה.
+                {isDesktopSpread
+                  ? `מצב פריסה פתוחה פעיל: מוצגים עמודים ${spreadStartPage}-${spreadStartPage + 1} כמו עיתון פתוח.`
+                  : `כעת מוצג עמוד ${currentPage}. בדפדפן נייד אפשר לבצע זום במחוות אצבעות או לפתוח במסך מלא לחוויית דפדוף מלאה.`}
               </p>
             </div>
           </div>
