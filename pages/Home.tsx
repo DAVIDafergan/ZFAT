@@ -6,7 +6,7 @@ import { AdUnit } from '../components/AdUnit';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Mail, Newspaper, Building2 } from 'lucide-react';
 import { Category, CATEGORY_COLORS } from '../types';
-import { formatWeekLabel } from '../services/siteConfig';
+import { formatWeekLabel, SITE_WHATSAPP_URL } from '../services/siteConfig';
 
 export const Home: React.FC = () => {
   const { posts, ads, weeklyPapers, boardListings } = useApp();
@@ -99,7 +99,7 @@ export const Home: React.FC = () => {
               </div>
             </Link>
             <a
-              href="https://wa.me/972525981770"
+              href={SITE_WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-3 rounded-[1.5rem] bg-[#25d366] px-4 py-4 text-white shadow-xl transition hover:-translate-y-1 hover:bg-[#1ebe5d] sm:rounded-[2rem] sm:px-6 sm:py-5"
