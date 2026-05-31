@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
 
   return (
     <>
-      <div className="h-[calc(4rem+env(safe-area-inset-top))] sm:h-24 lg:h-28" />
+      <div className="h-[calc(4.75rem+env(safe-area-inset-top))] sm:h-24 lg:h-28" />
       <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${isScrolled ? 'border-b border-white/15 bg-[#8b0000]/98 shadow-[0_12px_28px_rgba(0,0,0,0.22)] backdrop-blur-[3px] supports-[backdrop-filter]:bg-[#8b0000]/95' : 'border-b border-white/20 bg-[#8b0000] shadow-none backdrop-blur-0'}`}>
         <div className="h-[env(safe-area-inset-top)]" />
         <div className={`container mx-auto px-4 ${isScrolled ? 'py-2' : 'py-3'}`}>
@@ -94,7 +94,16 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
             </button>
 
             <Link to="/" className="flex flex-1 items-center justify-center lg:flex-none lg:justify-start" aria-label="דף הבית">
-              <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-10 w-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.40)] transition-all sm:h-12 md:h-14 lg:h-16" />
+              <img
+                src={LOGO_URL}
+                alt="לוגו צפת בתנופה"
+                width={320}
+                height={96}
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+                className="h-14 w-auto drop-shadow-[0_3px_14px_rgba(0,0,0,0.45)] transition-all sm:h-14 md:h-14 lg:h-16"
+              />
             </Link>
 
             <div className="flex items-center gap-2 lg:hidden">
@@ -206,7 +215,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
           <div className="animate-drawer-in ml-auto flex h-full w-[84%] max-w-[20rem] flex-col border-l border-red-100 bg-gradient-to-b from-white via-red-50/35 to-white p-4 shadow-2xl sm:p-5" onClick={(event) => event.stopPropagation()}>
             <div className="mb-5 flex items-center justify-between gap-3">
               <div className="rounded-2xl bg-[#8B0000] px-3 py-2 shadow-lg">
-                <img src={LOGO_URL} alt="לוגו צפת בתנופה" className="h-10 w-auto drop-shadow-[0_0_16px_rgba(255,255,255,0.42)]" />
+                <img src={LOGO_URL} alt="לוגו צפת בתנופה" width={320} height={96} loading="lazy" decoding="async" className="h-11 w-auto drop-shadow-[0_0_16px_rgba(255,255,255,0.42)]" />
               </div>
               <button type="button" className="rounded-full bg-gray-100 p-2 text-gray-700" onClick={() => setIsMenuOpen(false)} aria-label="סגור תפריט">
                 <X size={20} />

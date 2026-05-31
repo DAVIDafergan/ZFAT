@@ -1,17 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Header } from './components/Header';
 import { NewsTicker } from './components/NewsTicker';
 import { Home } from './pages/Home';
-import { Article } from './pages/Article';
-import { CategoryPage } from './pages/CategoryPage';
-import { AdminDashboard } from './pages/AdminDashboard';
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
-import { Contact } from './pages/Contact';
-import { SearchResults } from './pages/SearchResults';
-import { WeeklyNewspaper } from './pages/WeeklyNewspaper';
-import { BoardPage } from './pages/BoardPage';
 import { AccessibilityWidget } from './components/AccessibilityWidget';
 import {
   Post,
@@ -29,6 +20,16 @@ import { AppContext } from './context/AppContext';
 import { api } from './services/api';
 import { Loader2, Newspaper, Building2 } from 'lucide-react';
 import { API_URL, LOGO_URL } from './services/siteConfig';
+
+const Article = lazy(() => import('./pages/Article').then((module) => ({ default: module.Article })));
+const CategoryPage = lazy(() => import('./pages/CategoryPage').then((module) => ({ default: module.CategoryPage })));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then((module) => ({ default: module.AdminDashboard })));
+const Login = lazy(() => import('./pages/Login').then((module) => ({ default: module.Login })));
+const Register = lazy(() => import('./pages/Register').then((module) => ({ default: module.Register })));
+const Contact = lazy(() => import('./pages/Contact').then((module) => ({ default: module.Contact })));
+const SearchResults = lazy(() => import('./pages/SearchResults').then((module) => ({ default: module.SearchResults })));
+const WeeklyNewspaper = lazy(() => import('./pages/WeeklyNewspaper').then((module) => ({ default: module.WeeklyNewspaper })));
+const BoardPage = lazy(() => import('./pages/BoardPage').then((module) => ({ default: module.BoardPage })));
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
@@ -97,7 +98,7 @@ const App: React.FC = () => {
 
         const [data, authenticatedUser] = await Promise.all([
           api.fetchInitialData(),
-          api.verifyToken(),
+          hasToken ? api.verifyToken() : Promise.resolve(null),
         ]);
         setPosts(data.posts);
         setAds(data.ads);
@@ -354,25 +355,33 @@ const App: React.FC = () => {
 
           <main id="main-content" className="flex-1 focus:outline-none" tabIndex={-1}>
             <ErrorBoundary>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/article/:id" element={<Article />} />
-                <Route path="/category/:categoryName" element={<CategoryPage />} />
-                <Route path="/weekly-paper" element={<WeeklyNewspaper />} />
-                <Route path="/board" element={<BoardPage />} />
-                <Route path="/admin" element={
-                  authLoading ? (
-                    <div className="flex min-h-[50vh] items-center justify-center">
-                      <Loader2 size={28} className="animate-spin text-red-700" />
-                    </div>
-                  ) : user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/login" replace />
-                } />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/search" element={<SearchResults />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+              <Suspense
+                fallback={
+                  <div className="flex min-h-[50vh] items-center justify-center">
+                    <Loader2 size={28} className="animate-spin text-red-700" />
+                  </div>
+                }
+              >
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/article/:id" element={<Article />} />
+                  <Route path="/category/:categoryName" element={<CategoryPage />} />
+                  <Route path="/weekly-paper" element={<WeeklyNewspaper />} />
+                  <Route path="/board" element={<BoardPage />} />
+                  <Route path="/admin" element={
+                    authLoading ? (
+                      <div className="flex min-h-[50vh] items-center justify-center">
+                        <Loader2 size={28} className="animate-spin text-red-700" />
+                      </div>
+                    ) : user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/login" replace />
+                  } />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/search" element={<SearchResults />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
             </ErrorBoundary>
           </main>
 
