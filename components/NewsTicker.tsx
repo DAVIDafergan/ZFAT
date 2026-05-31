@@ -44,17 +44,19 @@ export const NewsTicker: React.FC<NewsTickerProps> = ({ posts }) => {
   const typedTitle = activePost.title.slice(0, visibleLetters);
 
   return (
-    <div className="relative z-40 flex min-h-11 items-stretch overflow-hidden border-y border-red-900/40 bg-[#090c14] text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]" aria-label="מבזקים" role="region">
+    <div className="relative z-40 flex min-h-12 items-stretch overflow-hidden border-y border-red-900/40 bg-[#090c14] text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]" aria-label="מבזקים" role="region">
       <div className="z-10 flex shrink-0 items-center gap-2 bg-red-700 px-4 text-xs font-black tracking-[0.12em] text-white sm:px-5 sm:text-sm">
         <span className="h-1.5 w-1.5 rounded-full bg-white" />
         מבזק
       </div>
-      <div className="flex flex-1 items-center overflow-hidden px-4 sm:px-6" aria-live="polite">
-        <Link to={`/article/${activePost.id}`} className="group flex min-h-11 w-full min-w-0 items-center gap-2 text-sm font-bold text-white/85 transition hover:text-red-300 sm:text-base">
+      <div className="flex flex-1 items-center overflow-hidden px-4 py-1.5 sm:px-6 sm:py-1" aria-live="polite">
+        <Link to={`/article/${activePost.id}`} className="group flex min-h-10 w-full min-w-0 items-center gap-2 text-sm font-bold text-white/85 transition hover:text-red-300 sm:text-base">
           <span className="shrink-0 text-red-400">•</span>
-          <span className="block min-w-0 flex-1 truncate leading-none sm:leading-tight">
-            {typedTitle}
-            <span className="ml-0.5 inline-block h-4 w-[1px] animate-pulse bg-red-400 align-middle sm:h-5" />
+          <span className="block min-w-0 flex-1 text-[0.95rem] leading-6 sm:text-base sm:leading-tight">
+            <span className="line-clamp-2 sm:line-clamp-1">
+              {typedTitle}
+              <span className="ml-0.5 inline-block h-[1em] w-[1px] animate-pulse bg-red-400 align-[-0.12em]" />
+            </span>
           </span>
           <span className="mr-auto hidden text-xs text-white/45 sm:block">
             {activePost.date}
