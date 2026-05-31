@@ -26,6 +26,7 @@ import {
 import { formatWeekLabel, normalizeShareCode } from '../services/siteConfig';
 import { AD_PLACEMENTS, AD_PLACEMENT_MAP } from '../services/adPlacements';
 import { api } from '../services/api';
+import { compressImage } from '../services/imageUtils';
 
 type TabKey = 'posts' | 'ads' | 'weekly-paper' | 'board' | 'users' | 'messages' | 'newsletter';
 
@@ -154,6 +155,12 @@ export const AdminDashboard: React.FC = () => {
     e.currentTarget.value = '';
 
     try {
+      if (file.type.startsWith('image/')) {
+        const compressedUrl = await compressImage(file);
+        callback(compressedUrl);
+        showToast('התמונה נדחסה ונשמרה בהצלחה');
+        return;
+      }
       const uploadedUrl = await api.uploadFile(file, folder);
       callback(uploadedUrl);
       showToast('הקובץ הועלה ל-S3 בהצלחה');

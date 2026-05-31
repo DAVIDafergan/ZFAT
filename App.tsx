@@ -28,7 +28,7 @@ import {
 import { AppContext } from './context/AppContext';
 import { api } from './services/api';
 import { Loader2, Newspaper, Building2 } from 'lucide-react';
-import { LOGO_URL } from './services/siteConfig';
+import { API_URL, LOGO_URL } from './services/siteConfig';
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
@@ -95,7 +95,10 @@ const App: React.FC = () => {
           setUser(JSON.parse(savedUser));
         }
 
-        const data = await api.fetchInitialData();
+        const [data, authenticatedUser] = await Promise.all([
+          api.fetchInitialData(),
+          api.verifyToken(),
+        ]);
         setPosts(data.posts);
         setAds(data.ads);
         setComments(data.comments);
@@ -104,7 +107,6 @@ const App: React.FC = () => {
         setNewsletterSubscribers(data.newsletterSubscribers || []);
         setWeeklyPapers(data.weeklyPapers || []);
         setBoardListings(data.boardListings || []);
-        const authenticatedUser = await api.verifyToken();
         if (authenticatedUser) {
           setUser(authenticatedUser);
           if (authenticatedUser.role === 'admin') {
@@ -288,6 +290,12 @@ const App: React.FC = () => {
     setFooterNewsletterStatus(success ? 'success' : 'error');
     if (success) setFooterEmail('');
   };
+
+  useEffect(() => {
+    const pingServer = () => fetch(`${API_URL}/api/posts?limit=1`).catch(() => {});
+    const interval = setInterval(pingServer, 9 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (isLoading) {
     return (

@@ -182,28 +182,16 @@ export const api = {
   fetchInitialData: async () => {
     if (shouldUseServer()) {
       try {
-        const [posts, ads, comments, weeklyPapers, boardListings] = await Promise.all([
+        const [posts, ads, comments, weeklyPapers, boardListings, messages, subscribers, users] = await Promise.all([
           fetchJson('/api/posts', { headers: authHeaders() }),
           fetchJson('/api/ads', { headers: authHeaders() }),
           fetchJson('/api/comments', { headers: authHeaders() }),
           fetchJson('/api/weekly-papers', { headers: authHeaders() }),
           fetchJson('/api/board-listings', { headers: authHeaders() }),
+          fetch(`${API_URL}/api/messages`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+          fetch(`${API_URL}/api/subscribers`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+          fetch(`${API_URL}/api/auth/users`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
         ]);
-        const messagesRes = await fetch(`${API_URL}/api/messages`, { headers: authHeaders() }).catch((error) => {
-          console.error('[API] Failed loading messages', error);
-          return null;
-        });
-        const subscribersRes = await fetch(`${API_URL}/api/subscribers`, { headers: authHeaders() }).catch((error) => {
-          console.error('[API] Failed loading subscribers', error);
-          return null;
-        });
-        const usersRes = await fetch(`${API_URL}/api/auth/users`, { headers: authHeaders() }).catch((error) => {
-          console.error('[API] Failed loading users', error);
-          return null;
-        });
-        const messages = messagesRes?.ok ? await messagesRes.json() : [];
-        const subscribers = subscribersRes?.ok ? await subscribersRes.json() : [];
-        const users = usersRes?.ok ? await usersRes.json() : [];
 
         return {
           posts: (posts.data || posts).map(normalizePost),
@@ -216,7 +204,7 @@ export const api = {
           boardListings: (boardListings || []).map(normalizeBoardListing),
         };
       } catch (error) {
-        console.warn('Server connection failed, falling back to local storage', error);
+        console.error('[API] fetchInitialData failed, falling back to local', error);
       }
     }
 
