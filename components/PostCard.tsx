@@ -52,7 +52,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, layout = 'grid' }) => 
 
   if (layout === 'list') {
     return (
-      <article className="group flex gap-3 overflow-hidden rounded-[1.4rem] border border-transparent bg-white/95 p-3 shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:-translate-x-1 hover:shadow-xl sm:gap-5 sm:rounded-[1.75rem] sm:border-gray-100 sm:p-4 sm:shadow-sm">
+      <article className="mobile-card-transition group flex gap-3 overflow-hidden rounded-[1.4rem] border border-transparent bg-white/95 p-3 shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:-translate-x-1 hover:shadow-xl sm:gap-5 sm:rounded-[1.75rem] sm:border-gray-100 sm:p-4 sm:shadow-sm">
         {post.imageUrl && (
           <Link to={`/article/${post.id}`} className="relative aspect-[4/3] w-[34%] shrink-0 overflow-hidden rounded-[1rem] shadow-inner md:w-1/4 md:rounded-[1.25rem]">
             <img src={post.imageUrl} alt={post.title} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
@@ -61,8 +61,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post, layout = 'grid' }) => 
         )}
         <div className="flex flex-1 flex-col justify-between py-1">
           <Link to={`/article/${post.id}`}>
-            <h3 className="news-headline mb-2 text-base font-black leading-snug text-gray-900 transition group-hover:text-red-700 sm:mb-3 sm:text-lg md:text-xl">{post.title}</h3>
-            <p className="hidden line-clamp-2 text-sm leading-7 text-gray-500 md:block">{displayExcerpt}</p>
+            <h3 className="news-headline mb-2 text-base font-black leading-7 text-gray-900 transition group-hover:text-red-700 sm:mb-3 sm:text-lg md:text-xl">{post.title}</h3>
+            <p className="line-clamp-2 text-sm leading-6 text-gray-500 md:leading-7">{displayExcerpt}</p>
           </Link>
           <div className="mt-2 flex items-center justify-between border-t border-gray-100/70 pt-2 text-[11px] text-gray-400 sm:mt-3 sm:border-gray-50 sm:pt-3 sm:text-xs md:border-none md:pt-0">
             <div className="flex items-center gap-2 sm:gap-4">
@@ -80,7 +80,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, layout = 'grid' }) => 
   }
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-transparent bg-white/95 shadow-[0_12px_26px_rgba(15,23,42,0.08)] transition hover:-translate-y-1.5 hover:shadow-xl sm:rounded-[2rem] sm:border-gray-100 sm:shadow-sm">
+    <article className="mobile-card-transition group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-transparent bg-white/95 shadow-[0_12px_26px_rgba(15,23,42,0.08)] transition hover:-translate-y-1.5 hover:shadow-xl sm:rounded-[2rem] sm:border-gray-100 sm:shadow-sm">
       {post.imageUrl && (
         <Link to={`/article/${post.id}`} className="relative block aspect-[16/10] overflow-hidden">
           <img src={post.imageUrl} alt={post.title} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
