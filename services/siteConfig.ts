@@ -27,6 +27,8 @@ export const SITE_URL = (() => {
 })();
 
 export const USE_SERVER = readEnv('VITE_USE_SERVER') !== 'false';
+export const SITE_WHATSAPP_NUMBER = '972525981770';
+export const SITE_WHATSAPP_URL = `https://wa.me/${SITE_WHATSAPP_NUMBER}`;
 
 export const normalizeShareCode = (value?: string | null, fallback = '') => {
   const source = `${value || ''}`.trim();

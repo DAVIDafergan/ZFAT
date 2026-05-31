@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Header } from './components/Header';
 import { NewsTicker } from './components/NewsTicker';
+import { StickyWhatsappButton } from './components/StickyWhatsappButton';
 import { Home } from './pages/Home';
 import { AccessibilityWidget } from './components/AccessibilityWidget';
 import {
@@ -462,6 +463,7 @@ const App: React.FC = () => {
             </div>
           </footer>
 
+          <StickyWhatsappButton />
           <AccessibilityWidget />
         </div>
       </HashRouter>

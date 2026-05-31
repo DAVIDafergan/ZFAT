@@ -5,6 +5,7 @@ import { BoardListingCard } from '../components/BoardListingCard';
 import { PageHero } from '../components/PageHero';
 import { AdUnit } from '../components/AdUnit';
 import { BoardListingDealType } from '../types';
+import { SITE_WHATSAPP_URL } from '../services/siteConfig';
 
 type DealFilter = 'all' | BoardListingDealType;
 type BalconyFilter = 'all' | 'with' | 'without';
@@ -151,7 +152,7 @@ export const BoardPage: React.FC = () => {
               <p className="mt-1 text-sm font-bold text-white/90 sm:text-base">פרסמו את הנכס שלכם בלוח הנדל"ן של צפת – פשוט, מהיר ואפקטיבי</p>
             </div>
             <a
-              href="https://wa.me/972525981770"
+              href={SITE_WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="shrink-0 rounded-full bg-white px-6 py-3 text-sm font-black text-[#128c4a] shadow-lg transition hover:scale-105 hover:shadow-xl sm:px-8 sm:py-4 sm:text-base"
