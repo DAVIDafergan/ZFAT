@@ -302,6 +302,100 @@ h6 {
   border-radius: 999px;
 }
 
+/* ─── Splash / Intro screen ─── */
+
+/* Radial red background reveal */
+@keyframes splashBgReveal {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Logo: dramatic scale-in + rise from below with cinematic ease */
+@keyframes splashLogoIn {
+  0%   { opacity: 0; transform: scale(0.55) translateY(60px); filter: blur(12px); }
+  35%  { opacity: 1; transform: scale(1.06) translateY(-8px); filter: blur(0); }
+  50%  { transform: scale(1) translateY(0); }
+  80%  { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 0; transform: scale(1.08) translateY(-14px); }
+}
+
+/* Shimmer sweep over logo */
+@keyframes splashShimmer {
+  0%   { left: -120%; }
+  50%  { left: 110%; }
+  100% { left: 110%; }
+}
+
+/* Red accent line that draws under the logo */
+@keyframes splashLineGrow {
+  0%   { transform: scaleX(0); opacity: 0; }
+  40%  { transform: scaleX(1); opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Final full-screen wipe-out (curtain up) */
+@keyframes splashCurtain {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-100%); }
+}
+
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 40%, #c0171e 0%, #8b0000 60%, #4a0000 100%);
+  animation: splashBgReveal 2.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.splash-screen.splash-exit {
+  animation: splashCurtain 0.55s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+.splash-logo-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.splash-logo {
+  width: min(280px, 68vw);
+  height: auto;
+  filter: drop-shadow(0 0 40px rgba(255, 200, 150, 0.45)) drop-shadow(0 8px 24px rgba(0,0,0,0.6));
+  animation: splashLogoIn 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  position: relative;
+}
+
+.splash-logo-shimmer {
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
+  animation: splashShimmer 2.8s ease-in-out forwards;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.splash-line {
+  width: min(200px, 50vw);
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #ffb347, #fff, #ffb347, transparent);
+  border-radius: 99px;
+  transform-origin: center;
+  animation: splashLineGrow 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 0 12px rgba(255, 179, 71, 0.7);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

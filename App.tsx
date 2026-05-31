@@ -298,19 +298,38 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#f7f5f1]">
-        <img src={LOGO_URL} alt="צפת בתנופה" className="h-16 w-auto animate-pulse opacity-80" />
-        <Loader2 size={40} className="animate-spin text-red-700" />
-        <p className="font-black text-gray-500">טוען נתונים...</p>
-      </div>
-    );
-  }
+  const [splashVisible, setSplashVisible] = useState(true);
+  const [splashExit, setSplashExit] = useState(false);
+  const splashStartRef = React.useRef(Date.now());
+
+  useEffect(() => {
+    if (!isLoading) {
+      const elapsed = Date.now() - splashStartRef.current;
+      const minDisplay = 2200; // ms — enough for the full intro animation
+      const remaining = Math.max(0, minDisplay - elapsed);
+
+      const exitDelay = setTimeout(() => setSplashExit(true), remaining);
+      const removeDelay = setTimeout(() => setSplashVisible(false), remaining + 600);
+      return () => { clearTimeout(exitDelay); clearTimeout(removeDelay); };
+    }
+  }, [isLoading]);
 
   const tickerPosts = posts.filter((post) => post.category === Category.NEWS);
 
   return (
+    <>
+      {splashVisible && (
+        <div className={`splash-screen${splashExit ? ' splash-exit' : ''}`} aria-hidden="true">
+          <div className="splash-logo-wrap">
+            <div style={{ position: 'relative', overflow: 'hidden', display: 'inline-flex' }}>
+              <img src={LOGO_URL} alt="צפת בתנופה" className="splash-logo" />
+              <span className="splash-logo-shimmer" />
+            </div>
+            <div className="splash-line" />
+          </div>
+        </div>
+      )}
+
     <AppContext.Provider value={{
       posts,
       ads,
@@ -447,6 +466,7 @@ const App: React.FC = () => {
         </div>
       </HashRouter>
     </AppContext.Provider>
+    </>
   );
 };
 
