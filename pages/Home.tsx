@@ -52,7 +52,7 @@ export const Home: React.FC = () => {
             <div className="space-y-3 p-4 sm:space-y-4 sm:p-6">
               {(newsPosts.length > 0 ? newsPosts : latestPosts).map((post, index) => (
                 <Link key={post.id} to={`/article/${post.id}`} className="group block">
-                  <article className="flex items-start gap-3 rounded-[1.2rem] border border-white/10 bg-[#101827] p-3 transition hover:border-red-500/40 hover:bg-[#131d2f] sm:gap-4 sm:p-4">
+                  <article className="mobile-card-transition flex items-start gap-3 rounded-[1.2rem] border border-white/10 bg-[#101827] p-3 transition hover:border-red-500/40 hover:bg-[#131d2f] sm:gap-4 sm:p-4">
                     <div className="w-full">
                       <h3 className="line-clamp-2 text-base font-black leading-6 text-white transition group-hover:text-red-300 sm:text-lg">
                         {post.title}
@@ -131,7 +131,7 @@ export const Home: React.FC = () => {
                 </div>
                 <Link to={`/category/${Category.NEWS}`} className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-black text-white/80 transition hover:bg-white/20">לכל המבזקים</Link>
               </div>
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-8">
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 sm:gap-8">
                 {latestPosts.map((post, idx) => (
                   <div key={`${post.id}-repeat`} className="animate-stagger-in" style={{ animationDelay: `${idx * 0.07}s` }}>
                     <PostCard post={post} />
