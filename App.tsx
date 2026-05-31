@@ -64,6 +64,7 @@ const App: React.FC = () => {
   const [ads, setAds] = useState<Ad[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [pendingComments, setPendingComments] = useState<Comment[]>([]);
   const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<NewsletterSubscriber[]>([]);
@@ -112,7 +113,12 @@ const App: React.FC = () => {
         if (authenticatedUser) {
           setUser(authenticatedUser);
           if (authenticatedUser.role === 'admin') {
-            setRegisteredUsers(await api.fetchUsers());
+            const [users, pending] = await Promise.all([
+              api.fetchUsers(),
+              api.fetchPendingComments(),
+            ]);
+            setRegisteredUsers(users);
+            setPendingComments(pending);
           }
         } else {
           localStorage.removeItem('zfat_jwt');
@@ -204,7 +210,12 @@ const App: React.FC = () => {
       const authenticatedUser = await api.login(usernameOrEmail, password);
       setUser(authenticatedUser);
       if (authenticatedUser.role === 'admin') {
-        setRegisteredUsers(await api.fetchUsers());
+        const [users, pending] = await Promise.all([
+          api.fetchUsers(),
+          api.fetchPendingComments(),
+        ]);
+        setRegisteredUsers(users);
+        setPendingComments(pending);
       } else {
         mergeRegisteredUser(authenticatedUser);
       }
@@ -238,7 +249,27 @@ const App: React.FC = () => {
 
   const addComment = async (comment: Comment) => {
     await api.addComment(comment);
-    setComments((prev) => [...prev, comment]);
+    // Comment is pending approval — do not add to displayed comments
+  };
+
+  const fetchPendingComments = async () => {
+    const pending = await api.fetchPendingComments();
+    setPendingComments(pending);
+  };
+
+  const approveComment = async (commentId: string) => {
+    await api.approveComment(commentId);
+    const approved = pendingComments.find(c => c.id === commentId);
+    setPendingComments(prev => prev.filter(c => c.id !== commentId));
+    if (approved) {
+      setComments(prev => [{ ...approved, approved: true }, ...prev]);
+    }
+  };
+
+  const deleteComment = async (commentId: string) => {
+    await api.deleteComment(commentId);
+    setPendingComments(prev => prev.filter(c => c.id !== commentId));
+    setComments(prev => prev.filter(c => c.id !== commentId));
   };
 
   const toggleLikeComment = async (commentId: string) => {
@@ -360,6 +391,10 @@ const App: React.FC = () => {
       register,
       addComment,
       toggleLikeComment,
+      pendingComments,
+      fetchPendingComments,
+      approveComment,
+      deleteComment,
       addContactMessage,
       subscribeToNewsletter,
       sendNewsletter,

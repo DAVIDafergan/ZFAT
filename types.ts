@@ -81,6 +81,7 @@ export interface Comment {
   date: string;
   likes: number;
   likedBy: string[];
+  approved?: boolean;
 }
 
 export interface ContactMessage {

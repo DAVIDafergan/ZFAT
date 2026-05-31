@@ -13,6 +13,7 @@ export const Article: React.FC = () => {
   const { posts, ads, user, comments, addComment, toggleLikeComment, incrementViews } = useApp();
   const [commentText, setCommentText] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'top'>('newest');
+  const [commentSubmitted, setCommentSubmitted] = useState(false);
 
   useEffect(() => {
     if (id) incrementViews(id);
@@ -114,6 +115,8 @@ export const Article: React.FC = () => {
     addComment(newComment);
     setCommentText('');
     setSortBy('newest');
+    setCommentSubmitted(true);
+    setTimeout(() => setCommentSubmitted(false), 8000);
   };
 
   return (
@@ -199,6 +202,11 @@ export const Article: React.FC = () => {
                     <Send size={16} /> פרסם תגובה
                   </button>
                 </div>
+                {commentSubmitted && (
+                  <div className="mt-3 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm font-bold text-yellow-800">
+                    ✓ תגובתך התקבלה ותפורסם לאחר אישור המנהל.
+                  </div>
+                )}
               </div>
             </div>
           </form>
