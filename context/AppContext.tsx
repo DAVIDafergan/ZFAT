@@ -43,6 +43,10 @@ export interface AppState {
 
   addComment: (comment: Comment) => Promise<void>;
   toggleLikeComment: (commentId: string) => Promise<void>;
+  pendingComments: Comment[];
+  fetchPendingComments: () => Promise<void>;
+  approveComment: (commentId: string) => Promise<void>;
+  deleteComment: (commentId: string) => Promise<void>;
 
   addContactMessage: (msg: ContactMessage) => Promise<void>;
   subscribeToNewsletter: (email: string) => Promise<boolean>;

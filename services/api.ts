@@ -100,6 +100,7 @@ const normalizeComment = (comment: any): Comment => ({
   date: comment.date || (comment.createdAt ? new Date(comment.createdAt).toLocaleDateString('he-IL') : new Date().toLocaleDateString('he-IL')),
   likes: Number(comment.likes || 0),
   likedBy: Array.isArray(comment.likedBy) ? comment.likedBy : [],
+  approved: Boolean(comment.approved),
 });
 
 const normalizeMessage = (message: any): ContactMessage => ({
@@ -590,6 +591,43 @@ export const api = {
       return c;
     });
     setStorage('zfat_comments', updated);
+  },
+
+  fetchPendingComments: async (): Promise<Comment[]> => {
+    if (shouldUseServer()) {
+      try {
+        const data = await fetchJson('/api/comments/pending', { headers: authHeaders() });
+        return (data || []).map(normalizeComment);
+      } catch (error) {
+        console.warn('[API] Failed to fetch pending comments', error);
+        return [];
+      }
+    }
+    return [];
+  },
+
+  approveComment: async (commentId: string): Promise<void> => {
+    if (shouldUseServer()) {
+      await fetchJson(`/api/comments/${commentId}/approve`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+      });
+      return;
+    }
+    const comments = getStorage<Comment[]>('zfat_comments', INITIAL_COMMENTS);
+    setStorage('zfat_comments', comments.map(c => c.id === commentId ? { ...c, approved: true } : c));
+  },
+
+  deleteComment: async (commentId: string): Promise<void> => {
+    if (shouldUseServer()) {
+      await fetchJson(`/api/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      return;
+    }
+    const comments = getStorage<Comment[]>('zfat_comments', INITIAL_COMMENTS);
+    setStorage('zfat_comments', comments.filter(c => c.id !== commentId));
   },
 
   sendMessage: async (msg: ContactMessage) => {

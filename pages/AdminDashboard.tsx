@@ -22,13 +22,15 @@ import {
   Home,
   FileText,
   Download,
+  MessageCircle,
+  CheckCircle,
 } from 'lucide-react';
 import { formatWeekLabel, normalizeShareCode } from '../services/siteConfig';
 import { AD_PLACEMENTS, AD_PLACEMENT_MAP } from '../services/adPlacements';
 import { api } from '../services/api';
 import { compressImage } from '../services/imageUtils';
 
-type TabKey = 'posts' | 'ads' | 'weekly-paper' | 'board' | 'users' | 'messages' | 'newsletter';
+type TabKey = 'posts' | 'ads' | 'weekly-paper' | 'board' | 'users' | 'messages' | 'newsletter' | 'comments';
 
 const initialPaperForm = {
   title: '',
@@ -83,6 +85,10 @@ export const AdminDashboard: React.FC = () => {
     deleteWeeklyPaper,
     createBoardListing,
     deleteBoardListing,
+    pendingComments,
+    fetchPendingComments,
+    approveComment,
+    deleteComment,
   } = useApp();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabKey>('posts');
@@ -434,6 +440,7 @@ export const AdminDashboard: React.FC = () => {
     { key: 'ads', label: 'באנרים', icon: Layout },
     { key: 'weekly-paper', label: 'העיתון השבועי', icon: Newspaper },
     { key: 'board', label: 'לוח בתנופה', icon: Home },
+    { key: 'comments', label: `אישור תגובות${pendingComments.length > 0 ? ` (${pendingComments.length})` : ''}`, icon: MessageCircle },
     { key: 'users', label: 'משתמשים', icon: Users },
     { key: 'messages', label: 'הודעות', icon: Mail },
     { key: 'newsletter', label: 'ניוזלטר', icon: Mail },
@@ -960,6 +967,58 @@ export const AdminDashboard: React.FC = () => {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'comments' && (
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-xl font-black text-gray-800 sm:text-2xl">
+                <MessageCircle size={24} className="text-red-700" /> תגובות ממתינות לאישור ({pendingComments.length})
+              </h2>
+              <button
+                type="button"
+                onClick={() => fetchPendingComments().then(() => showToast('הרשימה עודכנה'))}
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-bold text-gray-600 transition hover:bg-gray-50"
+              >
+                רענן רשימה
+              </button>
+            </div>
+            {pendingComments.length > 0 ? (
+              <div className="space-y-4">
+                {pendingComments.map((comment) => (
+                  <div key={comment.id} className="rounded-xl border border-yellow-100 bg-yellow-50 p-4 sm:p-5">
+                    <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <span className="block font-black text-gray-900">{comment.userName}</span>
+                        <span className="text-xs font-bold text-gray-400">{comment.date}</span>
+                        <span className="mr-3 text-xs font-bold text-gray-400">כתבה: {comment.postId}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => approveComment(comment.id).then(() => showToast('התגובה אושרה ופורסמה'))}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-2 text-sm font-black text-white transition hover:bg-green-700"
+                        >
+                          <CheckCircle size={16} /> אשר
+                        </button>
+                        <button
+                          onClick={() => deleteComment(comment.id).then(() => showToast('התגובה נמחקה'))}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-2 text-sm font-black text-white transition hover:bg-red-700"
+                        >
+                          <Trash2 size={16} /> מחק
+                        </button>
+                      </div>
+                    </div>
+                    <p className="rounded-lg bg-white p-4 text-base leading-8 text-gray-700 border border-yellow-100">{comment.content}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-16 text-center">
+                <MessageCircle size={40} className="mx-auto mb-3 text-gray-200" />
+                <p className="font-bold text-gray-500">אין תגובות הממתינות לאישור</p>
+              </div>
+            )}
           </div>
         )}
 
