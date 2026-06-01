@@ -350,7 +350,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!isLoading) {
       const elapsed = Date.now() - splashStartRef.current;
-      const minDisplay = 2200; // ms — enough for the full intro animation
+      const minDisplay = 900;
       const remaining = Math.max(0, minDisplay - elapsed);
 
       const exitDelay = setTimeout(() => setSplashExit(true), remaining);

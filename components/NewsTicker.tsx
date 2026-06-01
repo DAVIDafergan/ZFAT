@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Post } from '../types';
+import { formatHebrewDate } from '../services/dateUtils';
 
 interface NewsTickerProps {
   posts: Post[];
@@ -45,21 +46,21 @@ export const NewsTicker: React.FC<NewsTickerProps> = ({ posts }) => {
 
   return (
     <div className="relative z-40 flex min-h-[44px] items-center overflow-hidden border-y border-red-900/40 bg-[#090c14] text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)]" aria-label="מבזקים" role="region">
-      <div className="z-10 flex shrink-0 items-center gap-2 bg-red-700 px-4 py-2 text-[12px] font-black leading-5 tracking-[0.12em] text-white">
+      <div className="z-10 flex h-[44px] shrink-0 items-center gap-2 bg-red-700 px-4 text-[12px] font-black leading-none tracking-[0.12em] text-white">
         <span className="h-1.5 w-1.5 rounded-full bg-white" />
         מבזק
       </div>
-      <div className="flex flex-1 items-center overflow-hidden px-4 py-2" aria-live="polite">
-        <Link to={`/article/${activePost.id}`} className="group flex h-full w-full min-w-0 items-center gap-3 text-[13px] font-bold leading-5 text-white/85 transition hover:text-red-300">
+      <div className="flex h-[44px] flex-1 items-center overflow-hidden px-4" aria-live="polite">
+        <Link to={`/article/${activePost.id}`} className="group flex h-full w-full min-w-0 items-center gap-3 text-[13px] font-bold leading-none text-white/85 transition hover:text-red-300">
           <span className="shrink-0 text-red-400">•</span>
-          <span className="block min-w-0 flex-1 leading-5">
+          <span className="block min-w-0 flex-1 leading-[1.2]">
             <span className="line-clamp-1">
               {typedTitle}
               <span className="ml-0.5 inline-block h-[1em] w-[1px] animate-pulse bg-red-400 align-[-0.12em]" />
             </span>
           </span>
-          <span className="mr-auto shrink-0 text-[12px] leading-5 text-white/55">
-            {activePost.date}
+          <span className="mr-auto shrink-0 text-[12px] leading-none text-white/55">
+            {formatHebrewDate(activePost.date)}
           </span>
         </Link>
       </div>

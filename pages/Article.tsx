@@ -2,11 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { CATEGORY_COLORS, Comment } from '../types';
-import { Calendar, User, Eye, Tag, ThumbsUp, MessageCircle, Send, ArrowUpDown } from 'lucide-react';
+import { Calendar, User, Tag, ThumbsUp, MessageCircle, Send, ArrowUpDown } from 'lucide-react';
 import { AdUnit } from '../components/AdUnit';
 import { PostCard } from '../components/PostCard';
 import { ShareButtons } from '../components/ShareButtons';
 import { buildShortPostUrl } from '../services/siteConfig';
+import { formatHebrewDate } from '../services/dateUtils';
 
 export const Article: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -134,8 +135,8 @@ export const Article: React.FC = () => {
             <div className="mb-5 flex flex-wrap gap-3 text-sm font-bold">
               <span className={`${categoryColor} rounded-full px-3 py-1.5 text-white shadow-sm`}>{post.category}</span>
               <span className="inline-flex items-center gap-1.5 text-gray-500"><Calendar size={14} /> {post.date}</span>
+              <span className="inline-flex items-center gap-1.5 text-gray-500">תאריך עברי: {formatHebrewDate(post.date)}</span>
               <span className="inline-flex items-center gap-1.5 text-gray-500"><User size={14} /> {post.author}</span>
-              <span className="inline-flex items-center gap-1.5 text-gray-500"><Eye size={14} /> {post.views.toLocaleString('he-IL')} צפיות</span>
             </div>
 
             <h1 className="news-headline mb-4 text-3xl font-black leading-tight text-gray-900 sm:mb-6 sm:text-4xl md:text-6xl">{post.title}</h1>
