@@ -325,9 +325,22 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    const pingServer = () => fetch(`${API_URL}/api/posts?limit=1`).catch(() => {});
-    const interval = setInterval(pingServer, 9 * 60 * 1000);
-    return () => clearInterval(interval);
+    const pingServer = () => fetch(`${API_URL}/health`, { cache: 'no-store', keepalive: true }).catch(() => {});
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        pingServer();
+      }
+    };
+
+    pingServer();
+    const interval = setInterval(pingServer, 4 * 60 * 1000);
+    window.addEventListener('focus', pingServer);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', pingServer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const [splashVisible, setSplashVisible] = useState(true);
