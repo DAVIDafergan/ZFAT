@@ -42,8 +42,8 @@ cp .env.example .env
 ```env
 MONGO_URL=<railway mongo url>
 JWT_SECRET=change_me
-FRONTEND_URL=https://zfat-production.up.railway.app
-PUBLIC_SITE_URL=https://zfat-production.up.railway.app
+FRONTEND_URL=https://zfatbitnufa.com
+PUBLIC_SITE_URL=https://zfatbitnufa.com
 AWS_S3_REGION=eu-north-1
 AWS_S3_BUCKET=<your bucket>
 AWS_ACCESS_KEY_ID=<access key>
@@ -77,9 +77,9 @@ npm run dev
 
 ### שלב 5: גש לאתר
 
-Frontend: [https://zfat-production.up.railway.app](https://zfat-production.up.railway.app)
+Frontend: [https://zfatbitnufa.com](https://zfatbitnufa.com)
 
-Backend healthcheck: [https://zfat-production.up.railway.app/health](https://zfat-production.up.railway.app/health)
+Backend healthcheck: [https://zfatbitnufa.com/health](https://zfatbitnufa.com/health)
 
 ## כניסת אדמין
 
@@ -125,8 +125,8 @@ ZFAT/
 ```env
 MONGO_URL=<railway mongo url>
 JWT_SECRET=<strong secret>
-FRONTEND_URL=https://zfat-production.up.railway.app
-PUBLIC_SITE_URL=https://zfat-production.up.railway.app
+FRONTEND_URL=https://zfatbitnufa.com
+PUBLIC_SITE_URL=https://zfatbitnufa.com
 AWS_S3_REGION=eu-north-1
 AWS_S3_BUCKET=<your bucket>
 AWS_ACCESS_KEY_ID=<access key>
@@ -149,8 +149,8 @@ AWS_S3_UPLOAD_PREFIX=uploads
 אם צריך להגדיר URL מפורש ב-frontend:
 
 ```env
-VITE_API_URL=https://zfat-production.up.railway.app
-VITE_PUBLIC_SITE_URL=https://zfat-production.up.railway.app
+VITE_API_URL=https://zfatbitnufa.com
+VITE_PUBLIC_SITE_URL=https://zfatbitnufa.com
 ```
 
 Build ידני מה-root:
