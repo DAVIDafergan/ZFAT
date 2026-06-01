@@ -53,7 +53,7 @@ if (!hasDistIndex) {
   console.error(`[Startup] Missing frontend build file at ${distIndexPath}`);
 }
 
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -64,7 +64,9 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+};
+
+app.use('/api', cors(corsOptions));
 
 app.use(express.json({ limit: '50mb' }));
 
