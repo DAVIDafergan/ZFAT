@@ -7,9 +7,10 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Mail, Newspaper, Building2 } from 'lucide-react';
 import { Category, CATEGORY_COLORS } from '../types';
 import { formatWeekLabel, SITE_WHATSAPP_URL } from '../services/siteConfig';
+import { formatHebrewDate } from '../services/dateUtils';
 
 export const Home: React.FC = () => {
-  const { posts, ads, weeklyPapers, boardListings } = useApp();
+  const { posts, ads, weeklyPapers, boardListings, isLoading } = useApp();
 
   const featuredPosts = posts.filter(p => p.isFeatured);
   const latestPosts = posts.slice(0, 6);
@@ -32,6 +33,34 @@ export const Home: React.FC = () => {
     const diffDays = Math.floor(diffHours / 24);
     return `לפני ${diffDays} ימים`;
   };
+
+  if (isLoading && posts.length === 0) {
+    return (
+      <div className="animate-pulse bg-[#f7f5f1] pb-16 sm:pb-20">
+        <div className="h-[360px] w-full bg-gray-200 sm:h-[420px] md:h-[620px]" />
+        <div className="container mx-auto px-4 py-8 sm:py-10">
+          <div className="mb-8 grid gap-6 lg:grid-cols-[1.3fr_0.7fr] sm:mb-10">
+            <div className="space-y-4 rounded-[1.5rem] bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
+              <div className="h-7 w-1/3 rounded bg-gray-200" />
+              <div className="space-y-3">
+                <div className="h-20 rounded-xl bg-gray-100" />
+                <div className="h-20 rounded-xl bg-gray-100" />
+                <div className="h-20 rounded-xl bg-gray-100" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="h-40 rounded-[1.5rem] bg-gray-200 sm:rounded-[2rem]" />
+              <div className="h-40 rounded-[1.5rem] bg-gray-200 sm:rounded-[2rem]" />
+            </div>
+          </div>
+          <div className="grid gap-5 lg:grid-cols-2 sm:gap-8">
+            <div className="h-72 rounded-[1.5rem] bg-white shadow-sm sm:rounded-[2rem]" />
+            <div className="h-72 rounded-[1.5rem] bg-white shadow-sm sm:rounded-[2rem]" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in bg-[#f7f5f1] pb-16 sm:pb-20">
@@ -63,7 +92,7 @@ export const Home: React.FC = () => {
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] font-bold text-white/55 sm:mt-3 sm:text-xs">
                         <span>{formatRelativeTime(post.date)}</span>
                         <span className="h-1 w-1 rounded-full bg-white/30" />
-                        <span>{post.views.toLocaleString('he-IL')} צפיות</span>
+                        <span>{formatHebrewDate(post.date)}</span>
                       </div>
                     </div>
                     <div className="aspect-[4/3] w-[34%] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] sm:w-[32%]">
