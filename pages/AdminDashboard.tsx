@@ -63,6 +63,17 @@ const initialAdForm = {
 };
 
 const POSTS_PAGE_SIZE = 5;
+type UploadState = 'idle' | 'uploading' | 'ready' | 'error';
+type ArticleImageDraft = PostImage & {
+  uploadName?: string;
+  uploadState?: UploadState;
+  uploadError?: string;
+};
+type UploadFeedback = {
+  uploadName: string;
+  uploadState: UploadState;
+  uploadError?: string;
+};
 
 export const AdminDashboard: React.FC = () => {
   const {
@@ -103,7 +114,8 @@ export const AdminDashboard: React.FC = () => {
   });
   const [tagsInput, setTagsInput] = useState('');
   const [mainImagePhotographer, setMainImagePhotographer] = useState('');
-  const [additionalPostImages, setAdditionalPostImages] = useState<PostImage[]>([]);
+  const [mainImageFeedback, setMainImageFeedback] = useState<UploadFeedback>({ uploadName: '', uploadState: 'idle' });
+  const [additionalPostImages, setAdditionalPostImages] = useState<ArticleImageDraft[]>([]);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [postsPage, setPostsPage] = useState(1);
   const [editingAdId, setEditingAdId] = useState<string | null>(null);
@@ -176,6 +188,39 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const buildUploadName = (value: string) => {
+    if (!value.trim()) return '';
+    if (isDataUrl(value)) return 'תמונה שהועלתה מהמחשב';
+    try {
+      const fileName = decodeURIComponent(new URL(value).pathname.split('/').pop() || '');
+      return fileName || 'קישור לתמונה';
+    } catch {
+      return 'קישור לתמונה';
+    }
+  };
+
+  const handleArticleImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    onUploaded: (url: string) => void,
+    setFeedback: (feedback: UploadFeedback) => void,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.currentTarget.value = '';
+    setFeedback({ uploadName: file.name, uploadState: 'uploading' });
+
+    try {
+      const compressedUrl = await compressImage(file);
+      onUploaded(compressedUrl);
+      setFeedback({ uploadName: file.name, uploadState: 'ready' });
+      showToast(`התמונה "${file.name}" נקלטה במערכת בהצלחה`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'העלאת התמונה נכשלה';
+      setFeedback({ uploadName: file.name, uploadState: 'error', uploadError: message });
+      showToast(`שגיאה בהעלאת התמונה "${file.name}": ${message}`);
+    }
+  };
+
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPost.title || !newPost.content) return;
@@ -229,6 +274,7 @@ export const AdminDashboard: React.FC = () => {
     setNewPost({ title: '', category: Category.NEWS, excerpt: '', content: '', imageUrl: '', tags: [], isFeatured: false });
     setTagsInput('');
     setMainImagePhotographer('');
+    setMainImageFeedback({ uploadName: '', uploadState: 'idle' });
     setAdditionalPostImages([]);
     setEditingPostId(null);
   };
@@ -248,7 +294,13 @@ export const AdminDashboard: React.FC = () => {
     const normalizedImages = existingImages.length > 0 ? existingImages : fallbackMain;
     const firstImage = normalizedImages[0];
     setMainImagePhotographer(firstImage?.photographer || '');
-    setAdditionalPostImages(normalizedImages.slice(1));
+    setMainImageFeedback(post.imageUrl ? { uploadName: buildUploadName(post.imageUrl), uploadState: 'ready' } : { uploadName: '', uploadState: 'idle' });
+    setAdditionalPostImages(normalizedImages.slice(1).map((image) => ({
+      ...image,
+      uploadName: buildUploadName(image.url),
+      uploadState: image.url ? 'ready' : 'idle',
+      uploadError: '',
+    })));
     setTagsInput(post.tags.join(', '));
     setEditingPostId(post.id);
     setActiveTab('posts');
@@ -259,6 +311,7 @@ export const AdminDashboard: React.FC = () => {
     setNewPost({ title: '', category: Category.NEWS, excerpt: '', content: '', imageUrl: '', tags: [], isFeatured: false });
     setTagsInput('');
     setMainImagePhotographer('');
+    setMainImageFeedback({ uploadName: '', uploadState: 'idle' });
     setAdditionalPostImages([]);
     setEditingPostId(null);
   };
@@ -306,10 +359,10 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const addAdditionalPostImage = () => {
-    setAdditionalPostImages((prev) => [...prev, { url: '', photographer: '' }]);
+    setAdditionalPostImages((prev) => [...prev, { url: '', photographer: '', uploadName: '', uploadState: 'idle', uploadError: '' }]);
   };
 
-  const updateAdditionalPostImage = (index: number, updates: Partial<PostImage>) => {
+  const updateAdditionalPostImage = (index: number, updates: Partial<ArticleImageDraft>) => {
     setAdditionalPostImages((prev) => prev.map((image, imageIndex) => (imageIndex === index ? { ...image, ...updates } : image)));
   };
 
@@ -503,13 +556,41 @@ export const AdminDashboard: React.FC = () => {
                   <div className="flex flex-col gap-2">
                     <div className="relative">
                       <ImageIcon size={18} className="absolute right-3 top-3 text-gray-400" />
-                      <input type="text" value={newPost.imageUrl} onChange={(e) => setNewPost({ ...newPost, imageUrl: e.target.value })} className="w-full rounded-lg border border-gray-300 pl-4 pr-10 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="הדבק קישור או העלה קובץ..." />
+                      <input
+                        type="text"
+                        value={newPost.imageUrl}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setNewPost({ ...newPost, imageUrl: value });
+                          setMainImageFeedback({ uploadName: buildUploadName(value), uploadState: value ? 'ready' : 'idle' });
+                        }}
+                        className="w-full rounded-lg border border-gray-300 pl-4 pr-10 py-3 outline-none focus:ring-2 focus:ring-red-500"
+                        placeholder="הדבק קישור או העלה קובץ..."
+                      />
                     </div>
                     <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-3 text-sm font-black text-gray-700 transition hover:bg-gray-200">
                       <Upload size={16} /> בחר תמונה מהמחשב
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (url) => setNewPost({ ...newPost, imageUrl: url }))} />
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleArticleImageUpload(e, (url) => setNewPost({ ...newPost, imageUrl: url }), setMainImageFeedback)} />
                     </label>
-                    {newPost.imageUrl && <div className="mt-2 h-32 overflow-hidden rounded border border-gray-200 bg-gray-50"><img src={newPost.imageUrl} alt="preview" className="h-full w-full object-contain" /></div>}
+                    {newPost.imageUrl && (
+                      <div className={`rounded-2xl border p-3 ${mainImageFeedback.uploadState === 'error' ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50/70'}`}>
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className={`text-sm font-black ${mainImageFeedback.uploadState === 'error' ? 'text-red-700' : 'text-emerald-800'}`}>
+                              {mainImageFeedback.uploadState === 'uploading' ? 'מעלה תמונה ראשית...' : mainImageFeedback.uploadState === 'error' ? 'העלאת התמונה נכשלה' : 'התמונה הראשית נקלטה במערכת'}
+                            </p>
+                            <p className={`text-xs font-bold ${mainImageFeedback.uploadState === 'error' ? 'text-red-600' : 'text-emerald-700'}`}>
+                              {mainImageFeedback.uploadName || buildUploadName(newPost.imageUrl)}
+                            </p>
+                            {mainImageFeedback.uploadError && <p className="mt-1 text-xs font-bold text-red-600">{mainImageFeedback.uploadError}</p>}
+                          </div>
+                          {mainImageFeedback.uploadState === 'ready' && <CheckCircle size={20} className="text-emerald-600" />}
+                        </div>
+                        <div className="mt-3 h-40 overflow-hidden rounded-xl border border-white/70 bg-white">
+                          <img src={newPost.imageUrl} alt="preview" className="h-full w-full object-contain" />
+                        </div>
+                      </div>
+                    )}
                     <input
                       type="text"
                       value={mainImagePhotographer}
@@ -541,14 +622,50 @@ export const AdminDashboard: React.FC = () => {
                       <input
                         type="text"
                         value={image.url}
-                        onChange={(e) => updateAdditionalPostImage(index, { url: e.target.value })}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          updateAdditionalPostImage(index, {
+                            url: value,
+                            uploadName: buildUploadName(value),
+                            uploadState: value ? 'ready' : 'idle',
+                            uploadError: '',
+                          });
+                        }}
                         className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-red-500"
                         placeholder="קישור או העלאת תמונה"
                       />
                       <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-2 text-xs font-black text-gray-700 transition hover:bg-gray-200">
                         <Upload size={14} /> העלה תמונה
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (url) => updateAdditionalPostImage(index, { url }))} />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleArticleImageUpload(
+                            e,
+                            (url) => updateAdditionalPostImage(index, { url }),
+                            (feedback) => updateAdditionalPostImage(index, feedback),
+                          )}
+                        />
                       </label>
+                      {image.url && (
+                        <div className={`mt-2 rounded-xl border p-2.5 ${image.uploadState === 'error' ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50/70'}`}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className={`text-xs font-black ${image.uploadState === 'error' ? 'text-red-700' : 'text-emerald-800'}`}>
+                                {image.uploadState === 'uploading' ? `מעלה תמונה ${index + 1}...` : image.uploadState === 'error' ? `תמונה ${index + 1} לא נקלטה` : `תמונה ${index + 1} נקלטה`}
+                              </p>
+                              <p className={`text-[11px] font-bold ${image.uploadState === 'error' ? 'text-red-600' : 'text-emerald-700'}`}>
+                                {image.uploadName || buildUploadName(image.url)}
+                              </p>
+                              {image.uploadError && <p className="mt-1 text-[11px] font-bold text-red-600">{image.uploadError}</p>}
+                            </div>
+                            {image.uploadState === 'ready' && <CheckCircle size={16} className="shrink-0 text-emerald-600" />}
+                          </div>
+                          <div className="mt-2 h-24 overflow-hidden rounded-lg border border-white/80 bg-white">
+                            <img src={image.url} alt={`preview-${index}`} className="h-full w-full object-contain" />
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <input
                       type="text"

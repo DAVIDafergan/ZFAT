@@ -75,6 +75,12 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
     setIsSearchFocused(false);
   };
 
+  const handleLogoClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (window.innerWidth < 1024) return;
+    event.preventDefault();
+    window.location.assign('/');
+  };
+
   return (
     <>
       <div className="h-[calc(4.75rem+env(safe-area-inset-top))] sm:h-24 lg:h-28" />
@@ -83,7 +89,6 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
         <div className={`container mx-auto px-4 ${isScrolled ? 'py-2' : 'py-3'}`}>
           <div className="mb-3 hidden items-center justify-between text-xs font-bold text-white/80 lg:flex">
             <div className="flex items-center gap-3">
-              <span className="rounded-full bg-white/10 px-3 py-1">מהדורה דיגיטלית</span>
               <span>חדשות, קהילה, נדל"ן והעיתון השבועי</span>
             </div>
           </div>
@@ -93,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
               <Menu size={24} />
             </button>
 
-            <Link to="/" className="flex flex-1 items-center justify-center lg:flex-none lg:justify-start" aria-label="דף הבית">
+            <Link to="/" onClick={handleLogoClick} className="flex flex-1 items-center justify-center lg:flex-none lg:justify-start" aria-label="דף הבית">
               <img
                 src={LOGO_URL}
                 alt="לוגו צפת בתנופה"
