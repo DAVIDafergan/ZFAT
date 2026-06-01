@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
 
   return (
     <>
-      <div className="h-[calc(4.75rem+env(safe-area-inset-top))] sm:h-24 lg:h-28" />
+      <div className="h-[calc(5rem+env(safe-area-inset-top))] lg:h-[calc(5.5rem+env(safe-area-inset-top))]" />
       <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${isScrolled ? 'border-b border-white/15 bg-[#8b0000]/98 shadow-[0_12px_28px_rgba(0,0,0,0.22)] backdrop-blur-[3px] supports-[backdrop-filter]:bg-[#8b0000]/95' : 'border-b border-white/20 bg-[#8b0000] shadow-none backdrop-blur-0'}`}>
         <div className="h-[env(safe-area-inset-top)]" />
         <div className={`container mx-auto px-4 ${isScrolled ? 'py-2' : 'py-3'}`}>
