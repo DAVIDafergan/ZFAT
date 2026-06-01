@@ -87,12 +87,6 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
       <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${isScrolled ? 'border-b border-white/15 bg-[#8b0000]/98 shadow-[0_12px_28px_rgba(0,0,0,0.22)] backdrop-blur-[3px] supports-[backdrop-filter]:bg-[#8b0000]/95' : 'border-b border-white/20 bg-[#8b0000] shadow-none backdrop-blur-0'}`}>
         <div className="h-[env(safe-area-inset-top)]" />
         <div className={`container mx-auto px-4 ${isScrolled ? 'py-2' : 'py-3'}`}>
-          <div className="mb-3 hidden items-center justify-between text-xs font-bold text-white/80 lg:flex">
-            <div className="flex items-center gap-3">
-              <span>חדשות, קהילה, נדל"ן והעיתון השבועי</span>
-            </div>
-          </div>
-
           <div className="flex items-center justify-between gap-3">
             <button type="button" className="rounded-full p-2 text-white transition-all duration-300 hover:bg-white/15 hover:scale-105 lg:hidden" onClick={() => setIsMenuOpen(true)} aria-label="פתח תפריט ניווט" aria-expanded={isMenuOpen}>
               <Menu size={24} />

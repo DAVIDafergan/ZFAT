@@ -24,6 +24,7 @@ import {
   Download,
   MessageCircle,
   CheckCircle,
+  Search,
 } from 'lucide-react';
 import { formatWeekLabel, normalizeShareCode } from '../services/siteConfig';
 import { AD_PLACEMENTS, AD_PLACEMENT_MAP } from '../services/adPlacements';
@@ -75,6 +76,20 @@ type UploadFeedback = {
   uploadError?: string;
 };
 
+const HTML_TAG_REGEX = /<\/?[a-z][\s\S]*>/i;
+const stripHtml = (value: string) => value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+const normalizeArticleContent = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (HTML_TAG_REGEX.test(trimmed)) return trimmed;
+  return trimmed
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${paragraph.replace(/\n/g, '<br />')}</p>`)
+    .join('');
+};
+
 export const AdminDashboard: React.FC = () => {
   const {
     user,
@@ -118,6 +133,7 @@ export const AdminDashboard: React.FC = () => {
   const [additionalPostImages, setAdditionalPostImages] = useState<ArticleImageDraft[]>([]);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [postsPage, setPostsPage] = useState(1);
+  const [postSearchQuery, setPostSearchQuery] = useState('');
   const [editingAdId, setEditingAdId] = useState<string | null>(null);
   const [editingAdMeta, setEditingAdMeta] = useState<Pick<Ad, 'title' | 'area' | 'isActive'> | null>(null);
   const [editingSlides, setEditingSlides] = useState<AdSlide[]>([]);
@@ -146,17 +162,38 @@ export const AdminDashboard: React.FC = () => {
   const showToast = (message: string) => setToastMessage(message);
   const isDataUrl = (value: string) => value.trim().startsWith('data:');
   const displayUploadValue = (value: string) => (isDataUrl(value) ? '' : value);
-  const totalPostsPages = Math.max(1, Math.ceil(posts.length / POSTS_PAGE_SIZE));
+  const normalizedPostSearch = postSearchQuery.trim().toLowerCase();
+  const filteredPosts = useMemo(() => {
+    if (!normalizedPostSearch) return posts;
+    return posts.filter((post) => {
+      const searchableContent = [
+        post.title,
+        post.excerpt,
+        post.category,
+        post.author,
+        post.date,
+        ...(post.tags || []),
+      ]
+        .join(' ')
+        .toLowerCase();
+      return searchableContent.includes(normalizedPostSearch);
+    });
+  }, [posts, normalizedPostSearch]);
+  const totalPostsPages = Math.max(1, Math.ceil(filteredPosts.length / POSTS_PAGE_SIZE));
   const paginatedPosts = useMemo(() => {
     const start = (postsPage - 1) * POSTS_PAGE_SIZE;
-    return posts.slice(start, start + POSTS_PAGE_SIZE);
-  }, [posts, postsPage]);
+    return filteredPosts.slice(start, start + POSTS_PAGE_SIZE);
+  }, [filteredPosts, postsPage]);
 
   useEffect(() => {
     if (postsPage > totalPostsPages) {
       setPostsPage(totalPostsPages);
     }
   }, [postsPage, totalPostsPages]);
+
+  useEffect(() => {
+    setPostsPage(1);
+  }, [normalizedPostSearch]);
 
   const handleLogout = () => {
     logout();
@@ -223,7 +260,9 @@ export const AdminDashboard: React.FC = () => {
 
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPost.title || !newPost.content) return;
+    const normalizedContent = normalizeArticleContent(newPost.content || '');
+    if (!newPost.title || !normalizedContent) return;
+    const normalizedExcerpt = (newPost.excerpt || '').trim() || stripHtml(normalizedContent).slice(0, 180);
 
     const primaryImageUrl = (newPost.imageUrl || '').trim();
     const normalizedAdditionalImages = additionalPostImages
@@ -239,8 +278,8 @@ export const AdminDashboard: React.FC = () => {
       if (!current) return;
       await updatePost(editingPostId, {
         title: newPost.title,
-        excerpt: newPost.excerpt || '',
-        content: newPost.content,
+        excerpt: normalizedExcerpt,
+        content: normalizedContent,
         category: newPost.category as Category,
         author: current.author || user?.name || 'Admin',
         date: current.date || new Date().toLocaleDateString('he-IL'),
@@ -255,8 +294,8 @@ export const AdminDashboard: React.FC = () => {
       const post: Post = {
         id: Date.now().toString(),
         title: newPost.title,
-        excerpt: newPost.excerpt || '',
-        content: newPost.content,
+        excerpt: normalizedExcerpt,
+        content: normalizedContent,
         category: newPost.category as Category,
         author: user?.name || 'Admin',
         date: new Date().toLocaleDateString('he-IL'),
@@ -546,8 +585,8 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-bold text-gray-700">תוכן הכתבה (HTML)</label>
-                <textarea value={newPost.content} onChange={(e) => setNewPost({ ...newPost, content: e.target.value })} className="h-64 w-full rounded-lg border border-gray-300 px-4 py-3 font-mono text-sm outline-none focus:ring-2 focus:ring-red-500" placeholder="<p>תוכן הכתבה...</p>" required />
+                <label className="mb-2 block text-sm font-bold text-gray-700">תוכן הכתבה (אפשר טקסט רגיל או HTML)</label>
+                <textarea value={newPost.content} onChange={(e) => setNewPost({ ...newPost, content: e.target.value })} className="h-64 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-red-500" placeholder={'אפשר להדביק טקסט רגיל מהנייד - המערכת תסדר פסקאות אוטומטית.\n\nאו להדביק HTML מלא.'} required />
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -568,10 +607,16 @@ export const AdminDashboard: React.FC = () => {
                         placeholder="הדבק קישור או העלה קובץ..."
                       />
                     </div>
-                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-3 text-sm font-black text-gray-700 transition hover:bg-gray-200">
-                      <Upload size={16} /> בחר תמונה מהמחשב
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleArticleImageUpload(e, (url) => setNewPost({ ...newPost, imageUrl: url }), setMainImageFeedback)} />
-                    </label>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-3 text-sm font-black text-gray-700 transition hover:bg-gray-200">
+                        <Upload size={16} /> גלריה
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleArticleImageUpload(e, (url) => setNewPost({ ...newPost, imageUrl: url }), setMainImageFeedback)} />
+                      </label>
+                      <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-3 text-sm font-black text-gray-700 transition hover:bg-gray-200">
+                        <Upload size={16} /> צילום מהמצלמה
+                        <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleArticleImageUpload(e, (url) => setNewPost({ ...newPost, imageUrl: url }), setMainImageFeedback)} />
+                      </label>
+                    </div>
                     {newPost.imageUrl && (
                       <div className={`rounded-2xl border p-3 ${mainImageFeedback.uploadState === 'error' ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50/70'}`}>
                         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -634,19 +679,35 @@ export const AdminDashboard: React.FC = () => {
                         className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-red-500"
                         placeholder="קישור או העלאת תמונה"
                       />
-                      <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-2 text-xs font-black text-gray-700 transition hover:bg-gray-200">
-                        <Upload size={14} /> העלה תמונה
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handleArticleImageUpload(
-                            e,
-                            (url) => updateAdditionalPostImage(index, { url }),
-                            (feedback) => updateAdditionalPostImage(index, feedback),
-                          )}
-                        />
-                      </label>
+                      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-2 text-xs font-black text-gray-700 transition hover:bg-gray-200">
+                          <Upload size={14} /> העלאה מהגלריה
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleArticleImageUpload(
+                              e,
+                              (url) => updateAdditionalPostImage(index, { url }),
+                              (feedback) => updateAdditionalPostImage(index, feedback),
+                            )}
+                          />
+                        </label>
+                        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-2 text-xs font-black text-gray-700 transition hover:bg-gray-200">
+                          <Upload size={14} /> צילום מהמצלמה
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            onChange={(e) => handleArticleImageUpload(
+                              e,
+                              (url) => updateAdditionalPostImage(index, { url }),
+                              (feedback) => updateAdditionalPostImage(index, feedback),
+                            )}
+                          />
+                        </label>
+                      </div>
                       {image.url && (
                         <div className={`mt-2 rounded-xl border p-2.5 ${image.uploadState === 'error' ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50/70'}`}>
                           <div className="flex items-start justify-between gap-3">
@@ -700,8 +761,22 @@ export const AdminDashboard: React.FC = () => {
 
             <div className="mt-10 border-t border-gray-200 pt-8">
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-xl font-black text-gray-800">ניהול כתבות ({posts.length})</h3>
-                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">מוצגות 5 כתבות בכל דף</span>
+                <h3 className="text-xl font-black text-gray-800">ניהול כתבות ({filteredPosts.length})</h3>
+                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">
+                  {normalizedPostSearch ? `מסונן מתוך ${posts.length} כתבות` : 'מוצגות 5 כתבות בכל דף'}
+                </span>
+              </div>
+              <div className="mb-5">
+                <div className="relative max-w-xl">
+                  <Search size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={postSearchQuery}
+                    onChange={(e) => setPostSearchQuery(e.target.value)}
+                    className="w-full rounded-xl border border-gray-300 py-2.5 pl-4 pr-10 text-sm font-bold outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="חיפוש כתבה לפי כותרת, תגית, קטגוריה או תאריך..."
+                  />
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -724,12 +799,12 @@ export const AdminDashboard: React.FC = () => {
                 ))}
                 {paginatedPosts.length === 0 && (
                   <div className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-10 text-center text-sm font-bold text-gray-400">
-                    אין כתבות להצגה.
+                    {normalizedPostSearch ? 'לא נמצאו כתבות תואמות לחיפוש.' : 'אין כתבות להצגה.'}
                   </div>
                 )}
               </div>
 
-              {posts.length > POSTS_PAGE_SIZE && (
+              {filteredPosts.length > POSTS_PAGE_SIZE && (
                 <div className="mt-6 flex items-center justify-between">
                   <button
                     type="button"
