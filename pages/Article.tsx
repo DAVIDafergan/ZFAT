@@ -43,6 +43,23 @@ export const Article: React.FC = () => {
   const leadImage = postImages[0] || null;
   const galleryImages = postImages.slice(1);
 
+  const renderEditorialImage = (image: { url: string; photographer?: string }, index: number) => (
+    <figure key={`${image.url}-${index}`} className="my-10 border-y border-gray-200 bg-white py-4 sm:py-5">
+      <img
+        src={image.url}
+        alt={`${post.title} - תמונה ${index + 1}`}
+        loading={index === 0 ? 'eager' : 'lazy'}
+        decoding="async"
+        fetchPriority={index === 0 ? 'high' : undefined}
+        className="max-h-[620px] w-full object-cover"
+      />
+      <figcaption className="mt-3 flex flex-wrap items-center gap-3 px-3 text-xs font-bold text-gray-600 sm:px-5">
+        <span className="h-px w-10 bg-red-600" />
+        <span>צילום: {image.photographer || 'דוברות / רשתות חברתיות'}</span>
+      </figcaption>
+    </figure>
+  );
+
   // Interleave gallery images between content paragraphs
   const renderContentWithImages = () => {
     const content = post.content;
@@ -58,12 +75,7 @@ export const Article: React.FC = () => {
         <>
           <div className="article-content max-w-none text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: content }} />
           <div className="mt-8 space-y-6">
-            {galleryImages.map((image, index) => (
-              <figure key={`${image.url}-${index}`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-                <img src={image.url} alt={`${post.title} - תמונה ${index + 2}`} loading="lazy" decoding="async" className="max-h-[500px] w-full object-cover" />
-                <figcaption className="bg-gray-50 px-4 py-2 text-xs font-bold text-gray-600">צילום: {image.photographer || 'ללא קרדיט'}</figcaption>
-              </figure>
-            ))}
+            {galleryImages.map((image, index) => renderEditorialImage(image, index + 1))}
           </div>
         </>
       );
@@ -81,12 +93,7 @@ export const Article: React.FC = () => {
           <div key={`text-${imageIndex}`} className="article-content max-w-none text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: textSegment }} />
         );
       }
-      elements.push(
-        <figure key={`img-${imageIndex}`} className="my-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <img src={image.url} alt={`${post.title} - תמונה ${imageIndex + 2}`} loading="lazy" decoding="async" className="max-h-[500px] w-full object-cover" />
-          <figcaption className="bg-gray-50 px-4 py-2 text-xs font-bold text-gray-600">צילום: {image.photographer || 'ללא קרדיט'}</figcaption>
-        </figure>
-      );
+      elements.push(renderEditorialImage(image, imageIndex + 1));
       lastPartIndex = insertAfterIndex;
     });
 
@@ -135,13 +142,7 @@ export const Article: React.FC = () => {
             <p className="mb-6 border-r-4 border-red-600 pr-4 text-lg leading-8 text-gray-600 sm:mb-8 sm:pr-5 sm:text-xl md:text-2xl">{post.excerpt}</p>
 
             {leadImage && (
-              <div className="mb-8 rounded-[2rem] overflow-hidden shadow-lg">
-                <img src={leadImage.url} alt={post.title} loading="eager" decoding="async" fetchPriority="high" className="max-h-[560px] w-full object-cover" />
-                <div className="flex flex-wrap items-center justify-between gap-2 bg-gray-950 px-4 py-3 text-[11px] font-bold text-gray-300 sm:gap-4 sm:text-xs">
-                  <span>צילום: {leadImage.photographer || 'דוברות / רשתות חברתיות'}</span>
-                  <span>זמין לשיתוף בלחיצה אחת</span>
-                </div>
-              </div>
+              <div className="mb-8">{renderEditorialImage(leadImage, 0)}</div>
             )}
 
             <div className="mb-8">
