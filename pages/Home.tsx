@@ -66,8 +66,8 @@ export const Home: React.FC = () => {
                         <span>{post.views.toLocaleString('he-IL')} צפיות</span>
                       </div>
                     </div>
-                    <div className="aspect-[4/3] w-[34%] shrink-0 overflow-hidden rounded-xl border border-white/10 sm:w-[32%]">
-                      <img src={post.imageUrl} alt={post.title} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" fetchPriority={index < 2 ? 'high' : 'auto'} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                    <div className="aspect-[4/3] w-[34%] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] sm:w-[32%]">
+                      <img src={post.imageUrl} alt={post.title} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" fetchPriority={index < 2 ? 'high' : 'auto'} className="h-full w-full object-contain transition duration-300 group-hover:opacity-95" />
                     </div>
                   </article>
                 </Link>
