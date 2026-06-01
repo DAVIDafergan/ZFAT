@@ -14,7 +14,7 @@ const escapeHtml = require('./utils/escapeHtml');
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
 const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI;
-const publicSiteUrl = (process.env.PUBLIC_SITE_URL || process.env.FRONTEND_URL || 'https://zfat-production.up.railway.app').replace(/\/$/, '');
+const publicSiteUrl = (process.env.PUBLIC_SITE_URL || process.env.FRONTEND_URL || 'https://zfatbitnufa.com').replace(/\/$/, '');
 const distDir = path.join(__dirname, '../dist');
 const distIndexPath = path.join(distDir, 'index.html');
 const hasDistIndex = fs.existsSync(distIndexPath);
@@ -53,7 +53,7 @@ if (!hasDistIndex) {
   console.error(`[Startup] Missing frontend build file at ${distIndexPath}`);
 }
 
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -64,7 +64,9 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+};
+
+app.use('/api', cors(corsOptions));
 
 app.use(express.json({ limit: '50mb' }));
 

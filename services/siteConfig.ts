@@ -11,7 +11,7 @@ const readEnv = (key: string) => {
 };
 
 const trimSlash = (value: string) => value.replace(/\/$/, '');
-const DEFAULT_API_URL = 'https://zfat-production.up.railway.app';
+const DEFAULT_API_URL = 'https://zfatbitnufa.com';
 
 export const API_URL = (() => {
   const configured = readEnv('VITE_API_URL');
