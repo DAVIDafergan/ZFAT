@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Mail, Newspaper, Building2, Sunrise, Sunset } from 'lucide-react';
 import { Category, CATEGORY_COLORS } from '../types';
 import { getWeeklyPaperDateLabel, SITE_WHATSAPP_URL } from '../services/siteConfig';
-import { formatHebrewDate } from '../services/dateUtils';
+import { formatHebrewDate, formatPublishTime, resolvePostDateForDisplay } from '../services/dateUtils';
 import { sortPostsByNewest } from '../services/postSort';
 
 const TZFAT_COORDINATES = { lat: 32.9646, lng: 35.4960 };
@@ -129,7 +129,11 @@ export const Home: React.FC = () => {
                         {post.excerpt}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] font-bold text-white/55 sm:mt-3 sm:text-xs">
-                        <span>{formatHebrewDate(post.date)}</span>
+                        {(() => {
+                          const d = resolvePostDateForDisplay(post.publishedAt, post.createdAt, post.date);
+                          const t = formatPublishTime(d);
+                          return <span>{formatHebrewDate(d)}{t ? ` · ${t}` : ''}</span>;
+                        })()}
                       </div>
                     </div>
                     <div className="aspect-[4/3] w-[34%] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] sm:w-[32%]">

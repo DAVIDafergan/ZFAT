@@ -291,6 +291,7 @@ export const AdminDashboard: React.FC = () => {
       });
       showToast('הכתבה עודכנה בהצלחה');
     } else {
+      const nowIso = new Date().toISOString();
       const post: Post = {
         id: Date.now().toString(),
         title: newPost.title,
@@ -298,7 +299,9 @@ export const AdminDashboard: React.FC = () => {
         content: normalizedContent,
         category: newPost.category as Category,
         author: user?.name || 'Admin',
-        date: '',
+        date: nowIso,
+        publishedAt: nowIso,
+        createdAt: nowIso,
         imageUrl: primaryImageUrl,
         images: nextImages,
         tags: nextTags,
