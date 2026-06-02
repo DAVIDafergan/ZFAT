@@ -58,9 +58,8 @@ const resolvePostPublicationDate = (post: any): string => {
     post.published_at,
     post.createdAt,
     post.created_at,
-    post.updatedAt,
-    post.updated_at,
     post.date,
+    // updatedAt הוסר בכוונה — הוא מתעדכן בכל עריכה ואסור לשמש כתאריך פרסום
   ];
 
   for (const candidate of candidates) {
