@@ -17,7 +17,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, layout = 'grid' }) => 
   const categoryColor = CATEGORY_COLORS[post.category] || 'bg-gray-600';
   const shortUrl = buildShortPostUrl(post.shortLinkCode, post.id);
   const displayDate = resolvePostDateForDisplay(post.publishedAt, post.createdAt, post.date);
-  const publishTime = formatPublishTime(post.publishedAt || post.createdAt);
+  const publishTime = formatPublishTime(displayDate);
 
   const handleReadMore = (e: React.MouseEvent) => {
     e.preventDefault();
