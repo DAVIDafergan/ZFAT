@@ -1,19 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { HeroSlider } from '../components/HeroSlider';
 import { PostCard } from '../components/PostCard';
 import { AdUnit } from '../components/AdUnit';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Mail, Newspaper, Building2 } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Mail, Newspaper, Building2, Sunrise, Sunset } from 'lucide-react';
 import { Category, CATEGORY_COLORS } from '../types';
 import { getWeeklyPaperDateLabel, SITE_WHATSAPP_URL } from '../services/siteConfig';
 import { formatHebrewDate } from '../services/dateUtils';
 
+const TZFAT_COORDINATES = { lat: 32.9646, lng: 35.4960 };
+const JERUSALEM_TIME_ZONE = 'Asia/Jerusalem';
+
+const formatSunEventTime = (isoDate: string) => {
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('he-IL', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: JERUSALEM_TIME_ZONE
+  }).format(date);
+};
+
 export const Home: React.FC = () => {
   const { posts, ads, weeklyPapers, boardListings, isLoading } = useApp();
+  const [sunTimes, setSunTimes] = useState<{ sunrise: string; sunset: string } | null>(null);
+  const [isSunTimesLoading, setIsSunTimesLoading] = useState(true);
 
   const sortedPosts = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const featuredPosts = posts.filter(p => p.isFeatured);
+  const featuredPosts = sortedPosts.filter(p => p.isFeatured);
   const latestPosts = sortedPosts.slice(0, 6);
   const newsPosts = sortedPosts.filter((post) => post.category === Category.NEWS).slice(0, 6);
   const leaderboardAd = ads.find(a => a.area === 'leaderboard' && a.isActive);
@@ -24,16 +40,38 @@ export const Home: React.FC = () => {
   const categoriesToShow = Object.values(Category).filter(c => c !== Category.NEWS);
   const leadPaper = weeklyPapers[0];
   const featuredListings = boardListings.slice(0, 2);
-  const formatRelativeTime = (dateLabel: string) => {
-    const parsedDate = new Date(dateLabel);
-    if (Number.isNaN(parsedDate.getTime())) return dateLabel;
-    const diffMinutes = Math.max(1, Math.floor((Date.now() - parsedDate.getTime()) / 60000));
-    if (diffMinutes < 60) return `לפני ${diffMinutes} דק׳`;
-    const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `לפני ${diffHours} שעות`;
-    const diffDays = Math.floor(diffHours / 24);
-    return `לפני ${diffDays} ימים`;
-  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadSunTimes = async () => {
+      try {
+        const response = await fetch(
+          `https://api.sunrise-sunset.org/json?lat=${TZFAT_COORDINATES.lat}&lng=${TZFAT_COORDINATES.lng}&formatted=0`,
+          { signal: controller.signal }
+        );
+        if (!response.ok) throw new Error('Failed to load sun times');
+        const payload = await response.json();
+        if (payload?.status !== 'OK') throw new Error('Invalid sun times payload');
+
+        const sunrise = formatSunEventTime(payload?.results?.sunrise || '');
+        const sunset = formatSunEventTime(payload?.results?.sunset || '');
+
+        if (!sunrise || !sunset) throw new Error('Invalid sun times values');
+        setSunTimes({ sunrise, sunset });
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          setSunTimes(null);
+        }
+      } finally {
+        setIsSunTimesLoading(false);
+      }
+    };
+
+    loadSunTimes();
+
+    return () => controller.abort();
+  }, []);
 
   if (isLoading && posts.length === 0) {
     return (
@@ -91,8 +129,6 @@ export const Home: React.FC = () => {
                         {post.excerpt}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] font-bold text-white/55 sm:mt-3 sm:text-xs">
-                        <span>{formatRelativeTime(post.date)}</span>
-                        <span className="h-1 w-1 rounded-full bg-white/30" />
                         <span>{formatHebrewDate(post.date)}</span>
                       </div>
                     </div>
@@ -128,6 +164,30 @@ export const Home: React.FC = () => {
                 מעבר ללוח <ArrowLeft size={16} />
               </div>
             </Link>
+            <div className="overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155] p-4 text-white shadow-xl sm:rounded-[2rem] sm:p-6">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-black text-white/85">
+                <Sunrise size={14} /> זמני זריחה ושקיעה בצפת
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="rounded-2xl border border-white/15 bg-white/10 p-3 sm:p-4">
+                  <div className="mb-1 inline-flex items-center gap-1.5 text-xs font-black text-white/80">
+                    <Sunrise size={14} className="text-amber-300" />
+                    זריחה
+                  </div>
+                  <p className="text-2xl font-black tracking-tight sm:text-3xl" dir="ltr">{isSunTimesLoading ? '--:--' : sunTimes?.sunrise || '--:--'}</p>
+                </div>
+                <div className="rounded-2xl border border-white/15 bg-white/10 p-3 sm:p-4">
+                  <div className="mb-1 inline-flex items-center gap-1.5 text-xs font-black text-white/80">
+                    <Sunset size={14} className="text-orange-300" />
+                    שקיעה
+                  </div>
+                  <p className="text-2xl font-black tracking-tight sm:text-3xl" dir="ltr">{isSunTimesLoading ? '--:--' : sunTimes?.sunset || '--:--'}</p>
+                </div>
+              </div>
+              <p className="mt-3 text-xs font-bold text-white/75">
+                {isSunTimesLoading ? 'טוען זמנים עדכניים...' : sunTimes ? 'לפי שעון ישראל • מתעדכן אוטומטית' : 'לא ניתן לטעון כרגע את הזמנים'}
+              </p>
+            </div>
             <a
               href={SITE_WHATSAPP_URL}
               target="_blank"
@@ -199,7 +259,7 @@ export const Home: React.FC = () => {
 
             <div className="space-y-14 sm:space-y-20">
               {categoriesToShow.map((cat, catIdx) => {
-                const catPosts = posts.filter(p => p.category === cat).slice(0, 4);
+                const catPosts = sortedPosts.filter(p => p.category === cat).slice(0, 4);
                 if (catPosts.length === 0) return null;
                 const colorClass = CATEGORY_COLORS[cat] || 'bg-gray-600';
                 const textColorClass = colorClass.replace('bg-', 'text-');

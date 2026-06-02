@@ -102,7 +102,7 @@ const App: React.FC = () => {
           api.fetchInitialData(),
           hasToken ? api.verifyToken() : Promise.resolve(null),
         ]);
-        setPosts(data.posts);
+        setPosts([...data.posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
         setAds(data.ads);
         setComments(data.comments);
         setRegisteredUsers(data.registeredUsers);

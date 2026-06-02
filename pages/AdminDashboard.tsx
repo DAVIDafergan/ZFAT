@@ -29,6 +29,7 @@ import {
 import { getWeeklyPaperDateLabel, normalizeShareCode } from '../services/siteConfig';
 import { AD_PLACEMENTS, AD_PLACEMENT_MAP } from '../services/adPlacements';
 import { api } from '../services/api';
+import { formatGregorianDate } from '../services/dateUtils';
 import { compressImage } from '../services/imageUtils';
 
 type TabKey = 'posts' | 'ads' | 'weekly-paper' | 'board' | 'users' | 'messages' | 'newsletter' | 'comments';
@@ -282,7 +283,6 @@ export const AdminDashboard: React.FC = () => {
         content: normalizedContent,
         category: newPost.category as Category,
         author: current.author || user?.name || 'Admin',
-        date: current.date || new Date().toLocaleDateString('he-IL'),
         imageUrl: primaryImageUrl,
         images: nextImages,
         tags: nextTags,
@@ -298,7 +298,7 @@ export const AdminDashboard: React.FC = () => {
         content: normalizedContent,
         category: newPost.category as Category,
         author: user?.name || 'Admin',
-        date: new Date().toLocaleDateString('he-IL'),
+        date: '',
         imageUrl: primaryImageUrl,
         images: nextImages,
         tags: nextTags,
@@ -784,7 +784,7 @@ export const AdminDashboard: React.FC = () => {
                   <div key={post.id} className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
                     <div className="min-w-[220px] flex-1">
                       <p className="font-black text-gray-900">{post.title}</p>
-                      <p className="mt-1 text-sm font-bold text-red-700">{post.category} · {post.date}</p>
+                      <p className="mt-1 text-sm font-bold text-red-700">{post.category} · {formatGregorianDate(post.date)}</p>
                       <p className="mt-2 line-clamp-2 text-sm text-gray-600">{post.excerpt || 'ללא תקציר'}</p>
                     </div>
                     <div className="flex gap-2">

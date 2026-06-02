@@ -206,6 +206,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
               </div>
             </div>
           </div>
+
         </div>
       </header>
 

@@ -17,6 +17,7 @@ const postSchema = new mongoose.Schema({
   }],
   tags: [{ type: String }],
   isFeatured: { type: Boolean, default: false },
+  publishedAt: { type: Date, default: Date.now, index: true },
   featuredAt: { type: Date, default: null },
   views: { type: Number, default: 0 },
   shortLinkCode: { type: String, default: '' }

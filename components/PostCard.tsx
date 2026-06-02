@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Clock, ChevronLeft, Loader2, Check, Share2 } from 'lucide-react';
 import { Post, CATEGORY_COLORS } from '../types';
 import { buildShortPostUrl } from '../services/siteConfig';
-import { formatHebrewDate } from '../services/dateUtils';
+import { formatGregorianDate, formatHebrewDate } from '../services/dateUtils';
 
 interface PostCardProps {
   post: Post;
@@ -67,7 +67,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, layout = 'grid' }) => 
           </Link>
           <div className="mt-2 flex items-center justify-between border-t border-gray-100/70 pt-2 text-[11px] text-gray-400 sm:mt-3 sm:border-gray-50 sm:pt-3 sm:text-xs md:border-none md:pt-0">
             <div className="flex items-center gap-2 sm:gap-4">
-              <div className="flex items-center gap-1.5 rounded-full bg-gray-50 px-2.5 py-1 font-bold sm:px-3"><Clock size={12} /> <span>{post.date}</span></div>
+              <div className="flex items-center gap-1.5 rounded-full bg-gray-50 px-2.5 py-1 font-bold sm:px-3"><Clock size={12} /> <span>{formatGregorianDate(post.date)}</span></div>
               <div className="font-bold text-gray-500">{formatHebrewDate(post.date)}</div>
             </div>
             <button onClick={handleShare} className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 font-black text-red-700 transition hover:bg-red-100 sm:px-3" aria-live="polite">
@@ -91,7 +91,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, layout = 'grid' }) => 
       )}
       <div className="flex flex-1 flex-col p-4 sm:p-6">
         <div className="mb-3 flex items-center gap-2 text-xs font-bold text-gray-400">
-          <Clock size={12} /> <span>{post.date}</span>
+          <Clock size={12} /> <span>{formatGregorianDate(post.date)}</span>
           <span className="text-gray-300">|</span>
           <span>{formatHebrewDate(post.date)}</span>
         </div>
