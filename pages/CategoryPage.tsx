@@ -11,7 +11,9 @@ export const CategoryPage: React.FC = () => {
   const { posts, ads } = useApp();
 
   const decodedCategory = categoryName ? decodeURIComponent(categoryName) : '';
-  const categoryPosts = posts.filter((post) => post.category === decodedCategory);
+  const categoryPosts = posts
+    .filter((post) => post.category === decodedCategory)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const headerBgClass = CATEGORY_COLORS[decodedCategory as keyof typeof CATEGORY_COLORS] || 'bg-gray-800';
   const topAd = ads.find((ad) => ad.area === 'category_top' && ad.isActive);
   const midAd = ads.find((ad) => ad.area === 'category_mid' && ad.isActive);
