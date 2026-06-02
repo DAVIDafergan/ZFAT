@@ -140,7 +140,7 @@ const sampleAds = [
 const sampleWeeklyPapers = [
   {
     title: 'העיתון השבועי - מהדורת סוף השבוע',
-    weekKey: '2026-W21',
+    hebrewDate: 'ו׳ בסיוון תשפ״ו',
     description: 'מהדורה מלאה עם כותרות השבוע, טורי דעה וכתבות נדל"ן.',
     pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     coverImageUrl: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200',

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Download, BookOpen } from 'lucide-react';
 import { WeeklyPaper } from '../types';
-import { formatWeekLabel } from '../services/siteConfig';
+import { getWeeklyPaperDateLabel } from '../services/siteConfig';
 
 interface WeeklyPaperCardProps {
   paper: WeeklyPaper;
@@ -20,7 +20,7 @@ export const WeeklyPaperCard: React.FC<WeeklyPaperCardProps> = ({ paper, onOpen 
           </div>
         )}
         <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-black text-red-700 shadow-sm sm:right-4 sm:top-4 sm:px-3 sm:text-xs">
-          {formatWeekLabel(paper.weekKey)}
+          {getWeeklyPaperDateLabel(paper)}
         </span>
       </div>
       <div className="flex flex-1 flex-col p-4 sm:p-6">

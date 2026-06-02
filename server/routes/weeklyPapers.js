@@ -12,7 +12,7 @@ const mutateLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeader
 
 router.get('/', listLimiter, async (req, res) => {
   try {
-    const papers = await WeeklyPaper.find({ isActive: true }).sort({ weekKey: -1, publishedAt: -1 });
+    const papers = await WeeklyPaper.find({ isActive: true }).sort({ publishedAt: -1, createdAt: -1 });
     res.json(papers);
   } catch (err) {
     res.status(500).json({ message: err.message });

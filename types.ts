@@ -105,7 +105,8 @@ export interface NewsletterSubscriber {
 export interface WeeklyPaper {
   id: string;
   title: string;
-  weekKey: string;
+  hebrewDate: string;
+  weekKey?: string;
   description: string;
   pdfUrl: string;
   coverImageUrl: string;

@@ -6,7 +6,7 @@ import { AdUnit } from '../components/AdUnit';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Mail, Newspaper, Building2 } from 'lucide-react';
 import { Category, CATEGORY_COLORS } from '../types';
-import { formatWeekLabel, SITE_WHATSAPP_URL } from '../services/siteConfig';
+import { getWeeklyPaperDateLabel, SITE_WHATSAPP_URL } from '../services/siteConfig';
 import { formatHebrewDate } from '../services/dateUtils';
 
 export const Home: React.FC = () => {
@@ -108,10 +108,10 @@ export const Home: React.FC = () => {
             {leadPaper && (
               <Link to="/weekly-paper" className="block overflow-hidden rounded-[1.5rem] bg-[#111827] p-4 text-white shadow-xl transition hover:-translate-y-1 sm:rounded-[2rem] sm:p-6">
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-black text-white/80">
-                  <Newspaper size={14} /> {formatWeekLabel(leadPaper.weekKey)}
+                  <Newspaper size={14} /> {getWeeklyPaperDateLabel(leadPaper)}
                 </div>
                 <h3 className="news-headline text-2xl font-black leading-tight sm:text-3xl">העיתון השבועי</h3>
-                <p className="mt-3 text-sm font-medium leading-6 text-white/75 sm:leading-7">עיון אונליין, הורדת PDF וחיפוש מהיר לפי שבוע.</p>
+                <p className="mt-3 text-sm font-medium leading-6 text-white/75 sm:leading-7">עיון אונליין, הורדת PDF וחיפוש מהיר לפי תאריך עברי.</p>
                 <div className="mt-5 inline-flex items-center gap-2 text-sm font-black text-red-300">
                   לפתיחת המהדורה <ArrowLeft size={16} />
                 </div>
