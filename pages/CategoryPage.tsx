@@ -5,15 +5,14 @@ import { useApp } from '../context/AppContext';
 import { PostCard } from '../components/PostCard';
 import { AdUnit } from '../components/AdUnit';
 import { CATEGORY_COLORS } from '../types';
+import { sortPostsByNewest } from '../services/postSort';
 
 export const CategoryPage: React.FC = () => {
   const { categoryName } = useParams<{ categoryName: string }>();
   const { posts, ads } = useApp();
 
   const decodedCategory = categoryName ? decodeURIComponent(categoryName) : '';
-  const categoryPosts = posts
-    .filter((post) => post.category === decodedCategory)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const categoryPosts = sortPostsByNewest(posts.filter((post) => post.category === decodedCategory));
   const headerBgClass = CATEGORY_COLORS[decodedCategory as keyof typeof CATEGORY_COLORS] || 'bg-gray-800';
   const topAd = ads.find((ad) => ad.area === 'category_top' && ad.isActive);
   const midAd = ads.find((ad) => ad.area === 'category_mid' && ad.isActive);

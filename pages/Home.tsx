@@ -8,6 +8,7 @@ import { ArrowLeft, TrendingUp, Mail, Newspaper, Building2, Sunrise, Sunset } fr
 import { Category, CATEGORY_COLORS } from '../types';
 import { getWeeklyPaperDateLabel, SITE_WHATSAPP_URL } from '../services/siteConfig';
 import { formatHebrewDate } from '../services/dateUtils';
+import { sortPostsByNewest } from '../services/postSort';
 
 const TZFAT_COORDINATES = { lat: 32.9646, lng: 35.4960 };
 const JERUSALEM_TIME_ZONE = 'Asia/Jerusalem';
@@ -28,10 +29,9 @@ export const Home: React.FC = () => {
   const [sunTimes, setSunTimes] = useState<{ sunrise: string; sunset: string } | null>(null);
   const [isSunTimesLoading, setIsSunTimesLoading] = useState(true);
 
-  const sortedPosts = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedPosts = sortPostsByNewest(posts);
   const featuredPosts = sortedPosts.filter(p => p.isFeatured);
   const latestPosts = sortedPosts.slice(0, 6);
-  const newsPosts = sortedPosts.filter((post) => post.category === Category.NEWS).slice(0, 6);
   const leaderboardAd = ads.find(a => a.area === 'leaderboard' && a.isActive);
   const sidebarAd = ads.find(a => a.area === 'sidebar' && a.isActive);
   const sidebarVideoAd = ads.find(a => a.area === 'sidebar_video' && a.isActive);
@@ -118,7 +118,7 @@ export const Home: React.FC = () => {
               <h2 className="news-headline text-2xl font-black leading-snug text-white sm:text-3xl">חדשות אחרונות מצפת והגליל</h2>
             </div>
             <div className="space-y-3 p-4 sm:space-y-4 sm:p-6">
-              {(newsPosts.length > 0 ? newsPosts : latestPosts).map((post, index) => (
+              {latestPosts.map((post, index) => (
                 <Link key={post.id} to={`/article/${post.id}`} className="group block">
                   <article className="mobile-card-transition flex items-start gap-3 rounded-[1.2rem] border border-white/10 bg-[#101827] p-3 transition hover:border-red-500/40 hover:bg-[#131d2f] sm:gap-4 sm:p-4">
                     <div className="w-full">
