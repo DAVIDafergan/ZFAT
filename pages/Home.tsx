@@ -132,6 +132,31 @@ export const Home: React.FC = () => {
     publishedAt: latestPosts[0]?.publishedAt ?? null,
   });
 
+  if (typeof window !== 'undefined') {
+    (window as any).__homeDiagnostics = {
+      latestPosts: latestPosts.slice(0, 10).map((p) => ({
+        title: p.title,
+        publishedAt: p.publishedAt,
+      })),
+      featuredPosts: featuredPosts.slice(0, 10).map((p) => ({
+        title: p.title,
+        publishedAt: p.publishedAt,
+      })),
+      posts: posts.slice(0, 10).map((p) => ({
+        title: p.title,
+        publishedAt: p.publishedAt,
+      })),
+      firstLatestPost: {
+        title: latestPosts[0]?.title ?? null,
+        publishedAt: latestPosts[0]?.publishedAt ?? null,
+      },
+      firstRenderedHomePost: {
+        title: latestPosts[0]?.title ?? null,
+        publishedAt: latestPosts[0]?.publishedAt ?? null,
+      },
+    };
+  }
+
   return (
     <div className="animate-fade-in bg-[#f7f5f1] pb-16 sm:pb-20">
       {/* Hero — flush to header, no mobile gap */}

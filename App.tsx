@@ -109,6 +109,12 @@ const App: React.FC = () => {
           title: data.posts[0]?.title ?? null,
           publishedAt: data.posts[0]?.publishedAt ?? null,
         });
+        if (typeof window !== 'undefined') {
+          (window as any).__apiFirstArticle = {
+            title: data.posts[0]?.title ?? null,
+            publishedAt: data.posts[0]?.publishedAt ?? null,
+          };
+        }
         setPosts(sortedPosts);
         setAds(data.ads);
         setComments(data.comments);
@@ -141,10 +147,14 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    console.log('[diagnostics] First article in posts state', {
+    const firstPostInState = {
       title: posts[0]?.title ?? null,
       publishedAt: posts[0]?.publishedAt ?? null,
-    });
+    };
+    console.log('[diagnostics] First article in posts state', firstPostInState);
+    if (typeof window !== 'undefined') {
+      (window as any).__postsStateFirstArticle = firstPostInState;
+    }
   }, [posts]);
 
   useEffect(() => {
