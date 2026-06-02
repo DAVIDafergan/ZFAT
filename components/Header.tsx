@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User as UserIcon, LogOut, ChevronDown, Sunrise, Sunset } from 'lucide-react';
+import { Menu, X, Search, User as UserIcon, LogOut, ChevronDown } from 'lucide-react';
 import { Category, User, Post, CATEGORY_COLORS } from '../types';
 import { useApp } from '../context/AppContext';
 import { LOGO_URL } from '../services/siteConfig';
@@ -16,7 +16,6 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [sunTimes, setSunTimes] = useState<{ sunrise: string; sunset: string } | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { logout, posts } = useApp();
@@ -30,18 +29,6 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
     const handleScroll = () => setIsScrolled(window.scrollY > 16);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    fetch(`https://api.sunrise-sunset.org/json?lat=32.9646&lng=35.4956&formatted=0&date=${today}`)
-      .then(r => r.json())
-      .then(data => {
-        const fmt = (utc: string) =>
-          new Date(utc).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' });
-        setSunTimes({ sunrise: fmt(data.results.sunrise), sunset: fmt(data.results.sunset) });
-      })
-      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -220,25 +207,6 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
             </div>
           </div>
 
-          {sunTimes && (
-            <div
-              className="mt-2 flex items-center justify-center gap-3 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] sm:mt-3 sm:gap-4 sm:px-4"
-              dir="rtl"
-              aria-label="זמני זריחה ושקיעה בצפת"
-            >
-              <span className="inline-flex items-center gap-1.5">
-                <Sunrise size={14} className="shrink-0 text-orange-300" />
-                <span className="text-[11px] font-black text-white/85 sm:text-xs">זריחה</span>
-                <span className="text-xs font-bold sm:text-sm">{sunTimes.sunrise}</span>
-              </span>
-              <span className="text-[11px] text-white/35 sm:text-xs">•</span>
-              <span className="inline-flex items-center gap-1.5">
-                <Sunset size={14} className="shrink-0 text-indigo-300" />
-                <span className="text-[11px] font-black text-white/85 sm:text-xs">שקיעה</span>
-                <span className="text-xs font-bold sm:text-sm">{sunTimes.sunset}</span>
-              </span>
-            </div>
-          )}
         </div>
       </header>
 
