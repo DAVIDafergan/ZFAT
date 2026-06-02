@@ -12,9 +12,10 @@ import { formatHebrewDate } from '../services/dateUtils';
 export const Home: React.FC = () => {
   const { posts, ads, weeklyPapers, boardListings, isLoading } = useApp();
 
+  const sortedPosts = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const featuredPosts = posts.filter(p => p.isFeatured);
-  const latestPosts = posts.slice(0, 6);
-  const newsPosts = posts.filter((post) => post.category === Category.NEWS).slice(0, 6);
+  const latestPosts = sortedPosts.slice(0, 6);
+  const newsPosts = sortedPosts.filter((post) => post.category === Category.NEWS).slice(0, 6);
   const leaderboardAd = ads.find(a => a.area === 'leaderboard' && a.isActive);
   const sidebarAd = ads.find(a => a.area === 'sidebar' && a.isActive);
   const sidebarVideoAd = ads.find(a => a.area === 'sidebar_video' && a.isActive);
