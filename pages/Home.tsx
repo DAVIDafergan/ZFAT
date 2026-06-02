@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useApp } from '../context/AppContext';
 import { HeroSlider } from '../components/HeroSlider';
 import { PostCard } from '../components/PostCard';
 import { AdUnit } from '../components/AdUnit';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Mail, Newspaper, Building2, Sunrise, Sunset } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Mail, Newspaper, Building2 } from 'lucide-react';
 import { Category, CATEGORY_COLORS } from '../types';
 import { getWeeklyPaperDateLabel, SITE_WHATSAPP_URL } from '../services/siteConfig';
 import { formatHebrewDate } from '../services/dateUtils';
@@ -24,20 +24,6 @@ export const Home: React.FC = () => {
   const categoriesToShow = Object.values(Category).filter(c => c !== Category.NEWS);
   const leadPaper = weeklyPapers[0];
   const featuredListings = boardListings.slice(0, 2);
-
-  const [sunTimes, setSunTimes] = useState<{ sunrise: string; sunset: string } | null>(null);
-
-  useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    fetch(`https://api.sunrise-sunset.org/json?lat=32.9646&lng=35.4956&formatted=0&date=${today}`)
-      .then(r => r.json())
-      .then(data => {
-        const fmt = (utc: string) =>
-          new Date(utc).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' });
-        setSunTimes({ sunrise: fmt(data.results.sunrise), sunset: fmt(data.results.sunset) });
-      })
-      .catch(() => {});
-  }, []);
 
   if (isLoading && posts.length === 0) {
     return (
@@ -151,31 +137,6 @@ export const Home: React.FC = () => {
         <div className="mb-12">
           <AdUnit ad={leaderboardAd} className="w-full max-w-6xl mx-auto rounded-lg overflow-hidden shadow-sm" />
         </div>
-
-        {sunTimes && (
-          <div className="my-6 flex items-center justify-center gap-6 rounded-2xl border border-orange-100 bg-gradient-to-l from-orange-50 to-amber-50 px-6 py-4 shadow-sm" dir="rtl">
-            <div className="flex items-center gap-2 text-orange-500">
-              <Sunrise size={20} />
-              <div className="text-right">
-                <p className="text-[11px] font-bold text-gray-400">זריחה</p>
-                <p className="text-lg font-black text-orange-600">{sunTimes.sunrise}</p>
-              </div>
-            </div>
-            <div className="h-8 w-px bg-orange-200" />
-            <div className="text-center">
-              <p className="text-xs font-bold text-gray-500">צפת</p>
-              <p className="text-[11px] text-gray-400">{new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-            </div>
-            <div className="h-8 w-px bg-orange-200" />
-            <div className="flex items-center gap-2 text-indigo-500">
-              <div className="text-left">
-                <p className="text-[11px] font-bold text-gray-400">שקיעה</p>
-                <p className="text-lg font-black text-indigo-600">{sunTimes.sunset}</p>
-              </div>
-              <Sunset size={20} />
-            </div>
-          </div>
-        )}
 
         <div className="flex flex-col gap-8 lg:flex-row lg:gap-16 sm:gap-10">
           <div className="lg:w-2/3">
