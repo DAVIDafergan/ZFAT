@@ -31,7 +31,7 @@ export const Home: React.FC = () => {
 
   const sortedPosts = sortPostsByNewest(posts);
   const featuredPosts = sortedPosts.filter(p => p.isFeatured);
-  const latestPosts = sortedPosts.slice(0, 6);
+  const latestPosts = sortedPosts.slice(0, 10);
   const leaderboardAd = ads.find(a => a.area === 'leaderboard' && a.isActive);
   const sidebarAd = ads.find(a => a.area === 'sidebar' && a.isActive);
   const sidebarVideoAd = ads.find(a => a.area === 'sidebar_video' && a.isActive);

@@ -220,31 +220,27 @@ const shouldFallbackToLocal = (error: unknown) => (
 export const api = {
   fetchInitialData: async () => {
     if (shouldUseServer()) {
-      try {
-        const [posts, ads, comments, weeklyPapers, boardListings, messages, subscribers, users] = await Promise.all([
-          fetchJson('/api/posts', { headers: authHeaders() }),
-          fetchJson('/api/ads', { headers: authHeaders() }),
-          fetchJson('/api/comments', { headers: authHeaders() }),
-          fetchJson('/api/weekly-papers', { headers: authHeaders() }),
-          fetchJson('/api/board-listings', { headers: authHeaders() }),
-          fetch(`${API_URL}/api/messages`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
-          fetch(`${API_URL}/api/subscribers`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
-          fetch(`${API_URL}/api/auth/users`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
-        ]);
+      const [posts, ads, comments, weeklyPapers, boardListings, messages, subscribers, users] = await Promise.all([
+        fetchJson('/api/posts', { headers: authHeaders() }),
+        fetchJson('/api/ads', { headers: authHeaders() }),
+        fetchJson('/api/comments', { headers: authHeaders() }),
+        fetchJson('/api/weekly-papers', { headers: authHeaders() }),
+        fetchJson('/api/board-listings', { headers: authHeaders() }),
+        fetch(`${API_URL}/api/messages`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+        fetch(`${API_URL}/api/subscribers`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+        fetch(`${API_URL}/api/auth/users`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+      ]);
 
-        return {
-          posts: (posts.data || posts).map(normalizePost),
-          ads: (ads || []).map(normalizeAd),
-          comments: (comments || []).map(normalizeComment),
-          registeredUsers: (users || []).map(normalizeUser),
-          contactMessages: (messages || []).map(normalizeMessage),
-          newsletterSubscribers: (subscribers || []).map(normalizeSubscriber),
-          weeklyPapers: (weeklyPapers || []).map(normalizeWeeklyPaper),
-          boardListings: (boardListings || []).map(normalizeBoardListing),
-        };
-      } catch (error) {
-        console.error('[API] fetchInitialData failed, falling back to local', error);
-      }
+      return {
+        posts: (posts.data || posts).map(normalizePost),
+        ads: (ads || []).map(normalizeAd),
+        comments: (comments || []).map(normalizeComment),
+        registeredUsers: (users || []).map(normalizeUser),
+        contactMessages: (messages || []).map(normalizeMessage),
+        newsletterSubscribers: (subscribers || []).map(normalizeSubscriber),
+        weeklyPapers: (weeklyPapers || []).map(normalizeWeeklyPaper),
+        boardListings: (boardListings || []).map(normalizeBoardListing),
+      };
     }
 
     return api.fetchInitialDataLocal();
@@ -266,16 +262,12 @@ export const api = {
 
   addPost: async (post: Post): Promise<Post> => {
     if (shouldUseServer()) {
-      try {
-        const created = await fetchJson('/api/posts', {
-          method: 'POST',
-          headers: authHeaders(),
-          body: JSON.stringify(post),
-        });
-        return normalizePost(created);
-      } catch (error) {
-        console.warn('Falling back to local post creation', error);
-      }
+      const created = await fetchJson('/api/posts', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(post),
+      });
+      return normalizePost(created);
     }
 
     await delay(200);
@@ -284,36 +276,30 @@ export const api = {
     return post;
   },
 
-  updatePost: async (id: string, updates: Partial<Post>) => {
+  updatePost: async (id: string, updates: Partial<Post>): Promise<Post> => {
     if (shouldUseServer()) {
-      try {
-        await fetchJson(`/api/posts/${id}`, {
-          method: 'PUT',
-          headers: authHeaders(),
-          body: JSON.stringify(updates),
-        });
-        return;
-      } catch (error) {
-        console.warn('Falling back to local post update', error);
-      }
+      const updated = await fetchJson(`/api/posts/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(updates),
+      });
+      return normalizePost(updated);
     }
 
     await delay(150);
     const posts = getStorage<Post[]>('zfat_posts', INITIAL_POSTS);
-    setStorage('zfat_posts', posts.map((post) => (post.id === id ? { ...post, ...updates } : post)));
+    const updatedPosts = posts.map((post) => (post.id === id ? { ...post, ...updates } : post));
+    setStorage('zfat_posts', updatedPosts);
+    return normalizePost(updatedPosts.find((post) => post.id === id) || { ...updates, id });
   },
 
   deletePost: async (id: string) => {
     if (shouldUseServer()) {
-      try {
-        await fetchJson(`/api/posts/${id}`, {
-          method: 'DELETE',
-          headers: authHeaders(),
-        });
-        return;
-      } catch (error) {
-        console.warn('Falling back to local post deletion', error);
-      }
+      await fetchJson(`/api/posts/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      return;
     }
 
     await delay(150);

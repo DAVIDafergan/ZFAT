@@ -22,6 +22,14 @@ router.get('/', listLimiter, async (req, res) => {
       Post.countDocuments(),
     ]);
 
+    if (process.env.LOG_POST_ORDER === 'true') {
+      console.log('[posts:list] ordered timestamps', posts.map((post) => ({
+        title: post.title,
+        publishedAt: post.publishedAt,
+        createdAt: post.createdAt,
+      })));
+    }
+
     res.json({ data: posts, page, total, pages: Math.ceil(total / limit) });
   } catch (err) {
     res.status(500).json({ message: err.message });
