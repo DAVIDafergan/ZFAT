@@ -104,7 +104,18 @@ const App: React.FC = () => {
           api.fetchInitialData(),
           hasToken ? api.verifyToken() : Promise.resolve(null),
         ]);
-        setPosts(sortPostsByNewest(data.posts));
+        const sortedPosts = sortPostsByNewest(data.posts);
+        console.log('[diagnostics] First article returned from API', {
+          title: data.posts[0]?.title ?? null,
+          publishedAt: data.posts[0]?.publishedAt ?? null,
+        });
+        if (typeof window !== 'undefined') {
+          (window as any).__apiFirstArticle = {
+            title: data.posts[0]?.title ?? null,
+            publishedAt: data.posts[0]?.publishedAt ?? null,
+          };
+        }
+        setPosts(sortedPosts);
         setAds(data.ads);
         setComments(data.comments);
         setRegisteredUsers(data.registeredUsers);
@@ -134,6 +145,17 @@ const App: React.FC = () => {
     };
     init();
   }, []);
+
+  useEffect(() => {
+    const firstPostInState = {
+      title: posts[0]?.title ?? null,
+      publishedAt: posts[0]?.publishedAt ?? null,
+    };
+    console.log('[diagnostics] First article in posts state', firstPostInState);
+    if (typeof window !== 'undefined') {
+      (window as any).__postsStateFirstArticle = firstPostInState;
+    }
+  }, [posts]);
 
   useEffect(() => {
     if (user) localStorage.setItem('zfat_user', JSON.stringify(user));
