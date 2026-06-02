@@ -160,16 +160,17 @@ const normalizeBoardListing = (listing: any): BoardListing => ({
 const shouldUseServer = () => USE_SERVER;
 
 const fetchJson = async (path: string, init?: RequestInit) => {
+  const requestUrl = `${API_URL}${path}`;
   let response: Response;
   try {
-    response = await fetch(`${API_URL}${path}`, init);
+    response = await fetch(requestUrl, init);
   } catch (err) {
-    console.error(`[API] Network error for ${path}:`, err);
+    console.error(`[API] Network error for ${requestUrl}:`, err);
     throw new ApiRequestError('לא ניתן להתחבר לשרת כרגע. ודאו שה-Backend פעיל ונסו שוב.', 503);
   }
   const data = await response.json().catch(() => null);
   if (!response.ok) {
-    console.error(`[API] Request failed: ${path} [${response.status}]`, data);
+    console.error(`[API] Request failed: ${requestUrl} [${response.status}]`, data);
     throw new ApiRequestError(data?.message || `Request failed: ${response.status}`, response.status);
   }
   return data;

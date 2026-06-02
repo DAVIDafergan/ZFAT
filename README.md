@@ -44,6 +44,7 @@ MONGO_URL=<railway mongo url>
 JWT_SECRET=change_me
 FRONTEND_URL=https://zfatbitnufa.com
 PUBLIC_SITE_URL=https://zfatbitnufa.com
+CORS_ALLOWED_ORIGINS=https://www.zfatbitnufa.com
 AWS_S3_REGION=eu-north-1
 AWS_S3_BUCKET=<your bucket>
 AWS_ACCESS_KEY_ID=<access key>
@@ -127,6 +128,7 @@ MONGO_URL=<railway mongo url>
 JWT_SECRET=<strong secret>
 FRONTEND_URL=https://zfatbitnufa.com
 PUBLIC_SITE_URL=https://zfatbitnufa.com
+CORS_ALLOWED_ORIGINS=https://www.zfatbitnufa.com
 AWS_S3_REGION=eu-north-1
 AWS_S3_BUCKET=<your bucket>
 AWS_ACCESS_KEY_ID=<access key>
@@ -149,9 +151,11 @@ AWS_S3_UPLOAD_PREFIX=uploads
 אם צריך להגדיר URL מפורש ב-frontend:
 
 ```env
-VITE_API_URL=https://zfatbitnufa.com
+VITE_API_URL=https://<your-backend-domain>
 VITE_PUBLIC_SITE_URL=https://zfatbitnufa.com
 ```
+
+אם ה-frontend וה-backend רצים על דומיינים שונים, `VITE_API_URL` חייב להצביע על כתובת השרת המלאה (למשל Railway), ולא על דומיין הסטטיק.
 
 Build ידני מה-root:
 
