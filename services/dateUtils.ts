@@ -192,9 +192,8 @@ const timeFormatter = new Intl.DateTimeFormat('he-IL', {
 
 export const formatPublishTime = (value: string | undefined | null): string => {
   if (!value) return '';
-  // Only show time if the value contains an actual time component (not just a date)
-  const hasTime = /T\d{2}:\d{2}|\s\d{1,2}:\d{2}/.test(value);
-  if (!hasTime) return '';
+  // הצג שעה רק אם יש T בערך — כלומר ISO datetime אמיתי, לא רק תאריך
+  if (!/T\d{2}:\d{2}/.test(value)) return '';
   const parsed = parseDateValue(value);
   if (!parsed) return '';
   return timeFormatter.format(parsed);
