@@ -42,10 +42,9 @@ export const normalizeShareCode = (value?: string | null, fallback = '') => {
 
 export const buildArticleUrl = (id: string) => `${SITE_URL}/#/article/${id}`;
 
-export const buildShortPostUrl = (shortCode?: string | null, postId?: string) => {
-  const code = normalizeShareCode(shortCode, postId);
-  return code ? `${SITE_URL}/p/${code}` : buildArticleUrl(postId || '');
-};
+export const buildShortPostUrl = (_shortCode?: string | null, postId?: string) => (
+  postId ? buildArticleUrl(postId) : `${SITE_URL}/#/`
+);
 
 export const formatWeekLabel = (weekKey: string) => {
   if (!weekKey) return '';

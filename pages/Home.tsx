@@ -30,8 +30,8 @@ export const Home: React.FC = () => {
   const [isSunTimesLoading, setIsSunTimesLoading] = useState(true);
 
   const sortedPosts = sortPostsByNewest(posts);
-  const featuredPosts = sortedPosts.filter(p => p.isFeatured);
-  const latestPosts = sortedPosts.slice(0, 10);
+  const featuredPosts = sortPostsByNewest(posts.filter(p => p.isFeatured));
+  const latestPosts = sortPostsByNewest([...posts]).slice(0, 10);
   const leaderboardAd = ads.find(a => a.area === 'leaderboard' && a.isActive);
   const sidebarAd = ads.find(a => a.area === 'sidebar' && a.isActive);
   const sidebarVideoAd = ads.find(a => a.area === 'sidebar_video' && a.isActive);
@@ -259,7 +259,7 @@ export const Home: React.FC = () => {
 
             <div className="space-y-14 sm:space-y-20">
               {categoriesToShow.map((cat, catIdx) => {
-                const catPosts = sortedPosts.filter(p => p.category === cat).slice(0, 4);
+                const catPosts = sortPostsByNewest(posts.filter(p => p.category === cat)).slice(0, 4);
                 if (catPosts.length === 0) return null;
                 const colorClass = CATEGORY_COLORS[cat] || 'bg-gray-600';
                 const textColorClass = colorClass.replace('bg-', 'text-');

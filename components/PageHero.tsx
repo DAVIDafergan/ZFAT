@@ -19,7 +19,7 @@ export const PageHero: React.FC<PageHeroProps> = ({ eyebrow, title, description,
       <div className="container relative z-10 mx-auto px-4 py-10 sm:py-14 md:py-20">
         <div className="max-w-4xl">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-extrabold tracking-[0.14em] text-white/90 sm:mb-5 sm:gap-3 sm:px-4 sm:text-sm sm:tracking-[0.2em]">
-            <img src={LOGO_URL} alt="" className="h-6 w-auto opacity-90 sm:h-7" />
+            <img src={LOGO_URL} alt="" loading="lazy" decoding="async" className="h-6 w-auto opacity-90 sm:h-7" />
             <span>{eyebrow}</span>
           </div>
           <h1 className="news-headline mb-3 text-3xl font-black leading-tight sm:mb-4 sm:text-4xl md:text-6xl">{title}</h1>

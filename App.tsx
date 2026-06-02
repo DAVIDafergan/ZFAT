@@ -335,7 +335,7 @@ const App: React.FC = () => {
     };
 
     pingServer();
-    const interval = setInterval(pingServer, 4 * 60 * 1000);
+    const interval = setInterval(pingServer, 3 * 60 * 1000);
     window.addEventListener('focus', pingServer);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
@@ -376,7 +376,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!isLoading) {
       const elapsed = Date.now() - splashStartRef.current;
-      const minDisplay = 220;
+      const minDisplay = 0;
       const remaining = Math.max(0, minDisplay - elapsed);
 
       const exitDelay = setTimeout(() => setSplashExit(true), remaining);
@@ -385,7 +385,7 @@ const App: React.FC = () => {
     }
   }, [isLoading]);
 
-  const tickerPosts = posts.filter((post) => post.category === Category.NEWS);
+  const tickerPosts = sortPostsByNewest(posts.filter((post) => post.category === Category.NEWS));
 
   return (
     <>
@@ -393,7 +393,7 @@ const App: React.FC = () => {
         <div className={`splash-screen${splashExit ? ' splash-exit' : ''}`} aria-hidden="true">
           <div className="splash-logo-wrap">
             <div style={{ position: 'relative', overflow: 'hidden', display: 'inline-flex' }}>
-              <img src={LOGO_URL} alt="צפת בתנופה" className="splash-logo" />
+              <img src={LOGO_URL} alt="צפת בתנופה" loading="lazy" decoding="async" className="splash-logo" />
               <span className="splash-logo-shimmer" />
             </div>
             <div className="splash-line" />
@@ -484,7 +484,7 @@ const App: React.FC = () => {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm">
                   <div className="mb-5 flex justify-center md:justify-start">
-                    <img src={LOGO_URL} alt="צפת בתנופה" className="h-16 w-auto md:h-20" />
+                    <img src={LOGO_URL} alt="צפת בתנופה" loading="lazy" decoding="async" className="h-16 w-auto md:h-20" />
                   </div>
                   <p className="text-sm leading-7 text-gray-300">האתר המקומי לצפת: חדשות, מבזקים, קהילה, לוח בתנופה והעיתון השבועי במקום אחד.</p>
                 </div>
