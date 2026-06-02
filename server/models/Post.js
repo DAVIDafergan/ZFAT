@@ -17,10 +17,17 @@ const postSchema = new mongoose.Schema({
   }],
   tags: [{ type: String }],
   isFeatured: { type: Boolean, default: false },
-  publishedAt: { type: Date, default: Date.now, index: true },
+  publishedAt: { type: Date, default: Date.now, required: true, index: true },
   featuredAt: { type: Date, default: null },
   views: { type: Number, default: 0 },
   shortLinkCode: { type: String, default: '' }
 }, { timestamps: true });
+
+postSchema.pre('validate', function setPublishedAtFallback(next) {
+  if (!this.publishedAt) {
+    this.publishedAt = this.createdAt || new Date();
+  }
+  next();
+});
 
 module.exports = mongoose.model('Post', postSchema);

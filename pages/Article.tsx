@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, Navigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { CATEGORY_COLORS, Comment } from '../types';
 import { Calendar, User, Tag, ThumbsUp, MessageCircle, Send, ArrowUpDown } from 'lucide-react';
@@ -11,7 +11,7 @@ import { formatGregorianDate, formatHebrewDate } from '../services/dateUtils';
 
 export const Article: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { posts, ads, user, comments, addComment, toggleLikeComment, incrementViews } = useApp();
+  const { posts, ads, user, comments, addComment, toggleLikeComment, incrementViews, isLoading } = useApp();
   const [commentText, setCommentText] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'top'>('newest');
   const [commentSubmitted, setCommentSubmitted] = useState(false);
@@ -33,7 +33,27 @@ export const Article: React.FC = () => {
     return list;
   }, [articleComments, sortBy]);
 
-  if (!post) return <Navigate to="/" />;
+  if (!post && isLoading) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center bg-[#f7f5f1]">
+        <p className="text-lg font-black text-gray-600">טוען כתבה...</p>
+      </div>
+    );
+  }
+
+  if (!post) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center bg-[#f7f5f1] px-4">
+        <div className="rounded-2xl border border-gray-200 bg-white px-6 py-8 text-center shadow-sm">
+          <h1 className="text-2xl font-black text-gray-900">הכתבה לא נמצאה</h1>
+          <p className="mt-3 text-sm font-bold text-gray-500">ייתכן שהקישור שגוי או שהכתבה הוסרה.</p>
+          <Link to="/" className="mt-5 inline-flex rounded-full bg-red-700 px-5 py-2.5 text-sm font-black text-white hover:bg-red-800">
+            חזרה לעמוד הבית
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const categoryColor = CATEGORY_COLORS[post.category] || 'bg-gray-600';
   const relatedPosts = posts.filter(p => p.category === post.category && p.id !== post.id).slice(0, 3);

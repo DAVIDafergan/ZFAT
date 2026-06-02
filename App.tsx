@@ -153,12 +153,12 @@ const App: React.FC = () => {
 
   const addPost = async (post: Post) => {
     const saved = await api.addPost(post);
-    setPosts((prev) => [saved, ...prev]);
+    setPosts((prev) => sortPostsByNewest([saved, ...prev]));
   };
 
   const updatePost = async (id: string, updates: Partial<Post>) => {
-    await api.updatePost(id, updates);
-    setPosts((prev) => prev.map((post) => (post.id === id ? { ...post, ...updates } : post)));
+    const updatedPost = await api.updatePost(id, updates);
+    setPosts((prev) => sortPostsByNewest(prev.map((post) => (post.id === id ? updatedPost : post))));
   };
 
   const deletePost = async (id: string) => {
@@ -343,6 +343,14 @@ const App: React.FC = () => {
       window.removeEventListener('focus', pingServer);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.location.hash) return;
+    const articleMatch = window.location.pathname.match(/^\/article\/([^/]+)$/);
+    if (!articleMatch) return;
+    window.location.replace(`${window.location.origin}/#/article/${articleMatch[1]}`);
   }, []);
 
   useEffect(() => {
