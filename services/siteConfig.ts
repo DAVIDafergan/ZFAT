@@ -1,3 +1,5 @@
+import { formatHebrewDate } from './dateUtils';
+
 export const SITE_NAME = 'צפת בתנופה';
 export const SITE_TAGLINE = 'חדשות צפת, קהילה, נדל"ן והעיתון השבועי';
 export const LOGO_URL = '/logo.png';
@@ -50,6 +52,14 @@ export const formatWeekLabel = (weekKey: string) => {
   const match = weekKey.match(/^(\d{4})-W(\d{2})$/);
   if (!match) return weekKey;
   return `שבוע ${match[2]} / ${match[1]}`;
+};
+
+export const getWeeklyPaperDateLabel = (paper: { hebrewDate?: string; weekKey?: string; publishedAt?: string }) => {
+  const hebrewDate = paper.hebrewDate?.trim();
+  if (hebrewDate) return hebrewDate;
+  if (paper.weekKey) return formatWeekLabel(paper.weekKey);
+  if (paper.publishedAt) return formatHebrewDate(paper.publishedAt);
+  return '';
 };
 
 export const cleanPhoneNumber = (value: string) => value.replace(/[^\d]/g, '');

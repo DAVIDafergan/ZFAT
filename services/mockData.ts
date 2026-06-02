@@ -759,7 +759,7 @@ export const INITIAL_WEEKLY_PAPERS: WeeklyPaper[] = [
   {
     id: 'paper-1',
     title: 'העיתון השבועי - מהדורת השבוע',
-    weekKey: '2026-W21',
+    hebrewDate: 'ו׳ בסיוון תשפ״ו',
     description: 'מהדורת סוף השבוע עם כתבות עומק, קהילה ונדל"ן בצפת.',
     pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     coverImageUrl: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&auto=format&fit=crop',

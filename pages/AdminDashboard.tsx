@@ -26,7 +26,7 @@ import {
   CheckCircle,
   Search,
 } from 'lucide-react';
-import { formatWeekLabel, normalizeShareCode } from '../services/siteConfig';
+import { getWeeklyPaperDateLabel, normalizeShareCode } from '../services/siteConfig';
 import { AD_PLACEMENTS, AD_PLACEMENT_MAP } from '../services/adPlacements';
 import { api } from '../services/api';
 import { compressImage } from '../services/imageUtils';
@@ -35,7 +35,7 @@ type TabKey = 'posts' | 'ads' | 'weekly-paper' | 'board' | 'users' | 'messages' 
 
 const initialPaperForm = {
   title: '',
-  weekKey: '',
+  hebrewDate: '',
   description: '',
   pdfUrl: '',
   coverImageUrl: '',
@@ -443,7 +443,7 @@ export const AdminDashboard: React.FC = () => {
     const paper: WeeklyPaper = {
       id: Date.now().toString(),
       title: paperForm.title,
-      weekKey: paperForm.weekKey,
+      hebrewDate: paperForm.hebrewDate,
       description: paperForm.description,
       pdfUrl: paperForm.pdfUrl,
       coverImageUrl: paperForm.coverImageUrl,
@@ -1023,8 +1023,8 @@ export const AdminDashboard: React.FC = () => {
                   <input type="text" value={paperForm.title} onChange={(e) => setPaperForm({ ...paperForm, title: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="העיתון השבועי - מהדורת סוף השבוע" />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-bold text-gray-700">שבוע</label>
-                  <input type="week" value={paperForm.weekKey} onChange={(e) => setPaperForm({ ...paperForm, weekKey: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
+                  <label className="mb-2 block text-sm font-bold text-gray-700">תאריך עברי</label>
+                  <input type="text" value={paperForm.hebrewDate} onChange={(e) => setPaperForm({ ...paperForm, hebrewDate: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder={'לדוגמה: י"ג בסיוון תשפ"ו'} />
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-bold text-gray-700">תיאור קצר</label>
@@ -1067,7 +1067,7 @@ export const AdminDashboard: React.FC = () => {
                       <div className="h-20 w-16 overflow-hidden rounded-lg bg-gray-200">{paper.coverImageUrl ? <img src={paper.coverImageUrl} alt={paper.title} className="h-full w-full object-cover" /> : null}</div>
                       <div>
                         <p className="font-black text-gray-900">{paper.title}</p>
-                        <p className="text-sm font-bold text-red-700">{formatWeekLabel(paper.weekKey)}</p>
+                        <p className="text-sm font-bold text-red-700">{getWeeklyPaperDateLabel(paper)}</p>
                         <p className="mt-1 text-sm leading-6 text-gray-500">{paper.description}</p>
                       </div>
                     </div>

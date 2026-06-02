@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 
 const weeklyPaperSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  weekKey: { type: String, required: true, index: true },
+  hebrewDate: { type: String, default: '', trim: true },
+  weekKey: { type: String, default: '', index: true },
   description: { type: String, default: '' },
   pdfUrl: { type: String, required: true },
   coverImageUrl: { type: String, default: '' },

@@ -133,6 +133,7 @@ const normalizeUser = (user: any): User => ({
 const normalizeWeeklyPaper = (paper: any): WeeklyPaper => ({
   id: resolveId(paper),
   title: paper.title || '',
+  hebrewDate: paper.hebrewDate || '',
   weekKey: paper.weekKey || '',
   description: paper.description || '',
   pdfUrl: paper.pdfUrl || '',
