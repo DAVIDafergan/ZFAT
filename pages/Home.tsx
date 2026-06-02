@@ -131,7 +131,7 @@ export const Home: React.FC = () => {
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] font-bold text-white/55 sm:mt-3 sm:text-xs">
                         {(() => {
                           const d = resolvePostDateForDisplay(post.publishedAt, post.createdAt, post.date);
-                          const t = formatPublishTime(d);
+                          const t = formatPublishTime(post.publishedAt || post.createdAt);
                           return <span>{formatHebrewDate(d)}{t ? ` · ${t}` : ''}</span>;
                         })()}
                       </div>
