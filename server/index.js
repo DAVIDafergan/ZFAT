@@ -14,6 +14,7 @@ const escapeHtml = require('./utils/escapeHtml');
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
 const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI;
+const JWT_SECRET = (process.env.JWT_SECRET || '').trim();
 const publicSiteUrl = (process.env.PUBLIC_SITE_URL || process.env.FRONTEND_URL || 'https://zfatbitnufa.com').replace(/\/$/, '');
 const distDir = path.join(__dirname, '../dist');
 const distIndexPath = path.join(distDir, 'index.html');
@@ -28,11 +29,45 @@ const mongoStateLabels = {
   3: 'disconnecting',
 };
 
+const splitEnvList = (value = '') => value.split(',').map(item => item.trim()).filter(Boolean);
+
+const normalizeOrigin = (value = '') => {
+  const trimmed = `${value || ''}`.trim();
+  if (!trimmed) return '';
+  try {
+    const parsed = new URL(trimmed);
+    return `${parsed.protocol}//${parsed.host}`.toLowerCase();
+  } catch {
+    return trimmed.replace(/\/$/, '').toLowerCase();
+  }
+};
+
+const expandOriginVariants = (value = '') => {
+  const normalized = normalizeOrigin(value);
+  if (!normalized) return [];
+  try {
+    const parsed = new URL(normalized);
+    const host = parsed.host.toLowerCase();
+    const variants = new Set([`${parsed.protocol}//${host}`]);
+    if (host.startsWith('www.')) {
+      variants.add(`${parsed.protocol}//${host.slice(4)}`);
+    } else {
+      variants.add(`${parsed.protocol}//www.${host}`);
+    }
+    return [...variants];
+  } catch {
+    return [normalized];
+  }
+};
+
 const allowedOrigins = Array.from(new Set([
+  'https://zfatbitnufa.com',
+  'https://www.zfatbitnufa.com',
   publicSiteUrl,
-  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim()).filter(Boolean) : []),
-  ...(process.env.PUBLIC_SITE_URL ? process.env.PUBLIC_SITE_URL.split(',').map(origin => origin.trim()).filter(Boolean) : []),
-].filter(Boolean)));
+  ...splitEnvList(process.env.FRONTEND_URL),
+  ...splitEnvList(process.env.PUBLIC_SITE_URL),
+  ...splitEnvList(process.env.CORS_ALLOWED_ORIGINS),
+].flatMap(expandOriginVariants).filter(Boolean)));
 
 const shortLinkLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -55,10 +90,13 @@ if (!hasDistIndex) {
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    const normalizedOrigin = normalizeOrigin(origin);
+    if (!origin || allowedOrigins.includes(normalizedOrigin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      const error = new Error(`Origin ${origin} is not allowed by CORS`);
+      error.status = 403;
+      callback(error);
     }
   },
   credentials: true,
@@ -231,6 +269,11 @@ if (!MONGO_URI) {
   process.exit(1);
 }
 
+if (!JWT_SECRET) {
+  console.error('❌ Startup error: JWT_SECRET is missing');
+  process.exit(1);
+}
+
 mongoose.connection.on('connected', () => {
   console.log('✅ MongoDB connected');
 });
@@ -257,6 +300,7 @@ mongoose.connect(MONGO_URI)
     const server = app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📦 Static frontend path: ${distDir}`);
+      console.log(`🌐 Allowed CORS origins: ${allowedOrigins.join(', ')}`);
     });
     server.on('error', (error) => {
       console.error('❌ Startup server error:', error);

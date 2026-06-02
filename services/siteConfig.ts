@@ -11,19 +11,19 @@ const readEnv = (key: string) => {
 };
 
 const trimSlash = (value: string) => value.replace(/\/$/, '');
-const DEFAULT_API_URL = 'https://zfatbitnufa.com';
+const DEFAULT_SITE_URL = 'https://zfatbitnufa.com';
+const getBrowserOrigin = () => (typeof window !== 'undefined' ? trimSlash(window.location.origin) : '');
 
 export const API_URL = (() => {
   const configured = readEnv('VITE_API_URL');
   if (configured) return trimSlash(configured);
-  return DEFAULT_API_URL;
+  return getBrowserOrigin() || DEFAULT_SITE_URL;
 })();
 
 export const SITE_URL = (() => {
   const configured = readEnv('VITE_PUBLIC_SITE_URL') || readEnv('VITE_API_URL');
   if (configured) return trimSlash(configured);
-  if (typeof window !== 'undefined') return trimSlash(window.location.origin);
-  return DEFAULT_API_URL;
+  return getBrowserOrigin() || DEFAULT_SITE_URL;
 })();
 
 export const USE_SERVER = readEnv('VITE_USE_SERVER') !== 'false';
