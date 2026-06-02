@@ -1,5 +1,11 @@
 const mongoose = require('mongoose');
 
+const coerceDate = (value) => {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 const postSchema = new mongoose.Schema({
   title: { type: String, required: true },
   excerpt: { type: String, default: '' },
@@ -24,8 +30,10 @@ const postSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 postSchema.pre('validate', function setPublishedAtFallback(next) {
-  if (!this.publishedAt) {
-    this.publishedAt = this.createdAt || new Date();
+  if (!coerceDate(this.publishedAt)) {
+    const createdAtFallback = coerceDate(this.createdAt);
+    const legacyDateFallback = coerceDate(this.get('date'));
+    this.publishedAt = createdAtFallback || legacyDateFallback;
   }
   next();
 });
