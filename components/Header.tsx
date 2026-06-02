@@ -118,16 +118,6 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
               />
             </Link>
 
-            {sunTimes && (
-              <div className="hidden items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-white lg:flex" dir="rtl">
-                <Sunrise size={13} className="text-orange-300 shrink-0" />
-                <span className="text-[11px] font-bold">{sunTimes.sunrise}</span>
-                <span className="mx-0.5 text-white/30 text-[10px]">|</span>
-                <Sunset size={13} className="text-indigo-300 shrink-0" />
-                <span className="text-[11px] font-bold">{sunTimes.sunset}</span>
-              </div>
-            )}
-
             <div className="flex items-center gap-2 lg:hidden">
               {user ? (
                 <Link
@@ -229,6 +219,26 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
               </div>
             </div>
           </div>
+
+          {sunTimes && (
+            <div
+              className="mt-2 flex items-center justify-center gap-3 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] sm:mt-3 sm:gap-4 sm:px-4"
+              dir="rtl"
+              aria-label="זמני זריחה ושקיעה בצפת"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <Sunrise size={14} className="shrink-0 text-orange-300" />
+                <span className="text-[11px] font-black text-white/85 sm:text-xs">זריחה</span>
+                <span className="text-xs font-bold sm:text-sm">{sunTimes.sunrise}</span>
+              </span>
+              <span className="text-[11px] text-white/35 sm:text-xs">•</span>
+              <span className="inline-flex items-center gap-1.5">
+                <Sunset size={14} className="shrink-0 text-indigo-300" />
+                <span className="text-[11px] font-black text-white/85 sm:text-xs">שקיעה</span>
+                <span className="text-xs font-bold sm:text-sm">{sunTimes.sunset}</span>
+              </span>
+            </div>
+          )}
         </div>
       </header>
 
