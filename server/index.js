@@ -146,6 +146,50 @@ const ensureDefaultAdmin = async () => {
   console.log(`✅ Default admin ensured: ${defaultAdminEmail}`);
 };
 
+const coerceDate = (value) => {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const backfillLegacyPostPublishedAt = async () => {
+  const cursor = Post.collection.find(
+    {},
+    { projection: { _id: 1, publishedAt: 1, createdAt: 1, date: 1 } }
+  );
+  const operations = [];
+  let skipped = 0;
+
+  while (await cursor.hasNext()) {
+    const doc = await cursor.next();
+    if (!doc) break;
+
+    const currentPublishedAt = coerceDate(doc.publishedAt);
+    if (currentPublishedAt) continue;
+
+    const createdAtFallback = coerceDate(doc.createdAt);
+    const legacyDateFallback = coerceDate(doc.date);
+    const nextPublishedAt = createdAtFallback || legacyDateFallback;
+    if (!nextPublishedAt) {
+      skipped += 1;
+      continue;
+    }
+
+    operations.push({
+      updateOne: {
+        filter: { _id: doc._id },
+        update: { $set: { publishedAt: nextPublishedAt } },
+      },
+    });
+  }
+
+  if (operations.length > 0) {
+    await Post.bulkWrite(operations, { ordered: false });
+  }
+
+  console.log(`🛠️ Post publishedAt backfill complete: updated=${operations.length} skipped=${skipped}`);
+};
+
 app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
   try {
     const requestedCode = normalizeShortCode(req.params.shortCode);
@@ -296,6 +340,7 @@ process.on('uncaughtException', (error) => {
 
 mongoose.connect(MONGO_URI)
   .then(() => ensureDefaultAdmin())
+  .then(() => backfillLegacyPostPublishedAt())
   .then(() => {
     const server = app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
