@@ -125,6 +125,30 @@ const parseDateValue = (value: string): Date | null => {
   return null;
 };
 
+const gregorianFormatter = new Intl.DateTimeFormat('he-IL', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'Asia/Jerusalem',
+});
+
+const gregorianFormatterWithTime = new Intl.DateTimeFormat('he-IL', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: 'Asia/Jerusalem',
+});
+
+export const formatGregorianDate = (value: string, showTime = false): string => {
+  const parsedDate = parseDateValue(value);
+  if (!parsedDate) return value;
+  return showTime
+    ? gregorianFormatterWithTime.format(parsedDate)
+    : gregorianFormatter.format(parsedDate);
+};
+
 export const formatHebrewDate = (value: string): string => {
   const parsedDate = parseDateValue(value);
   if (!parsedDate) {

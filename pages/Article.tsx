@@ -7,7 +7,7 @@ import { AdUnit } from '../components/AdUnit';
 import { PostCard } from '../components/PostCard';
 import { ShareButtons } from '../components/ShareButtons';
 import { buildShortPostUrl } from '../services/siteConfig';
-import { formatHebrewDate } from '../services/dateUtils';
+import { formatGregorianDate, formatHebrewDate } from '../services/dateUtils';
 
 export const Article: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -134,8 +134,8 @@ export const Article: React.FC = () => {
           <div className="px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-10">
             <div className="mb-5 flex flex-wrap gap-3 text-sm font-bold">
               <span className={`${categoryColor} rounded-full px-3 py-1.5 text-white shadow-sm`}>{post.category}</span>
-              <span className="inline-flex items-center gap-1.5 text-gray-500"><Calendar size={14} /> {post.date}</span>
-              <span className="inline-flex items-center gap-1.5 text-gray-500">תאריך עברי: {formatHebrewDate(post.date)}</span>
+              <span className="inline-flex items-center gap-1.5 text-gray-500"><Calendar size={14} /> {formatGregorianDate(post.date)}</span>
+              <span className="inline-flex items-center gap-1.5 text-gray-500">{formatHebrewDate(post.date)}</span>
               <span className="inline-flex items-center gap-1.5 text-gray-500"><User size={14} /> {post.author}</span>
             </div>
 
