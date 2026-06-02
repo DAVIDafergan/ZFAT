@@ -12,9 +12,10 @@ import { formatHebrewDate } from '../services/dateUtils';
 export const Home: React.FC = () => {
   const { posts, ads, weeklyPapers, boardListings, isLoading } = useApp();
 
-  const featuredPosts = posts.filter(p => p.isFeatured);
-  const latestPosts = posts.slice(0, 6);
-  const newsPosts = posts.filter((post) => post.category === Category.NEWS).slice(0, 6);
+  const sortedPosts = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const featuredPosts = sortedPosts.filter(p => p.isFeatured);
+  const latestPosts = sortedPosts.slice(0, 6);
+  const newsPosts = sortedPosts.filter((post) => post.category === Category.NEWS).slice(0, 6);
   const leaderboardAd = ads.find(a => a.area === 'leaderboard' && a.isActive);
   const sidebarAd = ads.find(a => a.area === 'sidebar' && a.isActive);
   const sidebarVideoAd = ads.find(a => a.area === 'sidebar_video' && a.isActive);
@@ -198,7 +199,7 @@ export const Home: React.FC = () => {
 
             <div className="space-y-14 sm:space-y-20">
               {categoriesToShow.map((cat, catIdx) => {
-                const catPosts = posts.filter(p => p.category === cat).slice(0, 4);
+                const catPosts = sortedPosts.filter(p => p.category === cat).slice(0, 4);
                 if (catPosts.length === 0) return null;
                 const colorClass = CATEGORY_COLORS[cat] || 'bg-gray-600';
                 const textColorClass = colorClass.replace('bg-', 'text-');
