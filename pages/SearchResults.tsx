@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { PostCard } from '../components/PostCard';
 import { AdUnit } from '../components/AdUnit';
 import { Search } from 'lucide-react';
+import { sortPostsByNewest } from '../services/postSort';
 
 export const SearchResults: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -14,12 +15,12 @@ export const SearchResults: React.FC = () => {
   const results = useMemo(() => {
     if (!query.trim()) return [];
     const q = query.toLowerCase();
-    return posts.filter(p =>
+    return sortPostsByNewest(posts.filter(p =>
       p.title.toLowerCase().includes(q) ||
       p.excerpt.toLowerCase().includes(q) ||
       p.tags.some(t => t.toLowerCase().includes(q)) ||
       p.category.toLowerCase().includes(q)
-    );
+    ));
   }, [posts, query]);
 
   return (
