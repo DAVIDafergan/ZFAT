@@ -182,3 +182,23 @@ export const validateAndFormatHebrewDate = (value: string | null | undefined): s
   if (!parsedDate) return null;
   return formatHebrewDate(value);
 };
+
+const timeFormatter = new Intl.DateTimeFormat('he-IL', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+  timeZone: 'Asia/Jerusalem',
+});
+
+export const formatPublishTime = (value: string | undefined | null): string => {
+  if (!value) return '';
+  const parsed = parseDateValue(value);
+  if (!parsed) return '';
+  return timeFormatter.format(parsed);
+};
+
+export const resolvePostDateForDisplay = (
+  publishedAt?: string,
+  createdAt?: string,
+  date?: string,
+): string => publishedAt || createdAt || date || '';

@@ -7,7 +7,10 @@ const toTimestamp = (value?: string): number => {
 };
 
 export const getPostPublishTimestamp = (post: Post): number => (
-  toTimestamp(post.publishedAt || post.createdAt)
+  toTimestamp(post.publishedAt) ||
+  toTimestamp(post.createdAt) ||
+  toTimestamp(post.date) ||
+  0
 );
 
 export const sortPostsByNewest = (posts: Post[]): Post[] => (
