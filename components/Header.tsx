@@ -167,7 +167,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
                   <div className="absolute right-0 top-full mt-3 w-96 max-w-[calc(100vw-2rem)] overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-2xl">
                     {suggestions.map((post) => (
                       <button key={post.id} onClick={() => handleSuggestionClick(post.id)} className="flex w-full items-center gap-4 border-b border-gray-50 px-4 py-3 text-right transition hover:bg-red-50 last:border-b-0">
-                        <img src={post.imageUrl} alt="" className="h-12 w-12 rounded-xl object-cover" />
+                        <img src={post.imageUrl} alt="" loading="lazy" decoding="async" className="h-12 w-12 rounded-xl object-cover" />
                         <div className="flex-1">
                           <p className="line-clamp-1 text-sm font-black text-gray-900">{post.title}</p>
                           <p className="mt-1 text-xs font-bold text-gray-500">{post.category}</p>

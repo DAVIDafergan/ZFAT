@@ -632,7 +632,7 @@ export const AdminDashboard: React.FC = () => {
                           {mainImageFeedback.uploadState === 'ready' && <CheckCircle size={20} className="text-emerald-600" />}
                         </div>
                         <div className="mt-3 h-40 overflow-hidden rounded-xl border border-white/70 bg-white">
-                          <img src={newPost.imageUrl} alt="preview" className="h-full w-full object-contain" />
+                          <img src={newPost.imageUrl} alt="preview" loading="lazy" decoding="async" className="h-full w-full object-contain" />
                         </div>
                       </div>
                     )}
@@ -723,7 +723,7 @@ export const AdminDashboard: React.FC = () => {
                             {image.uploadState === 'ready' && <CheckCircle size={16} className="shrink-0 text-emerald-600" />}
                           </div>
                           <div className="mt-2 h-24 overflow-hidden rounded-lg border border-white/80 bg-white">
-                            <img src={image.url} alt={`preview-${index}`} className="h-full w-full object-contain" />
+                            <img src={image.url} alt={`preview-${index}`} loading="lazy" decoding="async" className="h-full w-full object-contain" />
                           </div>
                         </div>
                       )}
@@ -914,7 +914,7 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                     <p className="mb-3 text-xs font-black text-red-700">מידה מומלצת: {AD_PLACEMENT_MAP[ad.area]?.recommendedSize || '1200x250'}px</p>
                     <div className="relative mb-4 aspect-video overflow-hidden rounded-lg bg-gray-200">
-                      {ad.slides.length > 0 && <img src={ad.slides[0].imageUrl} alt="preview" className="h-full w-full bg-black object-contain opacity-70" />}
+                      {ad.slides.length > 0 && <img src={ad.slides[0].imageUrl} alt="preview" loading="lazy" decoding="async" className="h-full w-full bg-black object-contain opacity-70" />}
                       <div className="absolute inset-0 flex items-center justify-center bg-black/30 font-black text-white">{ad.slides.length} שקופיות</div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -967,7 +967,7 @@ export const AdminDashboard: React.FC = () => {
                     <div key={slide.id} draggable onDragStart={(e) => handleDragStart(e, index)} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, index)} className={`flex flex-col gap-4 rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all sm:flex-row sm:items-start sm:gap-6 sm:p-6 ${draggedSlideIndex === index ? 'ring-2 ring-red-300 opacity-50' : 'hover:border-red-200'}`}>
                       <div className="hidden cursor-grab text-gray-400 hover:text-gray-600 sm:mt-8 sm:block"><GripVertical size={24} /></div>
                       <div className="h-24 w-full shrink-0 overflow-hidden rounded-lg border border-gray-300 bg-gray-200 sm:w-32">
-                        <img src={slide.imageUrl} alt="preview" className="h-full w-full bg-black object-contain" />
+                        <img src={slide.imageUrl} alt="preview" loading="lazy" decoding="async" className="h-full w-full bg-black object-contain" />
                       </div>
                       <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
@@ -1064,7 +1064,7 @@ export const AdminDashboard: React.FC = () => {
                 {weeklyPapers.map((paper) => (
                   <div key={paper.id} className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex gap-4">
-                      <div className="h-20 w-16 overflow-hidden rounded-lg bg-gray-200">{paper.coverImageUrl ? <img src={paper.coverImageUrl} alt={paper.title} className="h-full w-full object-cover" /> : null}</div>
+                      <div className="h-20 w-16 overflow-hidden rounded-lg bg-gray-200">{paper.coverImageUrl ? <img src={paper.coverImageUrl} alt={paper.title} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}</div>
                       <div>
                         <p className="font-black text-gray-900">{paper.title}</p>
                         <p className="text-sm font-bold text-red-700">{getWeeklyPaperDateLabel(paper)}</p>
@@ -1147,7 +1147,7 @@ export const AdminDashboard: React.FC = () => {
                 {boardListings.map((listing) => (
                   <div key={listing.id} className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex gap-4">
-                      <div className="h-20 w-28 overflow-hidden rounded-lg bg-gray-200">{listing.imageUrl ? <img src={listing.imageUrl} alt={listing.title} className="h-full w-full object-cover" /> : null}</div>
+                      <div className="h-20 w-28 overflow-hidden rounded-lg bg-gray-200">{listing.imageUrl ? <img src={listing.imageUrl} alt={listing.title} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}</div>
                       <div>
                         <p className="font-black text-gray-900">{listing.title}</p>
                         <p className="text-sm font-bold text-red-700">{DEAL_TYPE_LABELS[listing.dealType]} · {listing.location}</p>
