@@ -92,7 +92,12 @@ const parseDateValue = (value: string): Date | null => {
 };
 
 export const formatHebrewDate = (value: string): string => {
-  const parsedDate = parseDateValue(value) || new Date();
+  const parsedDate = parseDateValue(value);
+  if (!parsedDate) {
+    console.error('[formatHebrewDate] Cannot parse date value:', value);
+    return 'תאריך לא זמין';
+  }
+
   const parts = hebrewPartsFormatter.formatToParts(parsedDate);
   const day = parts.find((part) => part.type === 'day')?.value;
   const month = parts.find((part) => part.type === 'month')?.value;
@@ -106,4 +111,16 @@ export const formatHebrewDate = (value: string): string => {
   const hebrewYear = formatHebrewYear(Number(year) % 1000);
 
   return `${hebrewDay} ${month} ${hebrewYear}`;
+};
+
+/**
+ * Server-side validation: verifies that a given date string can be converted
+ * to a Hebrew date.  Returns the formatted Hebrew date string on success, or
+ * null if the value is missing/unparseable (so callers know not to display it).
+ */
+export const validateAndFormatHebrewDate = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const parsedDate = parseDateValue(value);
+  if (!parsedDate) return null;
+  return formatHebrewDate(value);
 };

@@ -66,7 +66,7 @@ const normalizePost = (post: any): Post => {
     content: post.content || '',
     category: post.category,
     author: post.author || 'מערכת',
-    date: post.date || (post.createdAt ? new Date(post.createdAt).toLocaleDateString('he-IL') : new Date().toLocaleDateString('he-IL')),
+    date: post.date || (post.createdAt ? new Date(post.createdAt).toISOString() : ''),
     imageUrl: fallbackImageUrl,
     tags: Array.isArray(post.tags) ? post.tags : [],
     isFeatured: Boolean(post.isFeatured),
@@ -97,7 +97,7 @@ const normalizeComment = (comment: any): Comment => ({
   userId: comment.userId || '',
   userName: comment.userName || '',
   content: comment.content || '',
-  date: comment.date || (comment.createdAt ? new Date(comment.createdAt).toLocaleDateString('he-IL') : new Date().toLocaleDateString('he-IL')),
+  date: comment.date || (comment.createdAt ? new Date(comment.createdAt).toISOString() : ''),
   likes: Number(comment.likes || 0),
   likedBy: Array.isArray(comment.likedBy) ? comment.likedBy : [],
   approved: Boolean(comment.approved),
@@ -110,14 +110,14 @@ const normalizeMessage = (message: any): ContactMessage => ({
   phone: message.phone || '',
   subject: message.subject || '',
   message: message.message || '',
-  date: message.date || (message.createdAt ? new Date(message.createdAt).toLocaleDateString('he-IL') : new Date().toLocaleDateString('he-IL')),
+  date: message.date || (message.createdAt ? new Date(message.createdAt).toISOString() : ''),
   read: Boolean(message.read),
 });
 
 const normalizeSubscriber = (subscriber: any): NewsletterSubscriber => ({
   id: resolveId(subscriber),
   email: subscriber.email || '',
-  joinedDate: subscriber.joinedDate || (subscriber.createdAt ? new Date(subscriber.createdAt).toLocaleDateString('he-IL') : new Date().toLocaleDateString('he-IL')),
+  joinedDate: subscriber.joinedDate || (subscriber.createdAt ? new Date(subscriber.createdAt).toISOString() : ''),
   isActive: subscriber.isActive !== false,
 });
 
@@ -127,7 +127,7 @@ const normalizeUser = (user: any): User => ({
   email: user.email || '',
   role: user.role || 'user',
   isAuthenticated: user.isAuthenticated !== false,
-  joinedDate: user.joinedDate || (user.createdAt ? new Date(user.createdAt).toLocaleDateString('he-IL') : undefined),
+  joinedDate: user.joinedDate || (user.createdAt ? new Date(user.createdAt).toISOString() : undefined),
 });
 
 const normalizeWeeklyPaper = (paper: any): WeeklyPaper => ({
@@ -138,7 +138,7 @@ const normalizeWeeklyPaper = (paper: any): WeeklyPaper => ({
   description: paper.description || '',
   pdfUrl: paper.pdfUrl || '',
   coverImageUrl: paper.coverImageUrl || '',
-  publishedAt: paper.publishedAt || paper.createdAt || new Date().toISOString(),
+  publishedAt: paper.publishedAt || paper.createdAt || '',
   isActive: paper.isActive !== false,
 });
 
@@ -155,7 +155,7 @@ const normalizeBoardListing = (listing: any): BoardListing => ({
   contactName: listing.contactName || '',
   contactPhone: listing.contactPhone || '',
   isActive: listing.isActive !== false,
-  createdAt: listing.createdAt || new Date().toISOString(),
+  createdAt: listing.createdAt || '',
 });
 
 const shouldUseServer = () => USE_SERVER;
