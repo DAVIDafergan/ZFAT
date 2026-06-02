@@ -20,7 +20,8 @@ import {
 import { AppContext } from './context/AppContext';
 import { api } from './services/api';
 import { Loader2, Newspaper, Building2 } from 'lucide-react';
-import { API_URL, LOGO_URL } from './services/siteConfig';
+import { API_URL, LOGO_URL, normalizeShareCode } from './services/siteConfig';
+import { sortPostsByNewest } from './services/postSort';
 
 const Article = lazy(() => import('./pages/Article').then((module) => ({ default: module.Article })));
 const CategoryPage = lazy(() => import('./pages/CategoryPage').then((module) => ({ default: module.CategoryPage })));
@@ -79,6 +80,7 @@ const App: React.FC = () => {
   });
   const [footerEmail, setFooterEmail] = useState('');
   const [footerNewsletterStatus, setFooterNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [shortPathHandled, setShortPathHandled] = useState(false);
 
   const mergeRegisteredUser = (incomingUser: User) => {
     setRegisteredUsers((prev) => {
@@ -102,7 +104,7 @@ const App: React.FC = () => {
           api.fetchInitialData(),
           hasToken ? api.verifyToken() : Promise.resolve(null),
         ]);
-        setPosts([...data.posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+        setPosts(sortPostsByNewest(data.posts));
         setAds(data.ads);
         setComments(data.comments);
         setRegisteredUsers(data.registeredUsers);
@@ -343,6 +345,22 @@ const App: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (shortPathHandled || typeof window === 'undefined') return;
+    const match = window.location.pathname.match(/^\/p\/([^/]+)/);
+    if (!match) {
+      setShortPathHandled(true);
+      return;
+    }
+    if (isLoading) return;
+
+    const requestedCode = normalizeShareCode(match[1]);
+    const matchedPost = posts.find((post) => normalizeShareCode(post.shortLinkCode, post.id) === requestedCode);
+    const targetHash = matchedPost ? `#/article/${matchedPost.id}` : '#/';
+    window.location.replace(`${window.location.origin}/${targetHash}`);
+    setShortPathHandled(true);
+  }, [isLoading, posts, shortPathHandled]);
+
   const [splashVisible, setSplashVisible] = useState(true);
   const [splashExit, setSplashExit] = useState(false);
   const splashStartRef = React.useRef(Date.now());
@@ -350,11 +368,11 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!isLoading) {
       const elapsed = Date.now() - splashStartRef.current;
-      const minDisplay = 900;
+      const minDisplay = 220;
       const remaining = Math.max(0, minDisplay - elapsed);
 
       const exitDelay = setTimeout(() => setSplashExit(true), remaining);
-      const removeDelay = setTimeout(() => setSplashVisible(false), remaining + 600);
+      const removeDelay = setTimeout(() => setSplashVisible(false), remaining + 200);
       return () => { clearTimeout(exitDelay); clearTimeout(removeDelay); };
     }
   }, [isLoading]);

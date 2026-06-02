@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Minus, Plus, Search, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { WeeklyPaper } from '../types';
@@ -13,9 +13,11 @@ export const WeeklyNewspaper: React.FC = () => {
   const [selectedPaper, setSelectedPaper] = useState<WeeklyPaper | null>(weeklyPapers[0] || null);
   const [hasAutoSelected, setHasAutoSelected] = useState(Boolean(weeklyPapers[0]));
   const [currentPage, setCurrentPage] = useState(1);
-  const [zoom, setZoom] = useState(125);
+  const [zoom, setZoom] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 640 ? 100 : 125));
   const [isDesktopSpread, setIsDesktopSpread] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : false));
+  const readerRef = useRef<HTMLDivElement | null>(null);
   const topAd = ads.find((ad) => ad.area === 'weekly_top' && ad.isActive);
+  const getDefaultZoom = () => (typeof window !== 'undefined' && window.innerWidth < 640 ? 100 : 125);
 
   const filteredPapers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -32,7 +34,7 @@ export const WeeklyNewspaper: React.FC = () => {
     if (!hasAutoSelected && !selectedPaper && weeklyPapers.length > 0) {
       setSelectedPaper(weeklyPapers[0]);
       setCurrentPage(1);
-      setZoom(125);
+      setZoom(getDefaultZoom());
       setHasAutoSelected(true);
     }
   }, [hasAutoSelected, selectedPaper, weeklyPapers]);
@@ -53,7 +55,12 @@ export const WeeklyNewspaper: React.FC = () => {
   const openPaper = (paper: WeeklyPaper) => {
     setSelectedPaper(paper);
     setCurrentPage(1);
-    setZoom(125);
+    setZoom(getDefaultZoom());
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      window.setTimeout(() => {
+        readerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+    }
   };
 
   const spreadStep = isDesktopSpread ? 2 : 1;
@@ -96,7 +103,7 @@ export const WeeklyNewspaper: React.FC = () => {
         </div>
 
         {selectedPaper && (
-          <div className="mb-10 overflow-hidden rounded-[1.5rem] border border-gray-200 bg-white shadow-xl sm:rounded-[2rem]">
+          <div ref={readerRef} className="mb-10 scroll-mt-24 overflow-hidden rounded-[1.5rem] border border-gray-200 bg-white shadow-xl sm:rounded-[2rem]">
             <div className="flex flex-col gap-4 border-b border-gray-100 px-4 py-4 sm:px-6 sm:py-5 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-sm font-black text-red-700">{getWeeklyPaperDateLabel(selectedPaper)}</p>
@@ -161,7 +168,7 @@ export const WeeklyNewspaper: React.FC = () => {
                     <iframe key={`${spreadStartPage + 1}-${zoom}-left`} src={leftPageSrc} title={`${selectedPaper.title} עמוד ${spreadStartPage + 1}`} className="h-[72vh] min-h-[520px] w-full rounded-[0.85rem] border-0 bg-white" />
                   </div>
                 ) : (
-                  <iframe key={`${currentPage}-${zoom}-single`} src={rightPageSrc} title={selectedPaper.title} className="h-[70vh] min-h-[460px] w-full rounded-[1rem] border-0 bg-white md:h-[78vh]" />
+                  <iframe key={`${currentPage}-${zoom}-single`} src={rightPageSrc} title={selectedPaper.title} className="h-[64vh] min-h-[360px] w-full rounded-[1rem] border-0 bg-white md:h-[78vh]" />
                 )}
               </div>
               <p className="text-center text-xs font-medium text-white/80 sm:text-sm">
@@ -174,7 +181,7 @@ export const WeeklyNewspaper: React.FC = () => {
         )}
 
         {filteredPapers.length > 0 ? (
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 sm:gap-8">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
             {filteredPapers.map((paper) => (
               <WeeklyPaperCard key={paper.id} paper={paper} onOpen={openPaper} />
             ))}
