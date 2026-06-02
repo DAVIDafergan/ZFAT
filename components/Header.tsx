@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User as UserIcon, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, X, Search, User as UserIcon, LogOut, ChevronDown, Sunrise, Sunset } from 'lucide-react';
 import { Category, User, Post, CATEGORY_COLORS } from '../types';
 import { useApp } from '../context/AppContext';
 import { LOGO_URL } from '../services/siteConfig';
@@ -16,6 +16,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [sunTimes, setSunTimes] = useState<{ sunrise: string; sunset: string } | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { logout, posts } = useApp();
@@ -29,6 +30,18 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
     const handleScroll = () => setIsScrolled(window.scrollY > 16);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    fetch(`https://api.sunrise-sunset.org/json?lat=32.9646&lng=35.4956&formatted=0&date=${today}`)
+      .then(r => r.json())
+      .then(data => {
+        const fmt = (utc: string) =>
+          new Date(utc).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' });
+        setSunTimes({ sunrise: fmt(data.results.sunrise), sunset: fmt(data.results.sunset) });
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -104,6 +117,16 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
                 className="h-14 w-auto drop-shadow-[0_3px_14px_rgba(0,0,0,0.45)] transition-all sm:h-14 md:h-14 lg:h-16"
               />
             </Link>
+
+            {sunTimes && (
+              <div className="hidden items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-white lg:flex" dir="rtl">
+                <Sunrise size={13} className="text-orange-300 shrink-0" />
+                <span className="text-[11px] font-bold">{sunTimes.sunrise}</span>
+                <span className="mx-0.5 text-white/30 text-[10px]">|</span>
+                <Sunset size={13} className="text-indigo-300 shrink-0" />
+                <span className="text-[11px] font-bold">{sunTimes.sunset}</span>
+              </div>
+            )}
 
             <div className="flex items-center gap-2 lg:hidden">
               {user ? (
