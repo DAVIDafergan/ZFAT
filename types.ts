@@ -24,6 +24,9 @@ export interface Post {
   category: Category;
   author: string;
   date: string;
+  publishedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
   imageUrl: string;
   tags: string[];
   isFeatured: boolean;

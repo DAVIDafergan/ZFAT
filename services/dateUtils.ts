@@ -59,12 +59,43 @@ const formatHebrewDay = (value: number): string => `${buildHebrewNumberText(valu
 
 const formatHebrewYear = (value: number): string => addHebrewYearPunctuation(buildHebrewNumberText(value));
 
+const createUtcDate = (
+  year: number,
+  month: number,
+  day: number,
+  hour = 12,
+  minute = 0,
+): Date | null => {
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return null;
+  if (month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+  const utcDate = new Date(Date.UTC(year, month - 1, day, hour, minute));
+  if (
+    utcDate.getUTCFullYear() !== year
+    || utcDate.getUTCMonth() !== month - 1
+    || utcDate.getUTCDate() !== day
+    || utcDate.getUTCHours() !== hour
+    || utcDate.getUTCMinutes() !== minute
+  ) {
+    return null;
+  }
+  return utcDate;
+};
+
 const parseDateValue = (value: string): Date | null => {
   const trimmed = value?.trim();
   if (!trimmed) return null;
 
-  const nativeParsed = new Date(trimmed);
-  if (!Number.isNaN(nativeParsed.getTime())) return nativeParsed;
+  const isoDateOnlyMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (isoDateOnlyMatch) {
+    const [, yearText, monthText, dayText] = isoDateOnlyMatch;
+    return createUtcDate(Number(yearText), Number(monthText), Number(dayText), 12, 0);
+  }
+
+  const isoDateTimeNoTzMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[T\s](\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (isoDateTimeNoTzMatch) {
+    const [, yearText, monthText, dayText, hourText, minuteText] = isoDateTimeNoTzMatch;
+    return createUtcDate(Number(yearText), Number(monthText), Number(dayText), Number(hourText), Number(minuteText));
+  }
 
   const dateOnlyMatch = trimmed.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})$/);
   if (dateOnlyMatch) {
@@ -72,8 +103,7 @@ const parseDateValue = (value: string): Date | null => {
     const day = Number(dayText);
     const month = Number(monthText);
     const year = Number(yearText.length === 2 ? `20${yearText}` : yearText);
-    const parsed = new Date(year, month - 1, day);
-    if (!Number.isNaN(parsed.getTime())) return parsed;
+    return createUtcDate(year, month, day, 12, 0);
   }
 
   const withTimeMatch = trimmed.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})\s+(\d{1,2}):(\d{2})$/);
@@ -84,8 +114,12 @@ const parseDateValue = (value: string): Date | null => {
     const year = Number(yearText.length === 2 ? `20${yearText}` : yearText);
     const hour = Number(hourText);
     const minute = Number(minuteText);
-    const parsed = new Date(year, month - 1, day, hour, minute);
-    if (!Number.isNaN(parsed.getTime())) return parsed;
+    return createUtcDate(year, month, day, hour, minute);
+  }
+
+  const nativeParsed = new Date(trimmed);
+  if (!Number.isNaN(nativeParsed.getTime())) {
+    return nativeParsed;
   }
 
   return null;

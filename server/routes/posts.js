@@ -18,7 +18,7 @@ router.get('/', listLimiter, async (req, res) => {
     const skip = (page - 1) * limit;
 
     const [posts, total] = await Promise.all([
-      Post.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Post.find().sort({ publishedAt: -1, createdAt: -1 }).skip(skip).limit(limit),
       Post.countDocuments(),
     ]);
 
@@ -44,7 +44,12 @@ router.post('/', mutateLimiter, auth, editorOrAbove, async (req, res) => {
     const payload = {
       ...req.body,
       shortLinkCode: normalizeShortCode(req.body.shortLinkCode, Date.now().toString()) || generateShortCode(),
+      publishedAt: new Date(),
     };
+    delete payload.date;
+    delete payload.published_at;
+    delete payload.created_at;
+    delete payload.updated_at;
     if (payload.isFeatured) {
       payload.featuredAt = new Date();
     } else {
@@ -65,6 +70,13 @@ router.put('/:id', mutateLimiter, auth, editorOrAbove, validateObjectId(), async
       ...req.body,
       ...(req.body.shortLinkCode ? { shortLinkCode: normalizeShortCode(req.body.shortLinkCode, req.params.id) } : {}),
     };
+    delete updates.date;
+    delete updates.publishedAt;
+    delete updates.published_at;
+    delete updates.createdAt;
+    delete updates.created_at;
+    delete updates.updatedAt;
+    delete updates.updated_at;
     const post = await Post.findById(objectId);
     if (!post) return res.status(404).json({ message: 'כתבה לא נמצאה' });
 

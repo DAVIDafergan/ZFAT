@@ -45,6 +45,39 @@ const setStorage = (key: string, data: unknown) => {
 
 const resolveId = (item: { id?: string; _id?: string }) => item.id || item._id || '';
 
+const toIsoDateString = (value: unknown): string => {
+  if (value === null || value === undefined || value === '') return '';
+  const parsed = new Date(value as string | number | Date);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.toISOString();
+};
+
+const resolvePostPublicationDate = (post: any): string => {
+  const candidates = [
+    post.publishedAt,
+    post.published_at,
+    post.createdAt,
+    post.created_at,
+    post.updatedAt,
+    post.updated_at,
+    post.date,
+  ];
+
+  for (const candidate of candidates) {
+    const iso = toIsoDateString(candidate);
+    if (iso) return iso;
+    if (candidate) {
+      console.error('[api.normalizePost] Invalid post date candidate', {
+        postId: resolveId(post),
+        candidate,
+      });
+    }
+  }
+
+  console.error('[api.normalizePost] Missing valid publication date for post', { postId: resolveId(post) });
+  return '';
+};
+
 const normalizePost = (post: any): Post => {
   const normalizedImages = Array.isArray(post.images)
     ? post.images
@@ -66,7 +99,10 @@ const normalizePost = (post: any): Post => {
     content: post.content || '',
     category: post.category,
     author: post.author || 'מערכת',
-    date: post.date || (post.createdAt ? new Date(post.createdAt).toISOString() : ''),
+    date: resolvePostPublicationDate(post),
+    publishedAt: toIsoDateString(post.publishedAt || post.published_at),
+    createdAt: toIsoDateString(post.createdAt || post.created_at),
+    updatedAt: toIsoDateString(post.updatedAt || post.updated_at),
     imageUrl: fallbackImageUrl,
     tags: Array.isArray(post.tags) ? post.tags : [],
     isFeatured: Boolean(post.isFeatured),
@@ -97,7 +133,7 @@ const normalizeComment = (comment: any): Comment => ({
   userId: comment.userId || '',
   userName: comment.userName || '',
   content: comment.content || '',
-  date: comment.date || (comment.createdAt ? new Date(comment.createdAt).toISOString() : ''),
+  date: toIsoDateString(comment.date) || toIsoDateString(comment.createdAt || comment.created_at),
   likes: Number(comment.likes || 0),
   likedBy: Array.isArray(comment.likedBy) ? comment.likedBy : [],
   approved: Boolean(comment.approved),
@@ -110,14 +146,14 @@ const normalizeMessage = (message: any): ContactMessage => ({
   phone: message.phone || '',
   subject: message.subject || '',
   message: message.message || '',
-  date: message.date || (message.createdAt ? new Date(message.createdAt).toISOString() : ''),
+  date: toIsoDateString(message.date) || toIsoDateString(message.createdAt || message.created_at),
   read: Boolean(message.read),
 });
 
 const normalizeSubscriber = (subscriber: any): NewsletterSubscriber => ({
   id: resolveId(subscriber),
   email: subscriber.email || '',
-  joinedDate: subscriber.joinedDate || (subscriber.createdAt ? new Date(subscriber.createdAt).toISOString() : ''),
+  joinedDate: toIsoDateString(subscriber.joinedDate) || toIsoDateString(subscriber.createdAt || subscriber.created_at),
   isActive: subscriber.isActive !== false,
 });
 
@@ -127,7 +163,7 @@ const normalizeUser = (user: any): User => ({
   email: user.email || '',
   role: user.role || 'user',
   isAuthenticated: user.isAuthenticated !== false,
-  joinedDate: user.joinedDate || (user.createdAt ? new Date(user.createdAt).toISOString() : undefined),
+  joinedDate: toIsoDateString(user.joinedDate) || toIsoDateString(user.createdAt || user.created_at) || undefined,
 });
 
 const normalizeWeeklyPaper = (paper: any): WeeklyPaper => ({
@@ -138,7 +174,7 @@ const normalizeWeeklyPaper = (paper: any): WeeklyPaper => ({
   description: paper.description || '',
   pdfUrl: paper.pdfUrl || '',
   coverImageUrl: paper.coverImageUrl || '',
-  publishedAt: paper.publishedAt || paper.createdAt || '',
+  publishedAt: toIsoDateString(paper.publishedAt || paper.published_at) || toIsoDateString(paper.createdAt || paper.created_at),
   isActive: paper.isActive !== false,
 });
 
@@ -155,7 +191,7 @@ const normalizeBoardListing = (listing: any): BoardListing => ({
   contactName: listing.contactName || '',
   contactPhone: listing.contactPhone || '',
   isActive: listing.isActive !== false,
-  createdAt: listing.createdAt || '',
+  createdAt: toIsoDateString(listing.createdAt || listing.created_at),
 });
 
 const shouldUseServer = () => USE_SERVER;

@@ -37,6 +37,11 @@ describe('formatHebrewDate — regular dates', () => {
     expect(isRealHebrewDate(result)).toBe(true);
   });
 
+  it('formats an ISO datetime without timezone suffix', () => {
+    const result = formatHebrewDate('2024-03-15 08:30');
+    expect(isRealHebrewDate(result)).toBe(true);
+  });
+
   it('formats a dd-mm-yyyy date string', () => {
     const result = formatHebrewDate('15-03-2024');
     expect(isRealHebrewDate(result)).toBe(true);
@@ -75,6 +80,14 @@ describe('formatHebrewDate — missing or invalid input', () => {
 
   it('returns תאריך לא זמין for a completely invalid value', () => {
     expect(formatHebrewDate('not-a-date')).toBe('תאריך לא זמין');
+  });
+
+  it('returns תאריך לא זמין for impossible calendar date', () => {
+    expect(formatHebrewDate('31/02/2024')).toBe('תאריך לא זמין');
+  });
+
+  it('returns תאריך לא זמין for malformed ISO date', () => {
+    expect(formatHebrewDate('2024-13-40')).toBe('תאריך לא זמין');
   });
 
   it('never returns today\'s date when input is invalid', () => {
