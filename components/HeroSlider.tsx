@@ -21,13 +21,14 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ posts }) => {
 
   if (featuredPosts.length === 0) return null;
   const currentPost = featuredPosts[currentIndex];
+  const isInitialSlide = currentIndex === 0;
   const categoryTint = CATEGORY_COLORS[currentPost.category].replace('bg-', 'from-');
 
   return (
     <section className="animate-scan-line relative h-[360px] w-full overflow-hidden bg-gray-900 sm:h-[420px] md:h-[620px]" aria-label="כותרות ראשיות">
       <div className="absolute inset-0">
-        <img src={currentPost.imageUrl} alt="" aria-hidden="true" loading="eager" decoding="async" fetchPriority="high" className="h-full w-full object-cover scale-110 blur-sm brightness-70 transition-opacity duration-700" />
-        <img src={currentPost.imageUrl} alt={currentPost.title} loading="eager" decoding="async" fetchPriority="high" className="absolute inset-0 h-full w-full object-contain transition-opacity duration-700" />
+        <img src={currentPost.imageUrl} alt="" aria-hidden="true" loading={isInitialSlide ? 'eager' : 'lazy'} decoding="async" fetchPriority={isInitialSlide ? 'high' : 'auto'} className="h-full w-full object-cover scale-110 blur-sm brightness-70 transition-opacity duration-700" />
+        <img src={currentPost.imageUrl} alt={currentPost.title} loading={isInitialSlide ? 'eager' : 'lazy'} decoding="async" fetchPriority={isInitialSlide ? 'high' : 'auto'} className="absolute inset-0 h-full w-full object-contain transition-opacity duration-700" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
         <div className={`absolute inset-0 bg-gradient-to-l ${categoryTint}/40 via-transparent to-black/20`} />
       </div>

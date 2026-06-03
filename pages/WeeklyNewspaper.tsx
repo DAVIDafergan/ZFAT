@@ -15,6 +15,7 @@ export const WeeklyNewspaper: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 640 ? 100 : 125));
   const [isDesktopSpread, setIsDesktopSpread] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : false));
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
   const readerRef = useRef<HTMLDivElement | null>(null);
   const topAd = ads.find((ad) => ad.area === 'weekly_top' && ad.isActive);
   const getDefaultZoom = () => (typeof window !== 'undefined' && window.innerWidth < 640 ? 100 : 125);
@@ -42,6 +43,12 @@ export const WeeklyNewspaper: React.FC = () => {
   useEffect(() => {
     const onResize = () => setIsDesktopSpread(window.innerWidth >= 1024);
     onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
@@ -116,72 +123,101 @@ export const WeeklyNewspaper: React.FC = () => {
                 <button onClick={() => setSelectedPaper(null)} className="rounded-full border border-gray-200 px-5 py-3 text-sm font-bold text-gray-700 transition hover:border-red-200 hover:text-red-700">סגור תצוגה</button>
               </div>
             </div>
-            <div className="space-y-4 bg-gradient-to-b from-[#121212] to-[#2d2d2d] p-3 md:p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 text-white sm:px-4">
-                <div className="flex items-center gap-2">
+            <div className="space-y-3 bg-gradient-to-b from-[#121212] to-[#2d2d2d] p-3 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 text-white sm:px-4">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <button
                     onClick={() => setCurrentPage((prev) => Math.max(1, prev - spreadStep))}
-                    className="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-2 text-xs font-bold transition hover:border-white/40 hover:bg-white/10 sm:text-sm"
+                    className="inline-flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-1.5 text-xs font-bold transition hover:border-white/40 hover:bg-white/10 sm:px-3 sm:py-2 sm:text-sm"
                   >
-                    <ChevronRight size={16} /> עמוד קודם
+                    <ChevronRight size={14} /> קודם
                   </button>
+                  <span className="min-w-[3.5rem] text-center text-xs font-black sm:text-sm">
+                    עמ׳ {isDesktopSpread ? `${spreadStartPage}-${spreadStartPage + 1}` : currentPage}
+                  </span>
                   <button
                     onClick={() => setCurrentPage((prev) => prev + spreadStep)}
-                    className="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-2 text-xs font-bold transition hover:border-white/40 hover:bg-white/10 sm:text-sm"
+                    className="inline-flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-1.5 text-xs font-bold transition hover:border-white/40 hover:bg-white/10 sm:px-3 sm:py-2 sm:text-sm"
                   >
-                    עמוד הבא <ChevronLeft size={16} />
+                    הבא <ChevronLeft size={14} />
                   </button>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Search size={15} className="text-white/80" />
-                  <button
-                    onClick={() => setZoom((prev) => Math.max(75, prev - 25))}
-                    className="rounded-full border border-white/20 p-2 transition hover:border-white/40 hover:bg-white/10"
-                    aria-label="הקטנת זום"
-                  >
-                    <Minus size={14} />
-                  </button>
-                  <span className="min-w-14 text-center text-sm font-black">{zoom}%</span>
-                  <button
-                    onClick={() => setZoom((prev) => Math.min(250, prev + 25))}
-                    className="rounded-full border border-white/20 p-2 transition hover:border-white/40 hover:bg-white/10"
-                    aria-label="הגדלת זום"
-                  >
-                    <Plus size={14} />
-                  </button>
-                  <input
-                    type="range"
-                    min={75}
-                    max={250}
-                    step={25}
-                    value={zoom}
-                    onChange={(event) => setZoom(Number(event.target.value))}
-                    className="w-24 accent-red-500 sm:w-32"
-                    aria-label="שליטת זום"
-                  />
-                </div>
-              </div>
-              <div className="rounded-[1.25rem] bg-[#efe8de] p-2 shadow-[0_14px_40px_rgba(0,0,0,0.35)] sm:p-4">
-                {isDesktopSpread ? (
-                  <div className="grid grid-cols-2 gap-3 rounded-[1rem] bg-[#e5ddd2] p-3">
-                    <iframe key={`${spreadStartPage}-${zoom}-right`} src={rightPageSrc} title={`${selectedPaper.title} עמוד ${spreadStartPage}`} className="h-[72vh] min-h-[520px] w-full rounded-[0.85rem] border-0 bg-white" />
-                    <iframe key={`${spreadStartPage + 1}-${zoom}-left`} src={leftPageSrc} title={`${selectedPaper.title} עמוד ${spreadStartPage + 1}`} className="h-[72vh] min-h-[520px] w-full rounded-[0.85rem] border-0 bg-white" />
+
+                {!isMobile && (
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setZoom((prev) => Math.max(75, prev - 25))} className="rounded-full border border-white/20 p-1.5 transition hover:bg-white/10" aria-label="הקטן"><Minus size={13} /></button>
+                    <span className="min-w-12 text-center text-xs font-black">{zoom}%</span>
+                    <button onClick={() => setZoom((prev) => Math.min(250, prev + 25))} className="rounded-full border border-white/20 p-1.5 transition hover:bg-white/10" aria-label="הגדל"><Plus size={13} /></button>
+                    <input type="range" min={75} max={250} step={25} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="w-24 accent-red-500" />
                   </div>
-                ) : (
-                  <iframe key={`${currentPage}-${zoom}-single`} src={rightPageSrc} title={selectedPaper.title} className="h-[64vh] min-h-[360px] w-full rounded-[1rem] border-0 bg-white md:h-[78vh]" />
                 )}
               </div>
+
+              {isMobile ? (
+                <div className="rounded-[1.25rem] bg-[#efe8de] p-3 shadow-[0_14px_40px_rgba(0,0,0,0.35)]">
+                  <div className="mb-3 flex gap-2">
+                    <a
+                      href={selectedPaper?.pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-700 py-3 text-sm font-black text-white shadow-lg"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      פתח בדפדפן
+                    </a>
+                    <a
+                      href={selectedPaper?.pdfUrl}
+                      download
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white py-3 text-sm font-black text-gray-800 shadow"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      הורד PDF
+                    </a>
+                  </div>
+
+                  {selectedPaper?.coverImageUrl && (
+                    <div className="mb-3 overflow-hidden rounded-[1rem] bg-white shadow-inner">
+                      <img
+                        src={selectedPaper.coverImageUrl}
+                        alt={selectedPaper.title}
+                        className="mx-auto max-h-[55vh] w-auto object-contain"
+                      />
+                    </div>
+                  )}
+
+                  <div className="rounded-xl bg-[#1a1a1a] p-3 text-center text-white">
+                    <p className="mb-2 text-xs font-bold text-white/70">לצפייה מלאה בעיתון — פתח בדפדפן</p>
+                    <p className="text-[11px] text-white/50">מחוות זום (פינץ׳) פועלות בדפדפן הנייד</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-[1.25rem] bg-[#efe8de] p-2 shadow-[0_14px_40px_rgba(0,0,0,0.35)] sm:p-4">
+                  {isDesktopSpread ? (
+                    <div className="grid grid-cols-2 gap-3 rounded-[1rem] bg-[#e5ddd2] p-3">
+                      <iframe key={`${spreadStartPage}-${zoom}-right`} src={rightPageSrc} title={`${selectedPaper?.title} עמוד ${spreadStartPage}`} className="h-[72vh] min-h-[520px] w-full rounded-[0.85rem] border-0 bg-white" />
+                      <iframe key={`${spreadStartPage + 1}-${zoom}-left`} src={leftPageSrc} title={`${selectedPaper?.title} עמוד ${spreadStartPage + 1}`} className="h-[72vh] min-h-[520px] w-full rounded-[0.85rem] border-0 bg-white" />
+                    </div>
+                  ) : (
+                    <iframe key={`${currentPage}-${zoom}-single`} src={rightPageSrc} title={selectedPaper?.title} className="h-[64vh] min-h-[360px] w-full rounded-[1rem] border-0 bg-white md:h-[78vh]" />
+                  )}
+                </div>
+              )}
+
               <p className="text-center text-xs font-medium text-white/80 sm:text-sm">
-                {isDesktopSpread
-                  ? `מצב פריסה פתוחה פעיל: מוצגים עמודים ${spreadStartPage}-${spreadStartPage + 1} כמו עיתון פתוח.`
-                  : `כעת מוצג עמוד ${currentPage}. בדפדפן נייד אפשר לבצע זום במחוות אצבעות או לפתוח במסך מלא לחוויית דפדוף מלאה.`}
+                {isMobile
+                  ? 'לחץ "פתח בדפדפן" לצפייה ודפדוף מלאים בנייד'
+                  : isDesktopSpread
+                    ? `מצב פריסה פתוחה: עמודים ${spreadStartPage}–${spreadStartPage + 1}`
+                    : `עמוד ${currentPage} מוצג`}
               </p>
             </div>
           </div>
         )}
 
         {filteredPapers.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
             {filteredPapers.map((paper) => (
               <WeeklyPaperCard key={paper.id} paper={paper} onOpen={openPaper} />
             ))}

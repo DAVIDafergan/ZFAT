@@ -92,37 +92,46 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const init = async () => {
-      setIsLoading(true);
       try {
-        const hasToken = Boolean(localStorage.getItem('zfat_jwt'));
-        const savedUser = localStorage.getItem('zfat_user');
-        if (hasToken && savedUser) {
-          setUser(JSON.parse(savedUser));
+        const cachedPosts = localStorage.getItem('zfat_cached_posts');
+        if (cachedPosts) {
+          const parsed = JSON.parse(cachedPosts);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setPosts(sortPostsByNewest(parsed));
+            setIsLoading(false);
+          }
         }
+      } catch (_) {}
 
+      const hasToken = Boolean(localStorage.getItem('zfat_jwt'));
+      const savedUser = localStorage.getItem('zfat_user');
+      if (hasToken && savedUser) {
+        try { setUser(JSON.parse(savedUser)); } catch (_) {}
+      }
+
+      try {
         const [data, authenticatedUser] = await Promise.all([
           api.fetchInitialData(),
           hasToken ? api.verifyToken() : Promise.resolve(null),
         ]);
         const sortedPosts = sortPostsByNewest(data.posts);
-        console.log('[diagnostics] First article returned from API', {
-          title: data.posts[0]?.title ?? null,
-          publishedAt: data.posts[0]?.publishedAt ?? null,
-        });
-        if (typeof window !== 'undefined') {
-          (window as any).__apiFirstArticle = {
-            title: data.posts[0]?.title ?? null,
-            publishedAt: data.posts[0]?.publishedAt ?? null,
-          };
-        }
         setPosts(sortedPosts);
         setAds(data.ads);
         setComments(data.comments);
-        setRegisteredUsers(data.registeredUsers);
-        setContactMessages(data.contactMessages || []);
-        setNewsletterSubscribers(data.newsletterSubscribers || []);
         setWeeklyPapers(data.weeklyPapers || []);
         setBoardListings(data.boardListings || []);
+        setContactMessages(data.contactMessages || []);
+        setNewsletterSubscribers(data.newsletterSubscribers || []);
+        setRegisteredUsers(data.registeredUsers);
+
+        const skeletonEl = document.getElementById('app-skeleton');
+        if (skeletonEl) skeletonEl.style.display = 'none';
+        setIsLoading(false);
+
+        try {
+          localStorage.setItem('zfat_cached_posts', JSON.stringify(sortedPosts.slice(0, 30)));
+        } catch (_) {}
+
         if (authenticatedUser) {
           setUser(authenticatedUser);
           if (authenticatedUser.role === 'admin') {
@@ -139,23 +148,11 @@ const App: React.FC = () => {
         }
       } catch (error) {
         console.error('Failed to load initial data', error);
-      } finally {
         setIsLoading(false);
       }
     };
     init();
   }, []);
-
-  useEffect(() => {
-    const firstPostInState = {
-      title: posts[0]?.title ?? null,
-      publishedAt: posts[0]?.publishedAt ?? null,
-    };
-    console.log('[diagnostics] First article in posts state', firstPostInState);
-    if (typeof window !== 'undefined') {
-      (window as any).__postsStateFirstArticle = firstPostInState;
-    }
-  }, [posts]);
 
   useEffect(() => {
     if (user) localStorage.setItem('zfat_user', JSON.stringify(user));
