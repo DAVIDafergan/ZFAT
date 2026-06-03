@@ -219,16 +219,25 @@ const shouldFallbackToLocal = (error: unknown) => (
 export const api = {
   fetchInitialData: async () => {
     if (shouldUseServer()) {
-      const [posts, ads, comments, weeklyPapers, boardListings, messages, subscribers, users] = await Promise.all([
+      const [posts, ads, comments, weeklyPapers, boardListings] = await Promise.all([
         fetchJson('/api/posts', { headers: authHeaders() }),
         fetchJson('/api/ads', { headers: authHeaders() }),
         fetchJson('/api/comments', { headers: authHeaders() }),
         fetchJson('/api/weekly-papers', { headers: authHeaders() }),
         fetchJson('/api/board-listings', { headers: authHeaders() }),
-        fetch(`${API_URL}/api/messages`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
-        fetch(`${API_URL}/api/subscribers`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
-        fetch(`${API_URL}/api/auth/users`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
       ]);
+      const hasToken = Boolean(getToken());
+      let messages: any[] = [];
+      let subscribers: any[] = [];
+      let users: any[] = [];
+
+      if (hasToken) {
+        [messages, subscribers, users] = await Promise.all([
+          fetch(`${API_URL}/api/messages`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+          fetch(`${API_URL}/api/subscribers`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+          fetch(`${API_URL}/api/auth/users`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+        ]);
+      }
 
       return {
         posts: (posts.data || posts).map(normalizePost),
