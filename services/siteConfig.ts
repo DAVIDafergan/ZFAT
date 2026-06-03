@@ -42,6 +42,8 @@ export const normalizeShareCode = (value?: string | null, fallback = '') => {
 
 export const buildArticleUrl = (id: string) => `${SITE_URL}/#/article/${id}`;
 
+export const buildShareUrl = (id: string) => `${SITE_URL}/share/article/${id}`;
+
 export const buildShortPostUrl = (_shortCode?: string | null, postId?: string) => (
   postId ? buildArticleUrl(postId) : `${SITE_URL}/#/`
 );

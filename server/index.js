@@ -244,6 +244,56 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
   }
 });
 
+app.get('/share/article/:id', spaFallbackLimiter, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id).lean();
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+
+    const title = escapeHtml(post.title || 'צפת בתנופה');
+    const description = escapeHtml(post.excerpt || 'כתבה מתוך אתר צפת בתנופה');
+    const rawImage = post.imageUrl || '';
+    const isDataUrl = rawImage.startsWith('data:');
+    const image = isDataUrl
+      ? `${publicSiteUrl}/api/posts/${post._id}/og-image`
+      : escapeHtml(rawImage || `${publicSiteUrl}/og-whatsapp.png`);
+    const articleUrl = `${publicSiteUrl}/#/article/${post._id}`;
+    const shareUrl = `${publicSiteUrl}/share/article/${post._id}`;
+
+    res.setHeader('Cache-Control', 'no-cache');
+    res.send(`<!DOCTYPE html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <title>${title}</title>
+    <meta name="description" content="${description}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:locale" content="he_IL" />
+    <meta property="og:site_name" content="צפת בתנופה" />
+    <meta property="og:title" content="${title}" />
+    <meta property="og:description" content="${description}" />
+    <meta property="og:image" content="${image}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="${shareUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${title}" />
+    <meta name="twitter:description" content="${description}" />
+    <meta name="twitter:image" content="${image}" />
+    <link rel="canonical" href="${shareUrl}" />
+    <meta http-equiv="refresh" content="0; url=${articleUrl}" />
+    <style>body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f3f4f6;color:#111827;margin:0}a{color:#b91c1c;font-weight:700}</style>
+  </head>
+  <body>
+    <main>
+      <p>מעבירים אתכם לכתבה… <a href="${articleUrl}">לחצו כאן אם לא הופניתם אוטומטית</a></p>
+    </main>
+  </body>
+</html>`);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 app.get('/api/posts/:id/og-image', spaFallbackLimiter, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id).select('imageUrl').lean();

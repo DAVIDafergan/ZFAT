@@ -6,7 +6,7 @@ import { Calendar, User, Tag, ThumbsUp, MessageCircle, Send, ArrowUpDown } from 
 import { AdUnit } from '../components/AdUnit';
 import { PostCard } from '../components/PostCard';
 import { ShareButtons } from '../components/ShareButtons';
-import { buildShortPostUrl } from '../services/siteConfig';
+import { buildShareUrl } from '../services/siteConfig';
 import { formatGregorianDate, formatHebrewDate } from '../services/dateUtils';
 import { sortPostsByNewest } from '../services/postSort';
 
@@ -58,7 +58,7 @@ export const Article: React.FC = () => {
 
   const categoryColor = CATEGORY_COLORS[post.category] || 'bg-gray-600';
   const relatedPosts = sortPostsByNewest(posts.filter(p => p.category === post.category && p.id !== post.id)).slice(0, 3);
-  const shareUrl = buildShortPostUrl(post.shortLinkCode, post.id);
+  const shareUrl = buildShareUrl(post.id);
   const postImages = (Array.isArray(post.images) && post.images.length > 0
     ? post.images.filter((image) => image.url)
     : post.imageUrl ? [{ url: post.imageUrl, photographer: '' }] : []);

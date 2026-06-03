@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Clock, ChevronLeft, Loader2, Check, Share2 } from 'lucide-react';
 import { Post, CATEGORY_COLORS } from '../types';
-import { buildShortPostUrl } from '../services/siteConfig';
+import { buildShareUrl } from '../services/siteConfig';
 import { formatGregorianDate, formatHebrewDate, formatPublishTime, resolvePostDateForDisplay } from '../services/dateUtils';
 
 interface PostCardProps {
@@ -15,7 +15,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, layout = 'grid' }) => 
   const [isLoading, setIsLoading] = useState(false);
   const [shareReady, setShareReady] = useState(false);
   const categoryColor = CATEGORY_COLORS[post.category] || 'bg-gray-600';
-  const shortUrl = buildShortPostUrl(post.shortLinkCode, post.id);
+  const shortUrl = buildShareUrl(post.id);
   const displayDate = resolvePostDateForDisplay(post.publishedAt, post.createdAt, post.date);
   const publishTime = formatPublishTime(displayDate);
 
