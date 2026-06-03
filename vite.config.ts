@@ -19,6 +19,25 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+              'vendor-ui': ['lucide-react'],
+            },
+          },
+        },
+        minify: 'terser',
+        terserOptions: {
+          compress: {
+            drop_console: true,
+            drop_debugger: true,
+            pure_funcs: ['console.table', 'console.log'],
+          },
+        },
+        chunkSizeWarningLimit: 600,
       }
     };
 });
