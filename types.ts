@@ -8,7 +8,8 @@ export enum Category {
   CRIME = 'משפט ופלילים',
   WEATHER = 'מזג אוויר',
   INFRASTRUCTURE = 'תשתיות ותנועה',
-  LOCAL = 'צפת והגליל'
+  LOCAL = 'צפת והגליל',
+  SIMCHAOT = 'שמחות'
 }
 
 export interface PostImage {
@@ -154,6 +155,7 @@ export const CATEGORY_COLORS: Record<Category, string> = {
   [Category.WEATHER]: 'bg-cyan-600',
   [Category.INFRASTRUCTURE]: 'bg-yellow-600',
   [Category.LOCAL]: 'bg-red-700',
+  [Category.SIMCHAOT]: 'bg-pink-600',
 };
 
 export const DEAL_TYPE_LABELS: Record<BoardListingDealType, string> = {
