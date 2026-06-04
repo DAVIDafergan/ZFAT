@@ -232,18 +232,21 @@ const App: React.FC = () => {
   };
 
   const createAgent = async (agent: Agent) => {
-    await api.createAgent(agent);
-    setAgents((prev) => [agent, ...prev]);
+    const savedAgent = await api.createAgent(agent);
+    setAgents((prev) => [savedAgent, ...prev]);
   };
 
   const deleteAgent = async (id: string) => {
     await api.deleteAgent(id);
     setAgents((prev) => prev.filter((agent) => agent.id !== id));
+    setBoardListings((prev) => prev.map((listing) => (
+      listing.agentId === id ? { ...listing, agentId: undefined } : listing
+    )));
   };
 
   const createBoardListing = async (listing: BoardListing) => {
-    await api.createBoardListing(listing);
-    setBoardListings((prev) => [listing, ...prev]);
+    const savedListing = await api.createBoardListing(listing);
+    setBoardListings((prev) => [savedListing, ...prev]);
   };
 
   const deleteBoardListing = async (id: string) => {

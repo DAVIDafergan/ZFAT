@@ -151,6 +151,7 @@ app.use('/api/ads', require('./routes/ads'));
 app.use('/api/messages', require('./routes/messages'));
 app.use('/api/subscribers', require('./routes/subscribers'));
 app.use('/api/weekly-papers', require('./routes/weeklyPapers'));
+app.use('/api/agents', require('./routes/agents'));
 app.use('/api/board-listings', require('./routes/boardListings'));
 app.use('/api/uploads', require('./routes/uploads'));
 
@@ -221,6 +222,16 @@ const backfillLegacyPostPublishedAt = async () => {
   console.log(`🛠️ Post publishedAt backfill complete: updated=${operations.length} skipped=${skipped}`);
 };
 
+const resolvePostPrimaryImage = (post) => {
+  const directImage = `${post?.imageUrl || ''}`.trim();
+  if (directImage) return directImage;
+  if (Array.isArray(post?.images)) {
+    const firstImage = post.images.find((image) => `${image?.url || ''}`.trim());
+    if (firstImage?.url) return firstImage.url.trim();
+  }
+  return '';
+};
+
 app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
   try {
     const requestedCode = normalizeShortCode(req.params.shortCode);
@@ -229,7 +240,7 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
     let post = await Post.findOne({ shortLinkCode: requestedCode }).lean();
     if (!post) {
       const candidates = await Post.find({ shortLinkCode: { $exists: true, $ne: '' } })
-        .select('title excerpt imageUrl shortLinkCode createdAt')
+        .select('title excerpt imageUrl images shortLinkCode createdAt')
         .lean();
       post = candidates.find(candidate => normalizeShortCode(candidate.shortLinkCode, candidate._id?.toString()) === requestedCode);
     }
@@ -239,7 +250,7 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
     const title = escapeHtml(post.title || 'צפת בתנופה');
     const description = escapeHtml(post.excerpt || 'כתבה מתוך אתר צפת בתנופה');
     const image = escapeHtml(resolveShareImage({
-      rawImage: post.imageUrl,
+      rawImage: resolvePostPrimaryImage(post),
       postId: post._id,
       req,
       fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
@@ -284,7 +295,7 @@ app.get('/share/article/:id', spaFallbackLimiter, async (req, res) => {
     const title = escapeHtml(post.title || 'צפת בתנופה');
     const description = escapeHtml(post.excerpt || 'כתבה מתוך אתר צפת בתנופה');
     const image = escapeHtml(resolveShareImage({
-      rawImage: post.imageUrl,
+      rawImage: resolvePostPrimaryImage(post),
       postId: post._id,
       req,
       fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
@@ -329,11 +340,12 @@ app.get('/share/article/:id', spaFallbackLimiter, async (req, res) => {
 
 app.get('/api/posts/:id/og-image', spaFallbackLimiter, async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).select('imageUrl').lean();
-    if (!post || !post.imageUrl) return res.status(404).end();
+    const post = await Post.findById(req.params.id).select('imageUrl images').lean();
+    const imageUrl = resolvePostPrimaryImage(post);
+    if (!post || !imageUrl) return res.status(404).end();
 
-    if (post.imageUrl.startsWith('data:')) {
-      const matches = post.imageUrl.match(/^data:([^;]+);base64,(.+)$/s);
+    if (imageUrl.startsWith('data:')) {
+      const matches = imageUrl.match(/^data:([^;]+);base64,(.+)$/s);
       if (!matches) return res.status(404).end();
       const contentType = matches[1];
       const buffer = Buffer.from(matches[2], 'base64');
@@ -342,7 +354,7 @@ app.get('/api/posts/:id/og-image', spaFallbackLimiter, async (req, res) => {
       return res.send(buffer);
     }
 
-    return res.redirect(302, post.imageUrl);
+    return res.redirect(302, imageUrl);
   } catch (err) {
     res.status(500).end();
   }

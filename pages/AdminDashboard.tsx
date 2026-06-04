@@ -231,6 +231,25 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleServerImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    callback: (url: string) => void,
+    folder = 'admin'
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.currentTarget.value = '';
+
+    try {
+      const uploadedUrl = await api.uploadFile(file, folder);
+      callback(uploadedUrl);
+      showToast('התמונה הועלתה ונשמרה בשרת בהצלחה');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'העלאת התמונה נכשלה';
+      showToast(`שגיאה בהעלאת תמונה: ${message}`);
+    }
+  };
+
   const buildUploadName = (value: string) => {
     if (!value.trim()) return '';
     if (isDataUrl(value)) return 'תמונה שהועלתה מהמחשב';
@@ -1142,6 +1161,29 @@ export const AdminDashboard: React.FC = () => {
                     />
                   </div>
                   <div className="sm:col-span-3">
+                    <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-blue-200 bg-white/80 p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-black text-blue-900">או העלו תמונת מתווך מהמחשב</p>
+                        <p className="text-xs font-bold text-blue-700">הקובץ יישמר בשרת ויוצג באתר אוטומטית</p>
+                      </div>
+                      <label className="flex cursor-pointer items-center justify-center gap-2 rounded-full bg-blue-700 px-5 py-2.5 text-sm font-black text-white transition hover:bg-blue-800">
+                        <Upload size={16} /> העלה תמונת מתווך
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleServerImageUpload(e, (url) => setAgentForm({ ...agentForm, imageUrl: url }), 'agents')} />
+                      </label>
+                    </div>
+                  </div>
+                  {agentForm.imageUrl && (
+                    <div className="sm:col-span-3">
+                      <div className="flex items-center gap-3 rounded-2xl border border-blue-100 bg-white p-3">
+                        <img src={agentForm.imageUrl} alt="תצוגה מקדימה של המתווך" className="h-14 w-14 rounded-full object-cover" />
+                        <div>
+                          <p className="text-sm font-black text-gray-900">תמונת המתווך מוכנה לפרסום</p>
+                          <p className="text-xs font-bold text-gray-500">{buildUploadName(agentForm.imageUrl)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="sm:col-span-3">
                     <button type="submit" className="rounded-full bg-blue-700 px-6 py-2.5 text-sm font-black text-white hover:bg-blue-800">
                       + הוסף מתווך
                     </button>
@@ -1258,6 +1300,11 @@ export const AdminDashboard: React.FC = () => {
                         <p className="font-black text-gray-900">{listing.title}</p>
                         <p className="text-sm font-bold text-red-700">{DEAL_TYPE_LABELS[listing.dealType]} · {listing.location}</p>
                         <p className="mt-1 text-sm text-gray-500">₪{listing.price.toLocaleString('he-IL')} · {listing.sizeSqm} מ"ר · {listing.hasBalcony ? 'מרפסת' : 'ללא מרפסת'}</p>
+                        {listing.agentId && (
+                          <p className="mt-1 text-xs font-black text-blue-700">
+                            מתווך משויך: {agents.find((agent) => agent.id === listing.agentId)?.name || 'המתווך הוסר'}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <button onClick={() => deleteBoardListing(listing.id).then(() => showToast('המודעה הוסרה'))} className="rounded-lg p-2 text-red-500 transition hover:bg-red-50" title="מחק מודעה"><Trash2 size={18} /></button>
