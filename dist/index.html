@@ -20,12 +20,32 @@
     <meta name="twitter:description" content="חדשות מקומיות, העיתון השבועי, לוח דירות בצפת ותוכן קהילתי מעוצב ונגיש." />
     <meta name="twitter:image" content="https://zfatbitnufa.com/og-whatsapp.png" />
     <link rel="icon" href="/logo.png" />
+    <link rel="preload" as="font" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap" crossorigin />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #f7f5f1;
+        font-family: 'Heebo', sans-serif;
+        color: #111827;
+      }
+      
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+    </style>
     <link rel="preconnect" href="https://YOUR_API_DOMAIN_HERE" crossorigin />
     <!-- החלף YOUR_API_DOMAIN_HERE עם דומיין ה-API שלך -->
-    <script type="module" crossorigin src="/assets/index-Qs1b2c27.js"></script>
+    <script type="module" crossorigin src="/assets/index-HrCe6niL.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CzgldLPe.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-ui-aL5V05cs.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D23l92un.css">
+    <link rel="stylesheet" crossorigin href="/assets/index-D6OX9N1d.css">
   </head>
   <body>
     <div id="root">
@@ -42,20 +62,28 @@
           <div style="flex:1; max-width:280px; height:32px; background:#ffffff15; border-radius:20px; margin-right:auto;"></div>
         </div>
         <!-- Skeleton Hero -->
-        <div style="width:100%; height:340px; background:linear-gradient(135deg,#1f2937,#374151); position:relative; overflow:hidden;">
-          <div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent);animation:shimmer 1.5s infinite;"></div>
+        <div style="
+          width:100%; 
+          height:420px;
+          background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%);
+          position:relative; 
+          overflow:hidden;
+          background-size: 200% 200%;
+          animation: shimmer 2s infinite;
+        ">
+          <div style="
+            position:absolute;
+            inset:0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            animation: shimmer 1.5s infinite;
+          "></div>
         </div>
         <!-- Skeleton Cards -->
         <div style="max-width:1200px; margin:32px auto; padding:0 16px; display:grid; grid-template-columns:1fr; gap:16px;">
-          <div style="height:80px; background:#e5e7eb; border-radius:16px; animation:pulse 1.5s ease-in-out infinite;"></div>
-          <div style="height:80px; background:#e5e7eb; border-radius:16px; animation:pulse 1.5s ease-in-out infinite; animation-delay:0.1s;"></div>
-          <div style="height:80px; background:#e5e7eb; border-radius:16px; animation:pulse 1.5s ease-in-out infinite; animation-delay:0.2s;"></div>
-          <div style="height:80px; background:#e5e7eb; border-radius:16px; animation:pulse 1.5s ease-in-out infinite; animation-delay:0.3s;"></div>
+          <div style="height:100px; background: linear-gradient(90deg, #e5e7eb, #f0f0f0, #e5e7eb); background-size:200% 100%; border-radius:16px; animation:shimmer 2s infinite;"></div>
+          <div style="height:100px; background: linear-gradient(90deg, #e5e7eb, #f0f0f0, #e5e7eb); background-size:200% 100%; border-radius:16px; animation:shimmer 2s infinite; animation-delay:0.1s;"></div>
+          <div style="height:100px; background: linear-gradient(90deg, #e5e7eb, #f0f0f0, #e5e7eb); background-size:200% 100%; border-radius:16px; animation:shimmer 2s infinite; animation-delay:0.2s;"></div>
         </div>
-        <style>
-          @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
-          @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-        </style>
       </div>
     </div>
   </body>

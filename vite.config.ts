@@ -38,6 +38,10 @@ export default defineConfig(({ mode }) => {
           },
         },
         chunkSizeWarningLimit: 600,
+        sourcemap: false,
+        reportCompressedSize: true,
+        cssCodeSplit: true,
+        assetsInlineLimit: 4096,
       }
     };
 });
