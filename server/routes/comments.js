@@ -15,7 +15,7 @@ const isAdmin = (req, res, next) => {
 // GET /api/comments/pending  — admin only, returns unapproved comments
 router.get('/pending', readLimiter, auth, isAdmin, async (req, res) => {
   try {
-    const comments = await Comment.find({ approved: false }).sort({ createdAt: -1 });
+    const comments = await Comment.find({ approved: false }).sort({ createdAt: -1 }).lean();
     res.json(comments);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -29,7 +29,7 @@ router.get('/', readLimiter, async (req, res) => {
     const filter = rawPostId
       ? { postId: String(rawPostId).slice(0, 64), approved: true }
       : { approved: true };
-    const comments = await Comment.find(filter).sort({ createdAt: -1 });
+    const comments = await Comment.find(filter).sort({ createdAt: -1 }).lean();
     res.json(comments);
   } catch (err) {
     res.status(500).json({ message: err.message });

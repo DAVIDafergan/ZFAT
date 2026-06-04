@@ -94,7 +94,9 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const init = async () => {
-      // 1. Show cached content immediately — no white screen
+      performance.mark('app-init-start');
+
+      // 1. Restore cached posts immediately — no white screen
       let hasCachedContent = false;
       try {
         const cachedPosts = localStorage.getItem('zfat_cached_posts');
@@ -110,13 +112,22 @@ const App: React.FC = () => {
         }
       } catch (_) {}
 
+      // 2. Restore cached ads immediately
+      try {
+        const cachedAds = localStorage.getItem('zfat_cached_ads');
+        if (cachedAds) {
+          const parsed = JSON.parse(cachedAds);
+          if (Array.isArray(parsed) && parsed.length > 0) setAds(parsed);
+        }
+      } catch (_) {}
+
       const hasToken = Boolean(localStorage.getItem('zfat_jwt'));
       const savedUser = localStorage.getItem('zfat_user');
       if (hasToken && savedUser) {
         try { setUser(JSON.parse(savedUser)); } catch (_) {}
       }
 
-      // 2. If no cache: wake-up ping so the server starts spinning up
+      // 3. If no cache: wake-up ping so the server starts spinning up
       //    while the skeleton is still showing, before the main fetch
       if (!hasCachedContent) {
         try {
@@ -125,43 +136,69 @@ const App: React.FC = () => {
       }
 
       try {
-        const [data, authenticatedUser] = await Promise.all([
-          api.fetchInitialData(),
+        performance.mark('app-critical-fetch-start');
+
+        // 4. Fetch only critical data (posts + ads) and verify auth in parallel
+        const [criticalData, authenticatedUser] = await Promise.all([
+          api.fetchCriticalData(),
           hasToken ? api.verifyToken() : Promise.resolve(null),
         ]);
-        const sortedPosts = sortPostsByNewest(data.posts);
+
+        performance.mark('app-critical-fetch-end');
+        performance.measure('critical-data-fetch', 'app-critical-fetch-start', 'app-critical-fetch-end');
+
+        const sortedPosts = sortPostsByNewest(criticalData.posts);
         setPosts(sortedPosts);
-        setAds(data.ads);
-        setComments(data.comments);
-        setWeeklyPapers(data.weeklyPapers || []);
-        setAgents(data.agents || []);
-        setBoardListings(data.boardListings || []);
-        setContactMessages(data.contactMessages || []);
-        setNewsletterSubscribers(data.newsletterSubscribers || []);
-        setRegisteredUsers(data.registeredUsers);
+        setAds(criticalData.ads);
 
         const skeletonEl = document.getElementById('app-skeleton');
         if (skeletonEl) skeletonEl.style.display = 'none';
         setIsLoading(false);
 
+        // Cache posts and ads for instant display on next visit
         try {
           localStorage.setItem('zfat_cached_posts', JSON.stringify(sortedPosts.slice(0, 30)));
+          localStorage.setItem('zfat_cached_ads', JSON.stringify(criticalData.ads));
         } catch (_) {}
 
         if (authenticatedUser) {
           setUser(authenticatedUser);
-          if (authenticatedUser.role === 'admin') {
-            const [users, pending] = await Promise.all([
-              api.fetchUsers(),
-              api.fetchPendingComments(),
-            ]);
-            setRegisteredUsers(users);
-            setPendingComments(pending);
-          }
         } else {
           localStorage.removeItem('zfat_jwt');
           setUser(null);
         }
+
+        // 5. Load secondary data in background — does NOT block home page display
+        api.fetchSecondaryData().then((secondaryData) => {
+          setComments(secondaryData.comments);
+          setWeeklyPapers(secondaryData.weeklyPapers || []);
+          setAgents(secondaryData.agents || []);
+          setBoardListings(secondaryData.boardListings || []);
+          performance.mark('app-secondary-fetch-end');
+          performance.measure('secondary-data-fetch', 'app-critical-fetch-end', 'app-secondary-fetch-end');
+        }).catch((err) => {
+          console.warn('[App] Secondary data load failed', err);
+        });
+
+        // 6. Load admin data in background when user is confirmed admin
+        if (authenticatedUser?.role === 'admin') {
+          Promise.all([
+            api.fetchUsers(),
+            api.fetchPendingComments(),
+            api.fetchAdminData(),
+          ]).then(([users, pending, adminData]) => {
+            setRegisteredUsers(users);
+            setPendingComments(pending);
+            setContactMessages(adminData.contactMessages || []);
+            setNewsletterSubscribers(adminData.newsletterSubscribers || []);
+          }).catch((err) => {
+            console.warn('[App] Admin data load failed', err);
+          });
+        }
+
+        performance.mark('app-init-end');
+        performance.measure('app-total-init', 'app-init-start', 'app-init-end');
+
       } catch (error) {
         console.error('Failed to load initial data', error);
         setIsLoading(false);

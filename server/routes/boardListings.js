@@ -12,7 +12,7 @@ const mutateLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeader
 
 router.get('/', listLimiter, async (req, res) => {
   try {
-    const listings = await BoardListing.find({ isActive: true }).sort({ createdAt: -1 });
+    const listings = await BoardListing.find({ isActive: true }).sort({ createdAt: -1 }).lean();
     res.json(listings);
   } catch (err) {
     res.status(500).json({ message: err.message });

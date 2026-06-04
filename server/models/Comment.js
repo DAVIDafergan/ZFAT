@@ -10,4 +10,7 @@ const commentSchema = new mongoose.Schema({
   approved: { type: Boolean, default: false },
 }, { timestamps: true });
 
+commentSchema.index({ postId: 1, approved: 1, createdAt: -1 });
+commentSchema.index({ approved: 1, createdAt: -1 });
+
 module.exports = mongoose.model('Comment', commentSchema);
