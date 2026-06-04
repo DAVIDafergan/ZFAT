@@ -388,38 +388,10 @@ const App: React.FC = () => {
     setShortPathHandled(true);
   }, [isLoading, posts, shortPathHandled]);
 
-  const [splashVisible, setSplashVisible] = useState(true);
-  const [splashExit, setSplashExit] = useState(false);
-  const splashStartRef = React.useRef(Date.now());
-
-  useEffect(() => {
-    if (!isLoading) {
-      const elapsed = Date.now() - splashStartRef.current;
-      const minDisplay = 0;
-      const remaining = Math.max(0, minDisplay - elapsed);
-
-      const exitDelay = setTimeout(() => setSplashExit(true), remaining);
-      const removeDelay = setTimeout(() => setSplashVisible(false), remaining + 200);
-      return () => { clearTimeout(exitDelay); clearTimeout(removeDelay); };
-    }
-  }, [isLoading]);
-
   const tickerPosts = sortPostsByNewest(posts.filter((post) => post.category === Category.NEWS));
 
   return (
     <>
-      {splashVisible && (
-        <div className={`splash-screen${splashExit ? ' splash-exit' : ''}`} aria-hidden="true">
-          <div className="splash-logo-wrap">
-            <div style={{ position: 'relative', overflow: 'hidden', display: 'inline-flex' }}>
-              <img src={LOGO_URL} alt="צפת בתנופה" loading="lazy" decoding="async" className="splash-logo" />
-              <span className="splash-logo-shimmer" />
-            </div>
-            <div className="splash-line" />
-          </div>
-        </div>
-      )}
-
     <AppContext.Provider value={{
       posts,
       ads,
