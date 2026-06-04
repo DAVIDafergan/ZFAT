@@ -119,8 +119,8 @@ export const Home: React.FC = () => {
             <div className="space-y-3 p-4 sm:space-y-4 sm:p-6">
               {latestPosts.map((post, index) => (
                 <Link key={post.id} to={`/article/${post.id}`} className="group block">
-                  <article className="mobile-card-transition flex flex-row-reverse items-start gap-3 rounded-[1.2rem] border border-white/10 bg-[#101827] p-3 transition hover:border-red-500/40 hover:bg-[#131d2f] sm:gap-4 sm:p-4">
-                    <div className="min-w-0 flex-1">
+                  <article className="mobile-card-transition flex flex-col gap-3 rounded-[1.2rem] border border-white/10 bg-[#101827] p-3 transition hover:border-red-500/40 hover:bg-[#131d2f] sm:[direction:ltr] sm:flex-row sm:items-start sm:gap-4 sm:p-4">
+                    <div className="min-w-0 flex-1 text-right [direction:rtl] sm:order-2">
                       <h3 className="line-clamp-2 text-lg font-black leading-6 text-white transition group-hover:text-red-300 sm:text-xl sm:leading-7">
                         {post.title}
                       </h3>
@@ -128,6 +128,7 @@ export const Home: React.FC = () => {
                         {post.excerpt}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] font-bold text-white/55 sm:mt-3 sm:text-xs">
+                        <span className="rounded-full border border-red-400/50 bg-red-500/15 px-2.5 py-0.5 text-[10px] font-black text-red-200 sm:text-[11px]">{post.category}</span>
                         {(() => {
                           const d = resolvePostDateForDisplay(post.publishedAt, post.createdAt, post.date);
                           const t = formatPublishTime(d);
@@ -135,7 +136,7 @@ export const Home: React.FC = () => {
                         })()}
                       </div>
                     </div>
-                    <div className="aspect-[4/3] w-[35%] max-w-[9.5rem] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] sm:w-[32%] sm:max-w-[11rem] lg:max-w-[12.5rem]">
+                    <div className="aspect-[16/10] w-full overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] sm:order-1 sm:w-[32%] sm:max-w-[12rem] sm:shrink-0 lg:max-w-[13rem]">
                       <img src={post.imageUrl} alt={post.title} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" fetchPriority={index < 2 ? 'high' : 'auto'} className="h-full w-full object-contain transition duration-300 group-hover:opacity-95" />
                     </div>
                   </article>
