@@ -30,7 +30,6 @@ export const Home: React.FC = () => {
   const [isSunTimesLoading, setIsSunTimesLoading] = useState(true);
 
   const sortedPosts = sortPostsByNewest(posts);
-  const featuredPosts = sortPostsByNewest(posts.filter(p => p.isFeatured));
   const latestPosts = sortPostsByNewest([...posts]).slice(0, 10);
   const leaderboardAd = ads.find(a => a.area === 'leaderboard' && a.isActive);
   const sidebarAd = ads.find(a => a.area === 'sidebar' && a.isActive);
@@ -105,7 +104,7 @@ export const Home: React.FC = () => {
     <div className="animate-fade-in bg-[#f7f5f1] pb-16 sm:pb-20">
       {/* Hero — flush to header, no mobile gap */}
       <div className="-mt-1 shadow-2xl sm:mt-0 sm:mb-10">
-        <HeroSlider posts={featuredPosts} />
+        <HeroSlider posts={posts} />
       </div>
 
       <div className="container mx-auto px-4">
