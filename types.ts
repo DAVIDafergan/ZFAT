@@ -120,6 +120,14 @@ export interface WeeklyPaper {
 
 export type BoardListingDealType = 'rent' | 'sale';
 
+export interface Agent {
+  id: string;
+  name: string;
+  phone: string;
+  imageUrl: string;
+  createdAt?: string;
+}
+
 export interface BoardListing {
   id: string;
   title: string;
@@ -132,6 +140,7 @@ export interface BoardListing {
   hasBalcony: boolean;
   contactName: string;
   contactPhone: string;
+  agentId?: string;
   isActive: boolean;
   createdAt?: string;
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Category, Post, PostImage, Ad, AdSlide, AdArea, WeeklyPaper, BoardListing, BoardListingDealType, DEAL_TYPE_LABELS } from '../types';
+import { Category, Post, PostImage, Ad, AdSlide, AdArea, WeeklyPaper, Agent, BoardListing, BoardListingDealType, DEAL_TYPE_LABELS } from '../types';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -107,9 +107,12 @@ export const AdminDashboard: React.FC = () => {
     contactMessages,
     newsletterSubscribers,
     weeklyPapers,
+    agents,
     boardListings,
     createWeeklyPaper,
     deleteWeeklyPaper,
+    createAgent,
+    deleteAgent,
     createBoardListing,
     deleteBoardListing,
     pendingComments,
@@ -143,6 +146,8 @@ export const AdminDashboard: React.FC = () => {
   const [paperForm, setPaperForm] = useState(initialPaperForm);
   const [boardForm, setBoardForm] = useState(initialBoardForm);
   const [newAdForm, setNewAdForm] = useState(initialAdForm);
+  const [agentForm, setAgentForm] = useState({ name: '', phone: '', imageUrl: '' });
+  const [selectedAgentId, setSelectedAgentId] = useState<string>('');
 
   useEffect(() => {
     if (!toastMessage) return;
@@ -462,6 +467,21 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleAgentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!agentForm.name.trim()) return;
+    const agent: Agent = {
+      id: Date.now().toString(),
+      name: agentForm.name.trim(),
+      phone: agentForm.phone.trim(),
+      imageUrl: agentForm.imageUrl.trim() || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+      createdAt: new Date().toISOString(),
+    };
+    await createAgent(agent);
+    setAgentForm({ name: '', phone: '', imageUrl: '' });
+    showToast('המתווך נוסף בהצלחה');
+  };
+
   const handleBoardListingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const listing: BoardListing = {
@@ -476,11 +496,13 @@ export const AdminDashboard: React.FC = () => {
       hasBalcony: boardForm.hasBalcony,
       contactName: boardForm.contactName,
       contactPhone: boardForm.contactPhone,
+      agentId: selectedAgentId || undefined,
       isActive: true,
       createdAt: new Date().toISOString(),
     };
     await createBoardListing(listing);
     setBoardForm(initialBoardForm);
+    setSelectedAgentId('');
     showToast('מודעת לוח בתנופה פורסמה בהצלחה');
   };
 
@@ -1086,6 +1108,87 @@ export const AdminDashboard: React.FC = () => {
           <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1fr_1.1fr]">
             <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
               <h2 className="mb-6 flex items-center gap-2 text-xl font-black text-gray-800 sm:text-2xl"><Building2 size={24} className="text-red-700" /> העלאת מודעה ללוח בתנופה</h2>
+              <div className="mb-8 rounded-2xl border border-blue-100 bg-blue-50 p-5">
+                <h3 className="mb-4 text-lg font-black text-blue-900">מתווכים</h3>
+                <form onSubmit={handleAgentSubmit} className="mb-5 grid gap-3 sm:grid-cols-3">
+                  <div>
+                    <label className="mb-1 block text-xs font-black text-gray-600">שם המתווך / עסק</label>
+                    <input
+                      type="text"
+                      value={agentForm.name}
+                      onChange={e => setAgentForm({ ...agentForm, name: e.target.value })}
+                      placeholder="לדוגמה: משה כהן נדל״ן"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-black text-gray-600">טלפון</label>
+                    <input
+                      type="tel"
+                      value={agentForm.phone}
+                      onChange={e => setAgentForm({ ...agentForm, phone: e.target.value })}
+                      placeholder="050-0000000"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-black text-gray-600">קישור לתמונה</label>
+                    <input
+                      type="text"
+                      value={agentForm.imageUrl}
+                      onChange={e => setAgentForm({ ...agentForm, imageUrl: e.target.value })}
+                      placeholder="URL לתמונת פרופיל"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                  </div>
+                  <div className="sm:col-span-3">
+                    <button type="submit" className="rounded-full bg-blue-700 px-6 py-2.5 text-sm font-black text-white hover:bg-blue-800">
+                      + הוסף מתווך
+                    </button>
+                  </div>
+                </form>
+
+                {agents.length > 0 && (
+                  <div className="flex flex-wrap gap-3">
+                    {agents.map((agent) => (
+                      <div
+                        key={agent.id}
+                        onClick={() => setSelectedAgentId(selectedAgentId === agent.id ? '' : agent.id)}
+                        className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-3 transition ${
+                          selectedAgentId === agent.id
+                            ? 'border-blue-500 bg-blue-100'
+                            : 'border-gray-200 bg-white hover:border-blue-300'
+                        }`}
+                      >
+                        <img src={agent.imageUrl} alt={agent.name} className="h-10 w-10 rounded-full object-cover" />
+                        <div>
+                          <p className="text-sm font-black text-gray-900">{agent.name}</p>
+                          <p className="text-xs text-gray-500" dir="ltr">{agent.phone}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void deleteAgent(agent.id).then(() => {
+                              if (selectedAgentId === agent.id) setSelectedAgentId('');
+                              showToast('המתווך הוסר');
+                            });
+                          }}
+                          className="mr-2 rounded-full p-1 text-gray-400 hover:bg-red-100 hover:text-red-600"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {selectedAgentId && (
+                  <p className="mt-3 text-sm font-bold text-blue-700">
+                    ✓ המודעה הבאה תשויך למתווך: {agents.find(a => a.id === selectedAgentId)?.name}
+                  </p>
+                )}
+              </div>
               <form onSubmit={handleBoardListingSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>

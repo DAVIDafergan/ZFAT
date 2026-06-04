@@ -35,10 +35,9 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ posts }) => {
     <section
       className="w-full overflow-hidden bg-[#05070c]"
       aria-label="כותרות ראשיות"
-      dir="rtl"
     >
       {/* ── DESKTOP: תמונה שמאל 55%, כותרת ימין 45%, גובה קבוע 480px ── */}
-      <div className="hidden lg:flex lg:h-[480px] xl:h-[520px]">
+      <div className="hidden lg:flex lg:h-[480px] xl:h-[520px]" dir="ltr">
 
         {/* תמונה — גובה קבוע, object-cover תמיד */}
         <div className="relative h-full w-[55%] shrink-0 overflow-hidden">
@@ -59,7 +58,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ posts }) => {
         </div>
 
         {/* טקסט — צד ימין */}
-        <div className="relative flex h-full w-[45%] flex-col justify-center px-10 xl:px-14">
+        <div className="relative flex h-full w-[45%] flex-col justify-center px-10 xl:px-14" dir="rtl">
           <div
             key={`badges-${currentIndex}`}
             className="animate-headline-in mb-5 flex flex-wrap items-center gap-2"
