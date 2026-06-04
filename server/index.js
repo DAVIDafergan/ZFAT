@@ -69,6 +69,37 @@ const allowedOrigins = Array.from(new Set([
   ...splitEnvList(process.env.CORS_ALLOWED_ORIGINS),
 ].flatMap(expandOriginVariants).filter(Boolean)));
 
+const getRequestOrigin = (req) => {
+  const forwardedProto = `${req.get('x-forwarded-proto') || ''}`.split(',')[0].trim();
+  const forwardedHost = `${req.get('x-forwarded-host') || ''}`.split(',')[0].trim();
+  const protocol = forwardedProto || req.protocol || 'https';
+  const host = forwardedHost || req.get('host') || '';
+  return host ? `${protocol}://${host}` : publicSiteUrl;
+};
+
+const toAbsoluteUrl = (value, baseUrl) => {
+  const raw = `${value || ''}`.trim();
+  if (!raw) return '';
+  if (raw.startsWith('//')) return `https:${raw}`;
+  try {
+    return new URL(raw).toString();
+  } catch {
+    try {
+      return new URL(raw, `${baseUrl}/`).toString();
+    } catch {
+      return raw;
+    }
+  }
+};
+
+const resolveShareImage = ({ rawImage, postId, req, fallbackImage }) => {
+  const requestOrigin = getRequestOrigin(req);
+  const cleaned = `${rawImage || ''}`.trim();
+  if (!cleaned) return fallbackImage;
+  if (cleaned.startsWith('data:')) return `${requestOrigin}/api/posts/${postId}/og-image`;
+  return toAbsoluteUrl(cleaned, requestOrigin) || fallbackImage;
+};
+
 const shortLinkLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 60,
@@ -207,11 +238,12 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
 
     const title = escapeHtml(post.title || 'צפת בתנופה');
     const description = escapeHtml(post.excerpt || 'כתבה מתוך אתר צפת בתנופה');
-    const rawImage = post.imageUrl || '';
-    const isDataUrl = rawImage.startsWith('data:');
-    const image = isDataUrl
-      ? `${publicSiteUrl}/api/posts/${post._id}/og-image`
-      : escapeHtml(rawImage || `${publicSiteUrl}/favicon.ico`);
+    const image = escapeHtml(resolveShareImage({
+      rawImage: post.imageUrl,
+      postId: post._id,
+      req,
+      fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
+    }));
     const articleUrl = `${publicSiteUrl}/#/article/${post._id}`;
     const shortUrl = `${publicSiteUrl}/p/${requestedCode}`;
 
@@ -251,11 +283,12 @@ app.get('/share/article/:id', spaFallbackLimiter, async (req, res) => {
 
     const title = escapeHtml(post.title || 'צפת בתנופה');
     const description = escapeHtml(post.excerpt || 'כתבה מתוך אתר צפת בתנופה');
-    const rawImage = post.imageUrl || '';
-    const isDataUrl = rawImage.startsWith('data:');
-    const image = isDataUrl
-      ? `${publicSiteUrl}/api/posts/${post._id}/og-image`
-      : escapeHtml(rawImage || `${publicSiteUrl}/og-whatsapp.png`);
+    const image = escapeHtml(resolveShareImage({
+      rawImage: post.imageUrl,
+      postId: post._id,
+      req,
+      fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
+    }));
     const articleUrl = `${publicSiteUrl}/#/article/${post._id}`;
     const shareUrl = `${publicSiteUrl}/share/article/${post._id}`;
 
