@@ -119,12 +119,12 @@ export const Home: React.FC = () => {
             <div className="space-y-3 p-4 sm:space-y-4 sm:p-6">
               {latestPosts.map((post, index) => (
                 <Link key={post.id} to={`/article/${post.id}`} className="group block">
-                  <article className="mobile-card-transition flex items-start gap-3 rounded-[1.2rem] border border-white/10 bg-[#101827] p-3 transition hover:border-red-500/40 hover:bg-[#131d2f] sm:gap-4 sm:p-4">
-                    <div className="w-full">
-                      <h3 className="line-clamp-2 text-base font-black leading-6 text-white transition group-hover:text-red-300 sm:text-lg">
+                  <article className="mobile-card-transition flex flex-row-reverse items-start gap-3 rounded-[1.2rem] border border-white/10 bg-[#101827] p-3 transition hover:border-red-500/40 hover:bg-[#131d2f] sm:gap-4 sm:p-4">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="line-clamp-2 text-lg font-black leading-6 text-white transition group-hover:text-red-300 sm:text-xl sm:leading-7">
                         {post.title}
                       </h3>
-                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-white/65 sm:text-sm">
+                      <p className="mt-1 line-clamp-2 text-sm leading-6 text-white/65">
                         {post.excerpt}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] font-bold text-white/55 sm:mt-3 sm:text-xs">
@@ -135,7 +135,7 @@ export const Home: React.FC = () => {
                         })()}
                       </div>
                     </div>
-                    <div className="aspect-[4/3] w-[34%] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] sm:w-[32%]">
+                    <div className="aspect-[4/3] w-[35%] max-w-[9.5rem] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] sm:w-[32%] sm:max-w-[11rem] lg:max-w-[12.5rem]">
                       <img src={post.imageUrl} alt={post.title} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" fetchPriority={index < 2 ? 'high' : 'auto'} className="h-full w-full object-contain transition duration-300 group-hover:opacity-95" />
                     </div>
                   </article>
@@ -265,7 +265,6 @@ export const Home: React.FC = () => {
                 const catPosts = sortPostsByNewest(posts.filter(p => p.category === cat)).slice(0, 4);
                 if (catPosts.length === 0) return null;
                 const colorClass = CATEGORY_COLORS[cat] || 'bg-gray-600';
-                const textColorClass = colorClass.replace('bg-', 'text-');
                 const isDarkSection = catIdx % 3 === 2;
                 return (
                   <section key={cat} className="category-section">
@@ -286,7 +285,7 @@ export const Home: React.FC = () => {
                           <span className={`h-7 w-2 rounded-full sm:h-8 ${colorClass}`} />
                           <h2 className="news-headline text-xl font-black leading-none text-gray-900 sm:text-2xl">{cat}</h2>
                         </div>
-                        <Link to={`/category/${cat}`} className={`${textColorClass} rounded-full bg-white px-3 py-2 text-sm font-black transition hover:opacity-80 sm:px-4`}>
+                        <Link to={`/category/${cat}`} className="rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-black text-gray-900 transition hover:border-gray-300 hover:bg-gray-50 sm:px-4">
                           עוד ב{cat} <ArrowLeft size={16} className="mr-1 inline" />
                         </Link>
                       </div>
