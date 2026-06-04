@@ -8,6 +8,7 @@ import {
   NewsletterSubscriber,
   AccessibilitySettings,
   WeeklyPaper,
+  Agent,
   BoardListing,
 } from '../types';
 
@@ -20,6 +21,7 @@ export interface AppState {
   contactMessages: ContactMessage[];
   newsletterSubscribers: NewsletterSubscriber[];
   weeklyPapers: WeeklyPaper[];
+  agents: Agent[];
   boardListings: BoardListing[];
   accessibility: AccessibilitySettings;
   isLoading: boolean;
@@ -33,6 +35,8 @@ export interface AppState {
   deleteAd: (id: string) => Promise<void>;
   createWeeklyPaper: (paper: WeeklyPaper) => Promise<void>;
   deleteWeeklyPaper: (id: string) => Promise<void>;
+  createAgent: (agent: Agent) => Promise<void>;
+  deleteAgent: (id: string) => Promise<void>;
   createBoardListing: (listing: BoardListing) => Promise<void>;
   deleteBoardListing: (id: string) => Promise<void>;
 

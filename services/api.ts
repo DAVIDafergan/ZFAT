@@ -1,4 +1,4 @@
-import { Post, Ad, User, Comment, ContactMessage, NewsletterSubscriber, WeeklyPaper, BoardListing } from '../types';
+import { Post, Ad, User, Comment, ContactMessage, NewsletterSubscriber, WeeklyPaper, Agent, BoardListing } from '../types';
 import {
   INITIAL_POSTS,
   INITIAL_ADS,
@@ -177,6 +177,14 @@ const normalizeWeeklyPaper = (paper: any): WeeklyPaper => ({
   isActive: paper.isActive !== false,
 });
 
+const normalizeAgent = (a: any): Agent => ({
+  id: resolveId(a),
+  name: a.name || '',
+  phone: a.phone || '',
+  imageUrl: a.imageUrl || '',
+  createdAt: a.createdAt,
+});
+
 const normalizeBoardListing = (listing: any): BoardListing => ({
   id: resolveId(listing),
   title: listing.title || '',
@@ -189,6 +197,7 @@ const normalizeBoardListing = (listing: any): BoardListing => ({
   hasBalcony: Boolean(listing.hasBalcony),
   contactName: listing.contactName || '',
   contactPhone: listing.contactPhone || '',
+  agentId: listing.agentId || undefined,
   isActive: listing.isActive !== false,
   createdAt: toIsoDateString(listing.createdAt || listing.created_at),
 });
@@ -247,6 +256,7 @@ export const api = {
         contactMessages: (messages || []).map(normalizeMessage),
         newsletterSubscribers: (subscribers || []).map(normalizeSubscriber),
         weeklyPapers: (weeklyPapers || []).map(normalizeWeeklyPaper),
+        agents: [],
         boardListings: (boardListings || []).map(normalizeBoardListing),
       };
     }
@@ -264,6 +274,7 @@ export const api = {
       contactMessages: getStorage('zfat_messages', INITIAL_MESSAGES).map(normalizeMessage),
       newsletterSubscribers: getStorage('zfat_subscribers', INITIAL_SUBSCRIBERS).map(normalizeSubscriber),
       weeklyPapers: getStorage('zfat_weekly_papers', INITIAL_WEEKLY_PAPERS).map(normalizeWeeklyPaper),
+      agents: getStorage('zfat_agents', [] as Agent[]).map(normalizeAgent),
       boardListings: getStorage('zfat_board_listings', INITIAL_BOARD_LISTINGS).map(normalizeBoardListing),
     };
   },
@@ -421,6 +432,16 @@ export const api = {
 
     const papers = getStorage<WeeklyPaper[]>('zfat_weekly_papers', INITIAL_WEEKLY_PAPERS);
     setStorage('zfat_weekly_papers', papers.filter(paper => paper.id !== id));
+  },
+
+  createAgent: async (agent: Agent) => {
+    const agents = getStorage<Agent[]>('zfat_agents', []);
+    setStorage('zfat_agents', [agent, ...agents]);
+  },
+
+  deleteAgent: async (id: string) => {
+    const agents = getStorage<Agent[]>('zfat_agents', []);
+    setStorage('zfat_agents', agents.filter(a => a.id !== id));
   },
 
   createBoardListing: async (listing: BoardListing) => {

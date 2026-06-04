@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { BoardListingCard } from '../components/BoardListingCard';
 import { PageHero } from '../components/PageHero';
 import { AdUnit } from '../components/AdUnit';
-import { BoardListingDealType } from '../types';
+import { Agent, BoardListingDealType } from '../types';
 import { SITE_WHATSAPP_URL } from '../services/siteConfig';
 
 type DealFilter = 'all' | BoardListingDealType;
@@ -40,9 +40,10 @@ const isSmartQueryMatch = (queryTokens: string[], listing: { title: string; loca
 };
 
 export const BoardPage: React.FC = () => {
-  const { boardListings, ads } = useApp();
+  const { boardListings, ads, agents } = useApp();
   const [showSmartFilters, setShowSmartFilters] = useState(false);
   const [query, setQuery] = useState('');
+  const [agentFilter, setAgentFilter] = useState('');
   const [dealFilter, setDealFilter] = useState<DealFilter>('all');
   const [locationFilter, setLocationFilter] = useState('all');
   const [balconyFilter, setBalconyFilter] = useState<BalconyFilter>('all');
@@ -66,6 +67,7 @@ export const BoardPage: React.FC = () => {
     const maxSizeValue = toPositiveNumber(maxSize);
 
     const filtered = activeListings.filter((listing) => {
+      const matchesAgent = !agentFilter || listing.agentId === agentFilter;
       const matchesDeal = dealFilter === 'all' || listing.dealType === dealFilter;
       const matchesLocation = locationFilter === 'all' || listing.location === locationFilter;
       const matchesBalcony =
@@ -76,7 +78,7 @@ export const BoardPage: React.FC = () => {
       const matchesSize = (minSizeValue === null || listing.sizeSqm >= minSizeValue) && (maxSizeValue === null || listing.sizeSqm <= maxSizeValue);
       const matchesQuery = isSmartQueryMatch(queryTokens, listing);
 
-      return matchesDeal && matchesLocation && matchesBalcony && matchesPrice && matchesSize && matchesQuery;
+      return matchesAgent && matchesDeal && matchesLocation && matchesBalcony && matchesPrice && matchesSize && matchesQuery;
     });
 
     return filtered.sort((a, b) => {
@@ -88,10 +90,11 @@ export const BoardPage: React.FC = () => {
       const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
       return bTime - aTime;
     });
-  }, [activeListings, balconyFilter, dealFilter, locationFilter, maxPrice, maxSize, minPrice, minSize, query, sortMode]);
+  }, [activeListings, agentFilter, balconyFilter, dealFilter, locationFilter, maxPrice, maxSize, minPrice, minSize, query, sortMode]);
 
   const clearFilters = () => {
     setQuery('');
+    setAgentFilter('');
     setDealFilter('all');
     setLocationFilter('all');
     setBalconyFilter('all');
@@ -161,6 +164,44 @@ export const BoardPage: React.FC = () => {
             </a>
           </div>
         </div>
+
+        {agents.length > 0 && (
+          <div className="mb-10">
+            <h2 className="mb-5 text-2xl font-black text-gray-900">המתווכים שלנו</h2>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {agents.map((agent: Agent) => {
+                const agentListings = activeListings.filter((listing) => listing.agentId === agent.id);
+                return (
+                  <button
+                    key={agent.id}
+                    type="button"
+                    onClick={() => setAgentFilter(agentFilter === agent.id ? '' : agent.id)}
+                    className={`group flex flex-col items-center gap-3 rounded-2xl border bg-white p-5 text-center shadow-sm transition hover:-translate-y-1 hover:border-red-200 hover:shadow-md ${
+                      agentFilter === agent.id ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white'
+                    }`}
+                  >
+                    <div className="relative">
+                      <img
+                        src={agent.imageUrl}
+                        alt={agent.name}
+                        className="h-20 w-20 rounded-full object-cover ring-2 ring-gray-100 group-hover:ring-red-200"
+                      />
+                      {agentListings.length > 0 && (
+                        <span className="absolute -left-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-[11px] font-black text-white">
+                          {agentListings.length}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-black text-gray-900">{agent.name}</p>
+                      <p className="mt-0.5 text-xs text-gray-500">{agentListings.length} נכסים</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="mb-8">
           <button

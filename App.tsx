@@ -15,6 +15,7 @@ import {
   NewsletterSubscriber,
   AccessibilitySettings,
   WeeklyPaper,
+  Agent,
   BoardListing,
 } from './types';
 import { AppContext } from './context/AppContext';
@@ -70,6 +71,7 @@ const App: React.FC = () => {
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<NewsletterSubscriber[]>([]);
   const [weeklyPapers, setWeeklyPapers] = useState<WeeklyPaper[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [boardListings, setBoardListings] = useState<BoardListing[]>([]);
   const [accessibility, setAccessibility] = useState<AccessibilitySettings>({
     fontSize: 0,
@@ -132,6 +134,7 @@ const App: React.FC = () => {
         setAds(data.ads);
         setComments(data.comments);
         setWeeklyPapers(data.weeklyPapers || []);
+        setAgents(data.agents || []);
         setBoardListings(data.boardListings || []);
         setContactMessages(data.contactMessages || []);
         setNewsletterSubscribers(data.newsletterSubscribers || []);
@@ -226,6 +229,16 @@ const App: React.FC = () => {
   const deleteWeeklyPaper = async (id: string) => {
     await api.deleteWeeklyPaper(id);
     setWeeklyPapers((prev) => prev.filter((paper) => paper.id !== id));
+  };
+
+  const createAgent = async (agent: Agent) => {
+    await api.createAgent(agent);
+    setAgents((prev) => [agent, ...prev]);
+  };
+
+  const deleteAgent = async (id: string) => {
+    await api.deleteAgent(id);
+    setAgents((prev) => prev.filter((agent) => agent.id !== id));
   };
 
   const createBoardListing = async (listing: BoardListing) => {
@@ -414,6 +427,7 @@ const App: React.FC = () => {
       contactMessages,
       newsletterSubscribers,
       weeklyPapers,
+      agents,
       boardListings,
       accessibility,
       isLoading,
@@ -427,6 +441,8 @@ const App: React.FC = () => {
       deleteAd,
       createWeeklyPaper,
       deleteWeeklyPaper,
+      createAgent,
+      deleteAgent,
       createBoardListing,
       deleteBoardListing,
       login,
