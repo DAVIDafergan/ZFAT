@@ -430,3 +430,48 @@ h6 {
     animation-duration: 0.55s;
   }
 }
+
+/* ⭐ תמונות בהירו */
+.hero-image {
+  object-fit: cover;
+  object-position: center;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-image-bg {
+  object-fit: cover;
+  object-position: center;
+  width: 100%;
+  height: 100%;
+  filter: brightness(0.5) blur(2px);
+}
+
+/* ⭐ Responsive text בהירו */
+@media (max-width: 640px) {
+  .hero-title {
+    font-size: 1.125rem;
+    line-height: 1.25;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .hero-title {
+    font-size: 1.875rem;
+    line-height: 1.15;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-title {
+    font-size: 2.25rem;
+    line-height: 1.1;
+  }
+}
+
+@media (min-width: 1536px) {
+  .hero-title {
+    font-size: 3.75rem;
+    line-height: 1.05;
+  }
+}
