@@ -19,4 +19,6 @@ const boardListingSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
+boardListingSchema.index({ isActive: 1, createdAt: -1 });
+
 module.exports = mongoose.model('BoardListing', boardListingSchema);

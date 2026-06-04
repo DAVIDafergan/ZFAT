@@ -226,6 +226,76 @@ const shouldFallbackToLocal = (error: unknown) => (
 );
 
 export const api = {
+  /** Fetches only posts + ads — the minimum needed to render the home page. */
+  fetchCriticalData: async () => {
+    if (shouldUseServer()) {
+      performance.mark('perf-critical-start');
+      const [postsResponse, adsResponse] = await Promise.all([
+        fetchJson('/api/posts', { headers: authHeaders() }),
+        fetchJson('/api/ads', { headers: authHeaders() }),
+      ]);
+      performance.mark('perf-critical-end');
+      performance.measure('critical-fetch', 'perf-critical-start', 'perf-critical-end');
+      return {
+        posts: (postsResponse.data || postsResponse).map(normalizePost),
+        ads: (adsResponse || []).map(normalizeAd),
+      };
+    }
+
+    await delay(500);
+    return {
+      posts: getStorage('zfat_posts', INITIAL_POSTS).map(normalizePost),
+      ads: getStorage('zfat_ads', INITIAL_ADS).map(normalizeAd),
+    };
+  },
+
+  /** Fetches secondary data (comments, papers, agents, listings) — loaded in background after UI is shown. */
+  fetchSecondaryData: async () => {
+    if (shouldUseServer()) {
+      const [comments, weeklyPapers, agents, boardListings] = await Promise.all([
+        fetchJson('/api/comments', { headers: authHeaders() }).catch(() => []),
+        fetchJson('/api/weekly-papers', { headers: authHeaders() }).catch(() => []),
+        fetchJson('/api/agents', { headers: authHeaders() }).catch(() => []),
+        fetchJson('/api/board-listings', { headers: authHeaders() }).catch(() => []),
+      ]);
+      return {
+        comments: (comments || []).map(normalizeComment),
+        weeklyPapers: (weeklyPapers || []).map(normalizeWeeklyPaper),
+        agents: (agents || []).map(normalizeAgent),
+        boardListings: (boardListings || []).map(normalizeBoardListing),
+      };
+    }
+
+    return {
+      comments: getStorage('zfat_comments', INITIAL_COMMENTS).map(normalizeComment),
+      weeklyPapers: getStorage('zfat_weekly_papers', INITIAL_WEEKLY_PAPERS).map(normalizeWeeklyPaper),
+      agents: getStorage('zfat_agents', [] as Agent[]).map(normalizeAgent),
+      boardListings: getStorage('zfat_board_listings', INITIAL_BOARD_LISTINGS).map(normalizeBoardListing),
+    };
+  },
+
+  /** Fetches admin-only data — loaded in background when user is confirmed admin. */
+  fetchAdminData: async () => {
+    if (shouldUseServer()) {
+      const [messages, subscribers, users] = await Promise.all([
+        fetch(`${API_URL}/api/messages`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+        fetch(`${API_URL}/api/subscribers`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+        fetch(`${API_URL}/api/auth/users`, { headers: authHeaders() }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+      ]);
+      return {
+        contactMessages: (messages || []).map(normalizeMessage),
+        newsletterSubscribers: (subscribers || []).map(normalizeSubscriber),
+        registeredUsers: (users || []).map(normalizeUser),
+      };
+    }
+
+    return {
+      contactMessages: getStorage('zfat_messages', INITIAL_MESSAGES).map(normalizeMessage),
+      newsletterSubscribers: getStorage('zfat_subscribers', INITIAL_SUBSCRIBERS).map(normalizeSubscriber),
+      registeredUsers: getStorage('zfat_users_db', INITIAL_USERS).map(normalizeUser),
+    };
+  },
+
   fetchInitialData: async () => {
     if (shouldUseServer()) {
       const [posts, ads, comments, weeklyPapers, agents, boardListings] = await Promise.all([

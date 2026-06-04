@@ -18,7 +18,7 @@ router.get('/', listLimiter, async (req, res) => {
     const skip = (page - 1) * limit;
 
     const [posts, total] = await Promise.all([
-      Post.find().sort({ publishedAt: -1, createdAt: -1 }).skip(skip).limit(limit),
+      Post.find().sort({ publishedAt: -1, createdAt: -1 }).skip(skip).limit(limit).lean(),
       Post.countDocuments(),
     ]);
 
@@ -39,7 +39,7 @@ router.get('/', listLimiter, async (req, res) => {
 router.get('/:id', listLimiter, validateObjectId(), async (req, res) => {
   try {
     const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
-    const post = await Post.findById(objectId);
+    const post = await Post.findById(objectId).lean();
     if (!post) return res.status(404).json({ message: 'כתבה לא נמצאה' });
     res.json(post);
   } catch (err) {

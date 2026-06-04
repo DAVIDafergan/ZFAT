@@ -1,13 +1,17 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const Ad = require('../models/Ad');
 const auth = require('../middleware/auth');
 const { adminOnly } = require('../middleware/adminOnly');
 
+const listLimiter = rateLimit({ windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי בקשות למודעות' } });
+const mutateLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי פעולות ניהול מודעות' } });
+
 // GET /api/ads
-router.get('/', async (req, res) => {
+router.get('/', listLimiter, async (req, res) => {
   try {
-    const ads = await Ad.find();
+    const ads = await Ad.find().lean();
     res.json(ads);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -15,7 +19,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/ads (admin only)
-router.post('/', auth, adminOnly, async (req, res) => {
+router.post('/', mutateLimiter, auth, adminOnly, async (req, res) => {
   try {
     const ad = new Ad(req.body);
     await ad.save();
@@ -26,7 +30,7 @@ router.post('/', auth, adminOnly, async (req, res) => {
 });
 
 // PUT /api/ads/:id (admin only)
-router.put('/:id', auth, adminOnly, async (req, res) => {
+router.put('/:id', mutateLimiter, auth, adminOnly, async (req, res) => {
   try {
     const ad = await Ad.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!ad) return res.status(404).json({ message: 'פרסומת לא נמצאה' });
@@ -37,7 +41,7 @@ router.put('/:id', auth, adminOnly, async (req, res) => {
 });
 
 // DELETE /api/ads/:id (admin only)
-router.delete('/:id', auth, adminOnly, async (req, res) => {
+router.delete('/:id', mutateLimiter, auth, adminOnly, async (req, res) => {
   try {
     const ad = await Ad.findByIdAndDelete(req.params.id);
     if (!ad) return res.status(404).json({ message: 'פרסומת לא נמצאה' });

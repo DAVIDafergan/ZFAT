@@ -11,4 +11,6 @@ const weeklyPaperSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
+weeklyPaperSchema.index({ isActive: 1, publishedAt: -1 });
+
 module.exports = mongoose.model('WeeklyPaper', weeklyPaperSchema);
