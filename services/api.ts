@@ -182,7 +182,7 @@ const normalizeAgent = (a: any): Agent => ({
   name: a.name || '',
   phone: a.phone || '',
   imageUrl: a.imageUrl || '',
-  createdAt: a.createdAt,
+  createdAt: toIsoDateString(a.createdAt || a.created_at),
 });
 
 const normalizeBoardListing = (listing: any): BoardListing => ({
@@ -228,11 +228,12 @@ const shouldFallbackToLocal = (error: unknown) => (
 export const api = {
   fetchInitialData: async () => {
     if (shouldUseServer()) {
-      const [posts, ads, comments, weeklyPapers, boardListings] = await Promise.all([
+      const [posts, ads, comments, weeklyPapers, agents, boardListings] = await Promise.all([
         fetchJson('/api/posts', { headers: authHeaders() }),
         fetchJson('/api/ads', { headers: authHeaders() }),
         fetchJson('/api/comments', { headers: authHeaders() }),
         fetchJson('/api/weekly-papers', { headers: authHeaders() }),
+        fetchJson('/api/agents', { headers: authHeaders() }),
         fetchJson('/api/board-listings', { headers: authHeaders() }),
       ]);
       const hasToken = Boolean(getToken());
@@ -256,7 +257,7 @@ export const api = {
         contactMessages: (messages || []).map(normalizeMessage),
         newsletterSubscribers: (subscribers || []).map(normalizeSubscriber),
         weeklyPapers: (weeklyPapers || []).map(normalizeWeeklyPaper),
-        agents: [],
+        agents: (agents || []).map(normalizeAgent),
         boardListings: (boardListings || []).map(normalizeBoardListing),
       };
     }
@@ -434,25 +435,57 @@ export const api = {
     setStorage('zfat_weekly_papers', papers.filter(paper => paper.id !== id));
   },
 
-  createAgent: async (agent: Agent) => {
+  createAgent: async (agent: Agent): Promise<Agent> => {
+    if (shouldUseServer()) {
+      try {
+        const created = await fetchJson('/api/agents', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(agent),
+        });
+        return normalizeAgent(created);
+      } catch (error) {
+        if (!shouldFallbackToLocal(error)) throw error;
+        console.warn('Falling back to local agent creation', error);
+      }
+    }
+
     const agents = getStorage<Agent[]>('zfat_agents', []);
     setStorage('zfat_agents', [agent, ...agents]);
+    return agent;
   },
 
   deleteAgent: async (id: string) => {
-    const agents = getStorage<Agent[]>('zfat_agents', []);
-    setStorage('zfat_agents', agents.filter(a => a.id !== id));
-  },
-
-  createBoardListing: async (listing: BoardListing) => {
     if (shouldUseServer()) {
       try {
-        await fetchJson('/api/board-listings', {
+        await fetchJson(`/api/agents/${id}`, {
+          method: 'DELETE',
+          headers: authHeaders(),
+        });
+        return;
+      } catch (error) {
+        if (!shouldFallbackToLocal(error)) throw error;
+        console.warn('Falling back to local agent deletion', error);
+      }
+    }
+
+    const agents = getStorage<Agent[]>('zfat_agents', []);
+    setStorage('zfat_agents', agents.filter(a => a.id !== id));
+    const listings = getStorage<BoardListing[]>('zfat_board_listings', INITIAL_BOARD_LISTINGS);
+    setStorage('zfat_board_listings', listings.map((listing) => (
+      listing.agentId === id ? { ...listing, agentId: undefined } : listing
+    )));
+  },
+
+  createBoardListing: async (listing: BoardListing): Promise<BoardListing> => {
+    if (shouldUseServer()) {
+      try {
+        const created = await fetchJson('/api/board-listings', {
           method: 'POST',
           headers: authHeaders(),
           body: JSON.stringify(listing),
         });
-        return;
+        return normalizeBoardListing(created);
       } catch (error) {
         console.warn('Falling back to local board listing creation', error);
       }
@@ -460,6 +493,7 @@ export const api = {
 
     const listings = getStorage<BoardListing[]>('zfat_board_listings', INITIAL_BOARD_LISTINGS);
     setStorage('zfat_board_listings', [listing, ...listings]);
+    return listing;
   },
 
   deleteBoardListing: async (id: string) => {

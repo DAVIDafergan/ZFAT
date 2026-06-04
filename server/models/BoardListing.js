@@ -15,6 +15,7 @@ const boardListingSchema = new mongoose.Schema({
   hasBalcony: { type: Boolean, default: false },
   contactName: { type: String, default: '' },
   contactPhone: { type: String, default: '' },
+  agentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Agent', default: null },
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
