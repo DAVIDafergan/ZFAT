@@ -92,6 +92,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const init = async () => {
+      // 1. Show cached content immediately — no white screen
+      let hasCachedContent = false;
       try {
         const cachedPosts = localStorage.getItem('zfat_cached_posts');
         if (cachedPosts) {
@@ -99,6 +101,9 @@ const App: React.FC = () => {
           if (Array.isArray(parsed) && parsed.length > 0) {
             setPosts(sortPostsByNewest(parsed));
             setIsLoading(false);
+            hasCachedContent = true;
+            const skeletonEl = document.getElementById('app-skeleton');
+            if (skeletonEl) skeletonEl.style.display = 'none';
           }
         }
       } catch (_) {}
@@ -107,6 +112,14 @@ const App: React.FC = () => {
       const savedUser = localStorage.getItem('zfat_user');
       if (hasToken && savedUser) {
         try { setUser(JSON.parse(savedUser)); } catch (_) {}
+      }
+
+      // 2. If no cache: wake-up ping so the server starts spinning up
+      //    while the skeleton is still showing, before the main fetch
+      if (!hasCachedContent) {
+        try {
+          await fetch(`${API_URL}/health`, { cache: 'no-store', signal: AbortSignal.timeout(4000) }).catch(() => {});
+        } catch (_) {}
       }
 
       try {
