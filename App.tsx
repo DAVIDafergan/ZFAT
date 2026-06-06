@@ -100,6 +100,7 @@ const App: React.FC = () => {
       let hasCachedContent = false;
       try {
         const cachedPosts = localStorage.getItem('zfat_cached_posts');
+        const cachedTimestamp = localStorage.getItem('zfat_cached_posts_ts');
         if (cachedPosts) {
           const parsed = JSON.parse(cachedPosts);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -108,6 +109,11 @@ const App: React.FC = () => {
             hasCachedContent = true;
             const skeletonEl = document.getElementById('app-skeleton');
             if (skeletonEl) skeletonEl.style.display = 'none';
+
+            const cacheAge = cachedTimestamp ? Date.now() - Number(cachedTimestamp) : Infinity;
+            if (cacheAge < 60_000) {
+              return;
+            }
           }
         }
       } catch (_) {}
@@ -158,6 +164,7 @@ const App: React.FC = () => {
         // Cache posts and ads for instant display on next visit
         try {
           localStorage.setItem('zfat_cached_posts', JSON.stringify(sortedPosts.slice(0, 30)));
+          localStorage.setItem('zfat_cached_posts_ts', String(Date.now()));
           localStorage.setItem('zfat_cached_ads', JSON.stringify(criticalData.ads));
         } catch (_) {}
 

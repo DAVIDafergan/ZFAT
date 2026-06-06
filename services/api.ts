@@ -231,8 +231,14 @@ export const api = {
     if (shouldUseServer()) {
       performance.mark('perf-critical-start');
       const [postsResponse, adsResponse] = await Promise.all([
-        fetchJson('/api/posts', { headers: authHeaders() }),
-        fetchJson('/api/ads', { headers: authHeaders() }),
+        fetchJson('/api/posts', {
+          headers: authHeaders(),
+          cache: 'default',
+        }),
+        fetchJson('/api/ads', {
+          headers: authHeaders(),
+          cache: 'default',
+        }),
       ]);
       performance.mark('perf-critical-end');
       performance.measure('critical-fetch', 'perf-critical-start', 'perf-critical-end');
@@ -253,10 +259,10 @@ export const api = {
   fetchSecondaryData: async () => {
     if (shouldUseServer()) {
       const [comments, weeklyPapers, agents, boardListings] = await Promise.all([
-        fetchJson('/api/comments', { headers: authHeaders() }).catch(() => []),
-        fetchJson('/api/weekly-papers', { headers: authHeaders() }).catch(() => []),
-        fetchJson('/api/agents', { headers: authHeaders() }).catch(() => []),
-        fetchJson('/api/board-listings', { headers: authHeaders() }).catch(() => []),
+        fetchJson('/api/comments', { headers: authHeaders(), priority: 'low' }).catch(() => []),
+        fetchJson('/api/weekly-papers', { headers: authHeaders(), priority: 'low' }).catch(() => []),
+        fetchJson('/api/agents', { headers: authHeaders(), priority: 'low' }).catch(() => []),
+        fetchJson('/api/board-listings', { headers: authHeaders(), priority: 'low' }).catch(() => []),
       ]);
       return {
         comments: (comments || []).map(normalizeComment),

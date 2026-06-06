@@ -26,6 +26,9 @@ export default defineConfig(({ mode }) => {
             manualChunks: {
               'vendor-react': ['react', 'react-dom', 'react-router-dom'],
               'vendor-ui': ['lucide-react'],
+              'vendor-admin': [
+                './pages/AdminDashboard',
+              ],
             },
           },
         },
@@ -34,7 +37,7 @@ export default defineConfig(({ mode }) => {
           compress: {
             drop_console: true,
             drop_debugger: true,
-            pure_funcs: ['console.table', 'console.log'],
+            passes: 2,
           },
         },
         chunkSizeWarningLimit: 600,
