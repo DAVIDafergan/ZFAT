@@ -45,6 +45,8 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ posts }) => {
             key={currentPost.id}
             src={currentPost.imageUrl}
             alt={currentPost.title}
+            width={880}
+            height={480}
             loading={currentIndex === 0 ? 'eager' : 'lazy'}
             decoding="async"
             fetchPriority={currentIndex === 0 ? 'high' : 'auto'}
@@ -196,6 +198,8 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ posts }) => {
             key={`mob-img-${currentPost.id}`}
             src={currentPost.imageUrl}
             alt={currentPost.title}
+            width={880}
+            height={480}
             loading={currentIndex === 0 ? 'eager' : 'lazy'}
             decoding="async"
             fetchPriority={currentIndex === 0 ? 'high' : 'auto'}
