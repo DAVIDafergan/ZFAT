@@ -11,7 +11,45 @@ const User = require('./models/User');
 const { normalizeShortCode } = require('./utils/shortLink');
 const escapeHtml = require('./utils/escapeHtml');
 
+// ── In-memory cache ──────────────────────────────────────────────
+const cache = {
+  posts: { data: null, ts: 0 },
+  ads: { data: null, ts: 0 },
+};
+const CACHE_TTL_MS = 60_000;
+
+const getCached = (key) => {
+  const entry = cache[key];
+  if (entry?.data && Date.now() - entry.ts < CACHE_TTL_MS) return entry.data;
+  return null;
+};
+
+const setCached = (key, data) => {
+  cache[key] = { data, ts: Date.now() };
+};
+
+const invalidateCache = (key) => {
+  if (cache[key]) cache[key] = { data: null, ts: 0 };
+};
+
+const warmCache = async () => {
+  try {
+    const Ad = require('./models/Ad');
+    const [posts, ads] = await Promise.all([
+      Post.find({}).sort({ publishedAt: -1, createdAt: -1 }).lean(),
+      Ad.find({}).lean(),
+    ]);
+    setCached('posts', posts);
+    setCached('ads', ads);
+    console.log(`🔥 Cache warmed: ${posts.length} posts, ${ads.length} ads`);
+  } catch (err) {
+    console.error('❌ Cache warm-up failed:', err.message);
+  }
+};
+// ─────────────────────────────────────────────────────────────────
+
 const app = express();
+app.locals.invalidateCache = invalidateCache;
 const PORT = Number(process.env.PORT || 3001);
 const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI;
 const JWT_SECRET = (process.env.JWT_SECRET || '').trim();
@@ -107,6 +145,20 @@ const shortLinkLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: 'יותר מדי בקשות לקישורים קצרים' },
 });
+const postsListLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'יותר מדי בקשות לכתבות' },
+});
+const adsListLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'יותר מדי בקשות למודעות' },
+});
 const spaFallbackLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 300,
@@ -143,6 +195,37 @@ const getMongoStatus = () => ({
   state: mongoStateLabels[mongoose.connection.readyState] || 'unknown',
   readyState: mongoose.connection.readyState,
 });
+
+// ── Cached GET routes ────────────────────────────────────────────
+app.get('/api/posts', postsListLimiter, async (req, res) => {
+  try {
+    let posts = getCached('posts');
+    if (!posts) {
+      posts = await Post.find({}).sort({ publishedAt: -1, createdAt: -1 }).lean();
+      setCached('posts', posts);
+    }
+    res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
+    res.json({ data: posts });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+app.get('/api/ads', adsListLimiter, async (req, res) => {
+  try {
+    let ads = getCached('ads');
+    if (!ads) {
+      const Ad = require('./models/Ad');
+      ads = await Ad.find({}).lean();
+      setCached('ads', ads);
+    }
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
+    res.json(ads);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+// ─────────────────────────────────────────────────────────────────
 
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/auth', require('./routes/auth'));
@@ -436,6 +519,7 @@ process.on('uncaughtException', (error) => {
 mongoose.connect(MONGO_URI)
   .then(() => ensureDefaultAdmin())
   .then(() => backfillLegacyPostPublishedAt())
+  .then(() => warmCache())
   .then(() => {
     const server = app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);

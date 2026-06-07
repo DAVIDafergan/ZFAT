@@ -65,6 +65,7 @@ router.post('/', mutateLimiter, auth, editorOrAbove, async (req, res) => {
     }
     const post = new Post(payload);
     await post.save();
+    req.app.locals.invalidateCache?.('posts');
     res.status(201).json(post);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -99,6 +100,7 @@ router.put('/:id', mutateLimiter, auth, editorOrAbove, validateObjectId(), async
 
     post.set(updates);
     await post.save();
+    req.app.locals.invalidateCache?.('posts');
     res.json(post);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -110,6 +112,7 @@ router.delete('/:id', mutateLimiter, auth, adminOnly, validateObjectId(), async 
     const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
     const post = await Post.findByIdAndDelete(objectId);
     if (!post) return res.status(404).json({ message: 'כתבה לא נמצאה' });
+    req.app.locals.invalidateCache?.('posts');
     res.json({ message: 'כתבה נמחקה' });
   } catch (err) {
     res.status(500).json({ message: err.message });
