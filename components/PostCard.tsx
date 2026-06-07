@@ -55,24 +55,26 @@ export const PostCard: React.FC<PostCardProps> = ({ post, layout = 'grid' }) => 
 
   if (layout === 'list') {
     return (
-      <article className="mobile-card-transition group flex gap-3 overflow-hidden rounded-[1.4rem] border border-transparent bg-white/95 p-3 shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:-translate-x-1 hover:shadow-xl sm:gap-5 sm:rounded-[1.75rem] sm:border-gray-100 sm:p-4 sm:shadow-sm">
+      <article className="mobile-card-transition group flex h-[140px] flex-row-reverse gap-3 overflow-hidden border-b border-gray-200 bg-white py-2 transition sm:h-auto sm:gap-5 sm:rounded-[1.75rem] sm:border sm:border-gray-100 sm:bg-white/95 sm:p-4 sm:shadow-sm sm:hover:-translate-x-1 sm:hover:shadow-xl">
         {post.imageUrl && (
-          <Link to={`/article/${post.id}`} className="relative aspect-[4/3] w-[34%] shrink-0 overflow-hidden rounded-[1rem] shadow-inner md:w-1/4 md:rounded-[1.25rem]">
+          <Link to={`/article/${post.id}`} className="relative h-full w-[38%] shrink-0 overflow-hidden sm:aspect-[4/3] sm:w-[34%] sm:rounded-[1rem] sm:shadow-inner md:w-1/4 md:rounded-[1.25rem]">
             <img src={post.imageUrl} alt={post.title} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
-            <span className={`absolute top-0 right-0 rounded-bl-2xl px-3 py-1 text-[10px] font-black text-white shadow-md md:text-xs ${categoryColor}`}>{post.category}</span>
+            <span className={`absolute top-0 right-0 hidden rounded-bl-2xl px-3 py-1 text-[10px] font-black text-white shadow-md sm:inline md:text-xs ${categoryColor}`}>{post.category}</span>
           </Link>
         )}
-        <div className="flex flex-1 flex-col justify-between py-1">
+        <div className="flex flex-1 flex-col justify-between py-1 pl-1 sm:pl-0">
           <Link to={`/article/${post.id}`}>
-            <h3 className="news-headline mb-2 text-base font-black leading-7 text-gray-900 transition group-hover:text-red-700 sm:mb-3 sm:text-lg md:text-xl">{post.title}</h3>
-            <p className="line-clamp-2 text-sm leading-6 text-gray-500 md:leading-7">{displayExcerpt}</p>
+            <h3 className="news-headline mb-1 line-clamp-3 text-[1.02rem] font-extrabold leading-6 text-gray-900 transition group-hover:text-red-700 sm:mb-3 sm:text-lg sm:font-black sm:leading-7 md:text-xl">{post.title}</h3>
+            <p className="line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6 md:leading-7">{displayExcerpt}</p>
           </Link>
-          <div className="mt-2 flex items-center justify-between border-t border-gray-100/70 pt-2 text-[11px] text-gray-400 sm:mt-3 sm:border-gray-50 sm:pt-3 sm:text-xs md:border-none md:pt-0">
-            <div className="flex items-center gap-2 sm:gap-4">
-              <div className="flex items-center gap-1.5 rounded-full bg-gray-50 px-2.5 py-1 font-bold sm:px-3"><Clock size={12} /> <span>{formatGregorianDate(displayDate)}{publishTime ? ` · ${publishTime}` : ''}</span></div>
-              <div className="font-bold text-gray-500">{formatHebrewDate(displayDate)}</div>
+          <div className="mt-1 flex items-center justify-between border-t border-gray-100 pt-1.5 text-[11px] text-gray-500 sm:mt-3 sm:border-gray-50 sm:pt-3 sm:text-xs md:border-none md:pt-0">
+            <div className="flex items-center gap-1.5 sm:gap-4">
+              <div className="flex items-center gap-1 font-bold"><Clock size={11} /> <span>{formatGregorianDate(displayDate)}{publishTime ? ` · ${publishTime}` : ''}</span></div>
+              <span className="text-gray-300">|</span>
+              <span className="font-bold">{post.category}</span>
+              <div className="hidden font-bold text-gray-500 sm:block">{formatHebrewDate(displayDate)}</div>
             </div>
-            <button onClick={handleShare} className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 font-black text-red-700 transition hover:bg-red-100 sm:px-3" aria-live="polite">
+            <button onClick={handleShare} className="hidden items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 font-black text-red-700 transition hover:bg-red-100 sm:inline-flex sm:px-3" aria-live="polite">
               {shareReady ? <Check size={12} /> : <Share2 size={12} />}
               {shareReady ? 'שותף' : 'שתפו'}
             </button>
