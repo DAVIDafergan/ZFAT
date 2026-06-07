@@ -106,6 +106,8 @@ const App: React.FC = () => {
           if (Array.isArray(parsed) && parsed.length > 0) {
             setPosts(sortPostsByNewest(parsed));
             setIsLoading(false);
+            const splashEl = document.getElementById('splash-overlay');
+            if (splashEl) splashEl.style.animationPlayState = 'running';
             hasCachedContent = true;
             const skeletonEl = document.getElementById('app-skeleton');
             if (skeletonEl) skeletonEl.style.display = 'none';
@@ -160,6 +162,8 @@ const App: React.FC = () => {
         const skeletonEl = document.getElementById('app-skeleton');
         if (skeletonEl) skeletonEl.style.display = 'none';
         setIsLoading(false);
+        const splashEl = document.getElementById('splash-overlay');
+        if (splashEl) splashEl.style.animationPlayState = 'running';
 
         // Cache posts and ads for instant display on next visit
         try {
@@ -209,6 +213,8 @@ const App: React.FC = () => {
       } catch (error) {
         console.error('Failed to load initial data', error);
         setIsLoading(false);
+        const splashEl = document.getElementById('splash-overlay');
+        if (splashEl) splashEl.style.animationPlayState = 'running';
       }
     };
     init();
