@@ -31,6 +31,12 @@ export const Home: React.FC = () => {
 
   const sortedPosts = sortPostsByNewest(posts);
   const latestPosts = sortPostsByNewest([...posts]).slice(0, 10);
+
+  const SLIDER_WINDOW_MS = 24 * 60 * 60 * 1000;
+  const sliderPosts = sortedPosts.filter((post) => {
+    if (!post.isFeatured || !post.featuredAt) return false;
+    return Date.now() - new Date(post.featuredAt).getTime() <= SLIDER_WINDOW_MS;
+  });
   const leaderboardAd = ads.find(a => a.area === 'leaderboard' && a.isActive);
   const sidebarAd = ads.find(a => a.area === 'sidebar' && a.isActive);
   const sidebarVideoAd = ads.find(a => a.area === 'sidebar_video' && a.isActive);
@@ -104,7 +110,7 @@ export const Home: React.FC = () => {
     <div className="animate-fade-in bg-[#f7f5f1] pb-16 sm:pb-20">
       {/* Hero — flush to header, no mobile gap */}
       <div className="-mt-1 shadow-2xl sm:mt-0 sm:mb-10">
-        <HeroSlider posts={posts} />
+        <HeroSlider posts={sliderPosts} />
       </div>
 
       <div className="container mx-auto px-4">

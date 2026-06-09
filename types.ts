@@ -31,6 +31,7 @@ export interface Post {
   imageUrl: string;
   tags: string[];
   isFeatured: boolean;
+  featuredAt?: string;
   views: number;
   shortLinkCode: string;
   images?: PostImage[];
