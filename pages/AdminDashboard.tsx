@@ -311,6 +311,7 @@ export const AdminDashboard: React.FC = () => {
         images: nextImages,
         tags: nextTags,
         isFeatured: Boolean(newPost.isFeatured),
+        featuredAt: newPost.isFeatured ? new Date().toISOString() : undefined,
         shortLinkCode: current.shortLinkCode || normalizeShareCode('', current.id),
       });
       showToast('הכתבה עודכנה בהצלחה');
@@ -330,6 +331,7 @@ export const AdminDashboard: React.FC = () => {
         images: nextImages,
         tags: nextTags,
         isFeatured: Boolean(newPost.isFeatured),
+        featuredAt: newPost.isFeatured ? nowIso : undefined,
         views: 0,
         shortLinkCode: normalizeShareCode('', Date.now().toString()),
       };
@@ -824,12 +826,27 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div className="space-y-4">
-                {paginatedPosts.map((post) => (
+                {paginatedPosts.map((post) => {
+                  const featuredMs = post.featuredAt ? new Date(post.featuredAt).getTime() : 0;
+                  const msRemaining = post.isFeatured && featuredMs ? featuredMs + 24 * 60 * 60 * 1000 - Date.now() : 0;
+                  const isActiveInSlider = msRemaining > 0;
+                  const hoursLeft = isActiveInSlider ? Math.ceil(msRemaining / (60 * 60 * 1000)) : 0;
+                  return (
                   <div key={post.id} className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
                     <div className="min-w-[220px] flex-1">
                       <p className="font-black text-gray-900">{post.title}</p>
                       <p className="mt-1 text-sm font-bold text-red-700">{post.category} · {formatGregorianDate(post.date)}</p>
                       <p className="mt-2 line-clamp-2 text-sm text-gray-600">{post.excerpt || 'ללא תקציר'}</p>
+                      {isActiveInSlider && (
+                        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-black text-green-800">
+                          ✦ בסליידר הראשי · {hoursLeft > 1 ? `נותרו ${hoursLeft} שעות` : 'פחות משעה'}
+                        </p>
+                      )}
+                      {post.isFeatured && !isActiveInSlider && (
+                        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-black text-gray-600">
+                          פג תוקף הסליידר (24 שעות)
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => startEditingPost(post)} className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-black text-gray-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700">
@@ -840,7 +857,8 @@ export const AdminDashboard: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
                 {paginatedPosts.length === 0 && (
                   <div className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-10 text-center text-sm font-bold text-gray-400">
                     {normalizedPostSearch ? 'לא נמצאו כתבות תואמות לחיפוש.' : 'אין כתבות להצגה.'}

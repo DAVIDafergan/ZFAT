@@ -105,6 +105,7 @@ const normalizePost = (post: any): Post => {
     imageUrl: fallbackImageUrl,
     tags: Array.isArray(post.tags) ? post.tags : [],
     isFeatured: Boolean(post.isFeatured),
+    featuredAt: toIsoDateString(post.featuredAt) || undefined,
     views: Number(post.views || 0),
     shortLinkCode: normalizeShareCode(post.shortLinkCode, resolveId(post)),
     images,
