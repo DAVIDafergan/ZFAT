@@ -113,7 +113,7 @@ const App: React.FC = () => {
             if (skeletonEl) skeletonEl.style.display = 'none';
 
             const cacheAge = cachedTimestamp ? Date.now() - Number(cachedTimestamp) : Infinity;
-            if (cacheAge < 60_000) {
+            if (cacheAge < 5 * 60_000) {
               return;
             }
           }
@@ -139,7 +139,7 @@ const App: React.FC = () => {
       //    while the skeleton is still showing, before the main fetch
       if (!hasCachedContent) {
         try {
-          await fetch(`${API_URL}/health`, { cache: 'no-store', signal: AbortSignal.timeout(4000) }).catch(() => {});
+          await fetch(`${API_URL}/health`, { cache: 'no-store', signal: AbortSignal.timeout(1500) }).catch(() => {});
         } catch (_) {}
       }
 
