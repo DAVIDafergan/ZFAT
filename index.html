@@ -23,7 +23,11 @@
     <link rel="stylesheet" href="/index.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" media="print" onload="this.media='all'" />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" />
+    </noscript>
     <style>
       html, body {
         margin: 0;
@@ -105,11 +109,11 @@
         100% { opacity: 0; transform: scale(1.04); }
       }
     </style>
-    <link rel="preconnect" href="https://YOUR_API_DOMAIN_HERE" crossorigin />
+    <link rel="preconnect" href="https://zfatbitnufa.com" crossorigin />
     <!-- DNS prefetch לשירותים חיצוניים -->
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-    <!-- החלף YOUR_API_DOMAIN_HERE עם דומיין ה-API שלך -->
+    <!-- החלף לדומיין ה-API בפועל אם הוא שונה מהדומיין הראשי -->
   </head>
   <body>
     <!-- Splash intro overlay — shown immediately, fades out after ~2s while React loads behind it -->
