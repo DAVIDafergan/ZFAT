@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Post } from '../types';
-import { formatHebrewDate } from '../services/dateUtils';
 
 interface NewsTickerProps {
   posts: Post[];
@@ -58,9 +57,6 @@ export const NewsTicker: React.FC<NewsTickerProps> = ({ posts }) => {
               {typedTitle}
               <span className="ml-0.5 inline-block h-[1em] w-[1px] animate-pulse bg-red-400 align-[-0.12em]" />
             </span>
-          </span>
-          <span className="mr-auto shrink-0 text-[12px] leading-none text-white/55">
-            {formatHebrewDate(activePost.date)}
           </span>
         </Link>
       </div>

@@ -105,20 +105,16 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
               />
             </Link>
 
-            <div className="flex items-center gap-2 lg:hidden">
-              {user ? (
+            {user && (
+              <div className="flex items-center gap-2 lg:hidden">
                 <Link
                   to={isAdmin ? '/admin' : '/'}
                   className="inline-flex min-w-[4.5rem] items-center justify-center rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20"
                 >
                   {isAdmin ? 'ניהול' : user.name}
                 </Link>
-              ) : (
-                <Link to="/login" className="inline-flex min-w-[4.5rem] items-center justify-center rounded-full bg-white px-3 py-2 text-xs font-black text-[#5b0007] transition hover:bg-red-50">
-                  התחברות
-                </Link>
-              )}
-            </div>
+              </div>
+            )}
 
             <nav className="hidden flex-1 items-center justify-center lg:flex">
               <ul className="flex items-center gap-6 text-sm font-extrabold text-white xl:text-base">
