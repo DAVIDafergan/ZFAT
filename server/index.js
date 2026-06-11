@@ -516,7 +516,12 @@ process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught exception:', error);
 });
 
-mongoose.connect(MONGO_URI)
+mongoose.connect(MONGO_URI, {
+  keepAlive: true,
+  keepAliveInitialDelay: 300000,
+  socketTimeoutMS: 60000,
+  serverSelectionTimeoutMS: 30000,
+})
   .then(() => ensureDefaultAdmin())
   .then(() => backfillLegacyPostPublishedAt())
   .then(() => warmCache())
@@ -536,6 +541,10 @@ mongoose.connect(MONGO_URI)
     const FEATURED_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
     const autoUnfeatureJob = setInterval(async () => {
       try {
+        if (mongoose.connection.readyState !== 1) {
+          console.warn('⚠️ Auto-unfeature: skipping – MongoDB not connected (readyState:', mongoose.connection.readyState, ')');
+          return;
+        }
         const cutoff = new Date(Date.now() - FEATURED_MAX_AGE_MS);
         const result = await Post.updateMany(
           { isFeatured: true, featuredAt: { $lte: cutoff } },
