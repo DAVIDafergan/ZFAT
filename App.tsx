@@ -467,7 +467,17 @@ const App: React.FC = () => {
     setShortPathHandled(true);
   }, [isLoading, posts, shortPathHandled]);
 
-  const tickerPosts = sortPostsByNewest(posts.filter((post) => post.category === Category.NEWS));
+  const TICKER_MAX_AGE_MS = 48 * 60 * 60 * 1000;
+  const tickerPosts = sortPostsByNewest(
+    posts.filter((post) => {
+      if (post.category !== Category.NEWS) return false;
+      const publicationDate = post.publishedAt || post.createdAt || post.date;
+      if (!publicationDate) return true;
+      const publishedAtMs = new Date(publicationDate).getTime();
+      if (Number.isNaN(publishedAtMs)) return true;
+      return Date.now() - publishedAtMs <= TICKER_MAX_AGE_MS;
+    }),
+  );
 
   return (
     <>

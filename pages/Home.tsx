@@ -29,14 +29,14 @@ export const Home: React.FC = () => {
   const [sunTimes, setSunTimes] = useState<{ sunrise: string; sunset: string } | null>(null);
   const [isSunTimesLoading, setIsSunTimesLoading] = useState(true);
 
-  const sortedPosts = sortPostsByNewest(posts);
-  const latestPosts = sortPostsByNewest([...posts]).slice(0, 10);
-
   const SLIDER_WINDOW_MS = 24 * 60 * 60 * 1000;
+  const sortedPosts = sortPostsByNewest(posts);
   const sliderPosts = sortedPosts.filter((post) => {
     if (!post.isFeatured || !post.featuredAt) return false;
     return Date.now() - new Date(post.featuredAt).getTime() <= SLIDER_WINDOW_MS;
   });
+  const sliderPostIds = new Set(sliderPosts.map((post) => post.id));
+  const latestPosts = sortedPosts.filter((post) => !sliderPostIds.has(post.id)).slice(0, 10);
   const leaderboardAd = ads.find(a => a.area === 'leaderboard' && a.isActive);
   const sidebarAd = ads.find(a => a.area === 'sidebar' && a.isActive);
   const sidebarVideoAd = ads.find(a => a.area === 'sidebar_video' && a.isActive);
@@ -125,15 +125,15 @@ export const Home: React.FC = () => {
             <div className="space-y-3 p-4 sm:space-y-4 sm:p-6">
               {latestPosts.map((post, index) => (
                 <Link key={post.id} to={`/article/${post.id}`} className="group block">
-                  <article className="mobile-card-transition flex flex-col gap-3 rounded-[1.2rem] border border-white/10 bg-[#101827] p-3 transition hover:border-red-500/40 hover:bg-[#131d2f] sm:[direction:ltr] sm:flex-row sm:items-start sm:gap-4 sm:p-4">
-                    <div className="min-w-0 flex-1 text-right [direction:rtl] sm:order-2">
+                  <article className="mobile-card-transition flex flex-col gap-3 rounded-[1.2rem] border border-white/10 bg-[#101827] p-3.5 transition hover:border-red-500/40 hover:bg-[#131d2f] sm:[direction:ltr] sm:flex-row sm:items-start sm:gap-4 sm:p-4">
+                    <div className="order-2 min-w-0 flex-1 text-right [direction:rtl] sm:order-2">
                       <h3 className="line-clamp-2 text-lg font-black leading-6 text-white transition group-hover:text-red-300 sm:text-xl sm:leading-7">
                         {post.title}
                       </h3>
-                      <p className="mt-1 line-clamp-2 text-sm leading-6 text-white/65">
+                      <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-white/65">
                         {post.excerpt}
                       </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] font-bold text-white/55 sm:mt-3 sm:text-xs">
+                      <div className="mt-2.5 flex flex-wrap items-center gap-2.5 text-[11px] font-bold text-white/55 sm:mt-3 sm:gap-3 sm:text-xs">
                         <span className="rounded-full border border-red-400/50 bg-red-500/15 px-2.5 py-0.5 text-[10px] font-black text-red-200 sm:text-[11px]">{post.category}</span>
                         {(() => {
                           const d = resolvePostDateForDisplay(post.publishedAt, post.createdAt, post.date);
@@ -142,7 +142,7 @@ export const Home: React.FC = () => {
                         })()}
                       </div>
                     </div>
-                    <div className="aspect-[16/10] w-full overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] sm:order-1 sm:w-[32%] sm:max-w-[12rem] sm:shrink-0 lg:max-w-[13rem]">
+                    <div className="order-1 aspect-[16/9] w-full overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] sm:order-1 sm:w-[32%] sm:max-w-[12rem] sm:shrink-0 sm:aspect-[16/10] lg:max-w-[13rem]">
                       <img src={post.imageUrl} alt={post.title} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" fetchPriority={index < 2 ? 'high' : 'auto'} className="h-full w-full object-contain transition duration-300 group-hover:opacity-95" />
                     </div>
                   </article>
@@ -234,7 +234,7 @@ export const Home: React.FC = () => {
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 sm:gap-8">
                 {latestPosts.map((post, idx) => (
                   <div key={`${post.id}-repeat`} className="animate-stagger-in" style={{ animationDelay: `${idx * 0.07}s` }}>
-                    <PostCard post={post} />
+                    <PostCard post={post} layout="list" />
                   </div>
                 ))}
               </div>

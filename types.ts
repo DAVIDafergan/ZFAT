@@ -9,6 +9,10 @@ export enum Category {
   WEATHER = 'מזג אוויר',
   INFRASTRUCTURE = 'תשתיות ותנועה',
   LOCAL = 'צפת והגליל',
+  SYNAGOGUES = 'בתי כנסת בצפת',
+  KOSHER_RESTAURANTS = 'מסעדות כשרות',
+  MIKVAOT = 'מקוואות',
+  ATTRACTIONS = 'אטרקציות',
   SIMCHAOT = 'שמחות'
 }
 
@@ -165,6 +169,10 @@ export const CATEGORY_COLORS: Record<Category, string> = {
   [Category.WEATHER]: 'bg-cyan-600',
   [Category.INFRASTRUCTURE]: 'bg-yellow-600',
   [Category.LOCAL]: 'bg-red-700',
+  [Category.SYNAGOGUES]: 'bg-indigo-600',
+  [Category.KOSHER_RESTAURANTS]: 'bg-lime-600',
+  [Category.MIKVAOT]: 'bg-sky-700',
+  [Category.ATTRACTIONS]: 'bg-violet-600',
   [Category.SIMCHAOT]: 'bg-pink-600',
 };
 
