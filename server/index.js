@@ -517,10 +517,8 @@ process.on('uncaughtException', (error) => {
 });
 
 mongoose.connect(MONGO_URI, {
-  keepAlive: true,
-  keepAliveInitialDelay: 300000,
-  socketTimeoutMS: 60000,
   serverSelectionTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
 })
   .then(() => ensureDefaultAdmin())
   .then(() => backfillLegacyPostPublishedAt())
