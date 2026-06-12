@@ -190,6 +190,7 @@ const normalizeBoardListing = (listing: any): BoardListing => ({
   id: resolveId(listing),
   title: listing.title || '',
   imageUrl: listing.imageUrl || '',
+  listingCategory: listing.listingCategory || 'real_estate',
   location: listing.location || '',
   dealType: listing.dealType || 'rent',
   price: Number(listing.price || 0),
