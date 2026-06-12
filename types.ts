@@ -124,6 +124,7 @@ export interface WeeklyPaper {
 }
 
 export type BoardListingDealType = 'rent' | 'sale' | 'vacation';
+export type BoardListingCategory = 'real_estate' | 'restaurants' | 'synagogues' | 'mikvaot' | 'attractions';
 
 export interface Agent {
   id: string;
@@ -137,6 +138,7 @@ export interface BoardListing {
   id: string;
   title: string;
   imageUrl: string;
+  listingCategory: BoardListingCategory;
   location: string;
   dealType: BoardListingDealType;
   price: number;
@@ -180,4 +182,12 @@ export const DEAL_TYPE_LABELS: Record<BoardListingDealType, string> = {
   rent: 'להשכרה',
   sale: 'למכירה',
   vacation: 'צימרים ונופש',
+};
+
+export const BOARD_LISTING_CATEGORY_LABELS: Record<BoardListingCategory, string> = {
+  real_estate: 'נדל"ן',
+  restaurants: 'מסעדות כשרות',
+  synagogues: 'בתי כנסת בצפת',
+  mikvaot: 'מקוואות',
+  attractions: 'אטרקציות',
 };

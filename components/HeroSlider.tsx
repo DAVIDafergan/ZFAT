@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
-import { Post, CATEGORY_COLORS } from '../types';
+import { Post } from '../types';
 
 interface HeroSliderProps {
   posts: Post[];
@@ -61,18 +61,6 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ posts }) => {
 
         {/* טקסט — צד ימין */}
         <div className="relative flex h-full w-[45%] flex-col justify-center px-10 xl:px-14" dir="rtl">
-          <div
-            key={`badges-${currentIndex}`}
-            className="animate-headline-in mb-5 flex flex-wrap items-center gap-2"
-          >
-            <span className={`${CATEGORY_COLORS[currentPost.category]} inline-flex items-center rounded-full px-4 py-1.5 text-sm font-black text-white shadow-sm`}>
-              {currentPost.category}
-            </span>
-            <span className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-black tracking-[0.12em] text-white/85">
-              כתבה ראשית
-            </span>
-          </div>
-
           {/* line-clamp-3 מונע הגדלת הגובה */}
           <h2
             key={`title-${currentIndex}`}
@@ -146,15 +134,6 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ posts }) => {
           key={`mobile-text-${currentIndex}`}
           className="animate-headline-in bg-[#0b0f19] px-4 pb-5 pt-5"
         >
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <span className={`${CATEGORY_COLORS[currentPost.category]} inline-flex items-center rounded-full px-3.5 py-1.5 text-xs font-black text-white`}>
-              {currentPost.category}
-            </span>
-            <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-black text-white/80">
-              כתבה ראשית
-            </span>
-          </div>
-
           <h2 className="news-headline mb-2.5 line-clamp-3 text-xl font-black leading-snug text-white sm:text-2xl">
             <Link to={`/article/${currentPost.id}`} className="transition active:text-red-300">
               {currentPost.title}

@@ -4,14 +4,20 @@ import { HeroSlider } from '../components/HeroSlider';
 import { PostCard } from '../components/PostCard';
 import { AdUnit } from '../components/AdUnit';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Mail, Newspaper, Building2, Sunrise, Sunset } from 'lucide-react';
-import { Category, CATEGORY_COLORS } from '../types';
+import { ArrowLeft, TrendingUp, Mail, Newspaper, Building2, Sunrise, Sunset, MapPin, Phone } from 'lucide-react';
+import { Category, CATEGORY_COLORS, BoardListingCategory } from '../types';
 import { getWeeklyPaperDateLabel, SITE_WHATSAPP_URL } from '../services/siteConfig';
 import { formatHebrewDate, formatPublishTime, resolvePostDateForDisplay } from '../services/dateUtils';
 import { sortPostsByNewest } from '../services/postSort';
 
 const TZFAT_COORDINATES = { lat: 32.9646, lng: 35.4960 };
 const JERUSALEM_TIME_ZONE = 'Asia/Jerusalem';
+const MANAGED_CATEGORY_TO_LISTING: Partial<Record<Category, BoardListingCategory>> = {
+  [Category.KOSHER_RESTAURANTS]: 'restaurants',
+  [Category.SYNAGOGUES]: 'synagogues',
+  [Category.MIKVAOT]: 'mikvaot',
+  [Category.ATTRACTIONS]: 'attractions',
+};
 
 const formatSunEventTime = (isoDate: string) => {
   const date = new Date(isoDate);
@@ -120,7 +126,7 @@ export const Home: React.FC = () => {
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1 text-xs font-black text-white/85 sm:mb-3">
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> מהדורה ראשית
               </div>
-              <h2 className="news-headline text-2xl font-black leading-snug text-white sm:text-3xl">חדשות אחרונות מצפת והגליל</h2>
+              <h2 className="news-headline text-2xl font-black leading-snug text-white sm:text-3xl">חדשות אחרונות</h2>
             </div>
             <div className="space-y-3 p-4 sm:space-y-4 sm:p-6">
               {latestPosts.map((post, index) => (
@@ -270,7 +276,12 @@ export const Home: React.FC = () => {
             <div className="space-y-14 sm:space-y-20">
               {categoriesToShow.map((cat, catIdx) => {
                 const catPosts = sortPostsByNewest(posts.filter(p => p.category === cat)).slice(0, 4);
-                if (catPosts.length === 0) return null;
+                const managedListingCategory = MANAGED_CATEGORY_TO_LISTING[cat];
+                const managedListings = managedListingCategory
+                  ? boardListings.filter((listing) => listing.isActive && listing.listingCategory === managedListingCategory).slice(0, 4)
+                  : [];
+                const shouldRenderManagedListings = managedListings.length > 0;
+                if (catPosts.length === 0 && !shouldRenderManagedListings) return null;
                 const colorClass = CATEGORY_COLORS[cat] || 'bg-gray-600';
                 const isDarkSection = catIdx % 3 === 2;
                 return (
@@ -282,8 +293,8 @@ export const Home: React.FC = () => {
                           <span className={`h-7 w-2 rounded-full sm:h-8 ${colorClass}`} />
                           <h2 className="news-headline text-xl font-black leading-none text-white sm:text-2xl">{cat}</h2>
                         </div>
-                        <Link to={`/category/${cat}`} className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-sm font-black text-white/80 transition hover:bg-white/20 sm:px-4">
-                          עוד ב{cat} <ArrowLeft size={16} className="mr-1 inline" />
+                        <Link to={shouldRenderManagedListings ? '/board' : `/category/${cat}`} className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-sm font-black text-white/80 transition hover:bg-white/20 sm:px-4">
+                          {shouldRenderManagedListings ? 'לכל הפרטים' : `עוד ב${cat}`} <ArrowLeft size={16} className="mr-1 inline" />
                         </Link>
                       </div>
                     ) : (
@@ -292,18 +303,43 @@ export const Home: React.FC = () => {
                           <span className={`h-7 w-2 rounded-full sm:h-8 ${colorClass}`} />
                           <h2 className="news-headline text-xl font-black leading-none text-gray-900 sm:text-2xl">{cat}</h2>
                         </div>
-                        <Link to={`/category/${cat}`} className="rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-black text-gray-900 transition hover:border-gray-300 hover:bg-gray-50 sm:px-4">
-                          עוד ב{cat} <ArrowLeft size={16} className="mr-1 inline" />
+                        <Link to={shouldRenderManagedListings ? '/board' : `/category/${cat}`} className="rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-black text-gray-900 transition hover:border-gray-300 hover:bg-gray-50 sm:px-4">
+                          {shouldRenderManagedListings ? 'לכל הפרטים' : `עוד ב${cat}`} <ArrowLeft size={16} className="mr-1 inline" />
                         </Link>
                       </div>
                     )}
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 sm:gap-8">
-                      {catPosts.map((post, idx) => (
-                        <div key={post.id} className="animate-stagger-in" style={{ animationDelay: `${idx * 0.07}s` }}>
-                          <PostCard post={post} layout="list" />
-                        </div>
-                      ))}
-                    </div>
+                    {shouldRenderManagedListings ? (
+                      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 sm:gap-8">
+                        {managedListings.map((listing, idx) => (
+                          <article key={listing.id} className="animate-stagger-in overflow-hidden rounded-[1.4rem] border border-gray-200 bg-white shadow-sm" style={{ animationDelay: `${idx * 0.07}s` }}>
+                            <div className="aspect-[16/10] overflow-hidden bg-gray-100">
+                              <img src={listing.imageUrl} alt={listing.title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                            </div>
+                            <div className="space-y-3 p-4 sm:p-5">
+                              <h3 className="news-headline text-xl font-black text-gray-900 sm:text-2xl">{listing.title}</h3>
+                              <p className="inline-flex items-center gap-2 text-sm font-bold text-gray-700"><MapPin size={15} className="text-red-700" /> {listing.location || 'מיקום לא צוין'}</p>
+                              <div className="flex flex-wrap gap-2">
+                                {listing.contactPhone?.trim() ? (
+                                  <a href={`tel:${listing.contactPhone}`} className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-100">
+                                    <Phone size={15} /> {listing.contactPhone}
+                                  </a>
+                                ) : (
+                                  <span className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-xs font-black text-gray-500">אין מספר טלפון ליצירת קשר</span>
+                                )}
+                              </div>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 sm:gap-8">
+                        {catPosts.map((post, idx) => (
+                          <div key={post.id} className="animate-stagger-in" style={{ animationDelay: `${idx * 0.07}s` }}>
+                            <PostCard post={post} layout="list" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </section>
                 );
               })}

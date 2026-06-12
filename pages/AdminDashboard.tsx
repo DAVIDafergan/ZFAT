@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Category, Post, PostImage, Ad, AdSlide, AdArea, WeeklyPaper, Agent, BoardListing, BoardListingDealType, DEAL_TYPE_LABELS } from '../types';
+import { Category, Post, PostImage, Ad, AdSlide, AdArea, WeeklyPaper, Agent, BoardListing, BoardListingDealType, BoardListingCategory, DEAL_TYPE_LABELS, BOARD_LISTING_CATEGORY_LABELS } from '../types';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -45,6 +45,7 @@ const initialPaperForm = {
 const initialBoardForm = {
   title: '',
   imageUrl: '',
+  listingCategory: 'real_estate' as BoardListingCategory,
   location: '',
   dealType: 'rent' as BoardListingDealType,
   price: '',
@@ -509,6 +510,7 @@ export const AdminDashboard: React.FC = () => {
       id: Date.now().toString(),
       title: boardForm.title || 'מודעה ללא כותרת',
       imageUrl: boardForm.imageUrl || 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200',
+      listingCategory: boardForm.listingCategory,
       location: boardForm.location,
       dealType: boardForm.dealType,
       price: Number(boardForm.price || 0),
@@ -1252,6 +1254,12 @@ export const AdminDashboard: React.FC = () => {
               <form onSubmit={handleBoardListingSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
+                    <label className="mb-2 block text-sm font-bold text-gray-700">קטגוריה להצגה באתר</label>
+                    <select value={boardForm.listingCategory} onChange={(e) => setBoardForm({ ...boardForm, listingCategory: e.target.value as BoardListingCategory })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500">
+                      {Object.entries(BOARD_LISTING_CATEGORY_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                    </select>
+                  </div>
+                  <div>
                     <label className="mb-2 block text-sm font-bold text-gray-700">כותרת המודעה</label>
                     <input type="text" value={boardForm.title} onChange={(e) => setBoardForm({ ...boardForm, title: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
                   </div>
@@ -1316,7 +1324,7 @@ export const AdminDashboard: React.FC = () => {
                       <div className="h-20 w-28 overflow-hidden rounded-lg bg-gray-200">{listing.imageUrl ? <img src={listing.imageUrl} alt={listing.title} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}</div>
                       <div>
                         <p className="font-black text-gray-900">{listing.title}</p>
-                        <p className="text-sm font-bold text-red-700">{DEAL_TYPE_LABELS[listing.dealType]} · {listing.location}</p>
+                        <p className="text-sm font-bold text-red-700">{BOARD_LISTING_CATEGORY_LABELS[listing.listingCategory]} · {DEAL_TYPE_LABELS[listing.dealType]} · {listing.location}</p>
                         <p className="mt-1 text-sm text-gray-500">₪{listing.price.toLocaleString('he-IL')} · {listing.sizeSqm} מ"ר · {listing.hasBalcony ? 'מרפסת' : 'ללא מרפסת'}</p>
                         {listing.agentId && (
                           <p className="mt-1 text-xs font-black text-blue-700">

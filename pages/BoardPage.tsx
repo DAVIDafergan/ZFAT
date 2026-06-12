@@ -53,7 +53,10 @@ export const BoardPage: React.FC = () => {
   const [maxSize, setMaxSize] = useState('');
   const [sortMode, setSortMode] = useState<SortMode>('newest');
   const topAd = ads.find((ad) => ad.area === 'board_top' && ad.isActive);
-  const activeListings = useMemo(() => boardListings.filter((listing) => listing.isActive), [boardListings]);
+  const activeListings = useMemo(
+    () => boardListings.filter((listing) => listing.isActive && listing.listingCategory === 'real_estate'),
+    [boardListings],
+  );
   const locationOptions = useMemo(
     () => Array.from(new Set(activeListings.map((listing) => listing.location))).sort((a, b) => a.localeCompare(b, 'he')),
     [activeListings],

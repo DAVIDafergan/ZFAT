@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 const boardListingSchema = new mongoose.Schema({
   title: { type: String, default: '' },
   imageUrl: { type: String, default: '' },
+  listingCategory: {
+    type: String,
+    enum: ['real_estate', 'restaurants', 'synagogues', 'mikvaot', 'attractions'],
+    default: 'real_estate',
+  },
   location: { type: String, default: '' },
   dealType: {
     type: String,
