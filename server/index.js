@@ -49,6 +49,7 @@ const warmCache = async () => {
 // ─────────────────────────────────────────────────────────────────
 
 const app = express();
+app.set('trust proxy', 1);
 app.locals.invalidateCache = invalidateCache;
 const PORT = Number(process.env.PORT || 3001);
 const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI;
