@@ -123,7 +123,7 @@ export interface WeeklyPaper {
   isActive: boolean;
 }
 
-export type BoardListingDealType = 'rent' | 'sale';
+export type BoardListingDealType = 'rent' | 'sale' | 'vacation';
 
 export interface Agent {
   id: string;
@@ -179,4 +179,5 @@ export const CATEGORY_COLORS: Record<Category, string> = {
 export const DEAL_TYPE_LABELS: Record<BoardListingDealType, string> = {
   rent: 'להשכרה',
   sale: 'למכירה',
+  vacation: 'צימרים ונופש',
 };

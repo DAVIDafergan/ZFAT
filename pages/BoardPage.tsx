@@ -31,7 +31,7 @@ const isSmartQueryMatch = (queryTokens: string[], listing: { title: string; loca
       listing.title,
       listing.location,
       listing.details,
-      listing.dealType === 'rent' ? 'להשכרה שכירות' : 'למכירה מכירה',
+      listing.dealType === 'rent' ? 'להשכרה שכירות' : listing.dealType === 'vacation' ? 'צימרים נופש חופשה' : 'למכירה מכירה',
       listing.hasBalcony ? 'מרפסת' : 'ללא מרפסת',
     ].join(' '),
   );
@@ -113,7 +113,7 @@ export const BoardPage: React.FC = () => {
         description={'לוח נדל"ן מחודש עם חיפוש חכם, סינון מתקדם וחוויית גלילה דינמית בעיצוב חדשותי יוקרתי.'}
         accent="from-[#7a0b14] via-[#5a1020] to-[#0f172a]"
       >
-        <div className="animate-scan-line relative grid gap-3 rounded-[1.5rem] border border-white/20 bg-white/10 p-3 shadow-2xl backdrop-blur-sm sm:gap-4 sm:rounded-[2rem] sm:p-4 md:grid-cols-[1.6fr_0.9fr]">
+        <div className="animate-scan-line relative grid gap-3 rounded-[1.5rem] border border-white/20 bg-white/10 p-3 shadow-2xl backdrop-blur-sm sm:gap-4 sm:rounded-[2rem] sm:p-4 md:grid-cols-[1fr_auto]">
           <div>
             <label htmlFor="listing-search" className="mb-2 block text-sm font-bold text-white/80">חיפוש לפי שכונה, רחוב או תיאור</label>
             <div className="flex items-center gap-3 rounded-full bg-white px-4 py-3 text-gray-800 shadow-lg">
@@ -128,12 +128,23 @@ export const BoardPage: React.FC = () => {
             </div>
           </div>
           <div>
-            <label htmlFor="listing-filter" className="mb-2 block text-sm font-bold text-white/80">סוג עסקה</label>
-            <select id="listing-filter" value={dealFilter} onChange={(event) => setDealFilter(event.target.value as DealFilter)} className="w-full rounded-full border-0 bg-white px-4 py-3 text-sm font-bold text-gray-800 shadow-lg outline-none">
-              <option value="all">הכל</option>
-              <option value="rent">להשכרה</option>
-              <option value="sale">למכירה</option>
-            </select>
+            <label className="mb-2 block text-sm font-bold text-white/80">סוג עסקה</label>
+            <div className="flex flex-wrap gap-2">
+              {([['all', 'הכל'], ['rent', 'להשכרה'], ['sale', 'למכירה'], ['vacation', 'צימרים ונופש']] as [DealFilter, string][]).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setDealFilter(value)}
+                  className={`rounded-full px-4 py-2.5 text-sm font-black shadow transition ${
+                    dealFilter === value
+                      ? 'bg-[#7a0b14] text-white'
+                      : 'bg-white text-gray-800 hover:bg-red-50'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </PageHero>
