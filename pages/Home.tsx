@@ -125,8 +125,8 @@ export const Home: React.FC = () => {
             <div className="space-y-3 p-4 sm:space-y-4 sm:p-6">
               {latestPosts.map((post, index) => (
                 <Link key={post.id} to={`/article/${post.id}`} className="group block">
-                  <article className="mobile-card-transition flex flex-col gap-3 rounded-[1.2rem] border border-white/10 bg-[#101827] p-3.5 transition hover:border-red-500/40 hover:bg-[#131d2f] sm:[direction:ltr] sm:flex-row sm:items-start sm:gap-4 sm:p-4">
-                    <div className="order-2 min-w-0 flex-1 text-right [direction:rtl] sm:order-2">
+                  <article className="mobile-card-transition flex flex-row-reverse items-start gap-3 p-3 rounded-[1.2rem] border border-white/10 bg-[#101827] transition hover:border-red-500/40 hover:bg-[#131d2f] sm:[direction:ltr] sm:flex-row sm:items-start sm:gap-4 sm:p-4">
+                    <div className="order-2 flex-1 min-w-0 text-right [direction:rtl] sm:order-2">
                       <h3 className="line-clamp-2 text-lg font-black leading-6 text-white transition group-hover:text-red-300 sm:text-xl sm:leading-7">
                         {post.title}
                       </h3>
@@ -142,7 +142,7 @@ export const Home: React.FC = () => {
                         })()}
                       </div>
                     </div>
-                    <div className="order-1 aspect-[16/9] w-full overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] sm:order-1 sm:w-[32%] sm:max-w-[12rem] sm:shrink-0 sm:aspect-[16/10] lg:max-w-[13rem]">
+                    <div className="order-1 w-[36%] aspect-[4/3] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] sm:order-1 sm:w-[32%] sm:max-w-[12rem] sm:aspect-[16/10] lg:max-w-[13rem]">
                       <img src={post.imageUrl} alt={post.title} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" fetchPriority={index < 2 ? 'high' : 'auto'} className="h-full w-full object-contain transition duration-300 group-hover:opacity-95" />
                     </div>
                   </article>
@@ -231,7 +231,7 @@ export const Home: React.FC = () => {
                 </div>
                 <Link to={`/category/${Category.NEWS}`} className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-black text-white/80 transition hover:bg-white/20">לכל המבזקים</Link>
               </div>
-              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 sm:gap-8">
+              <div className="grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-2">
                 {latestPosts.map((post, idx) => (
                   <div key={`${post.id}-repeat`} className="animate-stagger-in" style={{ animationDelay: `${idx * 0.07}s` }}>
                     <PostCard post={post} layout="list" />
