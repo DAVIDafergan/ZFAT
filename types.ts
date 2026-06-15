@@ -6,6 +6,7 @@ export enum Category {
   SECURITY = 'ביטחון',
   CULTURE = 'תרבות ואומנות',
   CRIME = 'משפט ופלילים',
+  HEALTH = 'בריאות',
   WEATHER = 'מזג אוויר',
   INFRASTRUCTURE = 'תשתיות ותנועה',
   LOCAL = 'צפת והגליל',
@@ -125,6 +126,7 @@ export interface WeeklyPaper {
 
 export type BoardListingDealType = 'rent' | 'sale' | 'vacation';
 export type BoardListingCategory = 'real_estate' | 'restaurants' | 'synagogues' | 'mikvaot' | 'attractions';
+export type ManagedBoardListingCategory = Exclude<BoardListingCategory, 'real_estate'>;
 
 export interface Agent {
   id: string;
@@ -168,6 +170,7 @@ export const CATEGORY_COLORS: Record<Category, string> = {
   [Category.SECURITY]: 'bg-orange-600',
   [Category.CULTURE]: 'bg-purple-600',
   [Category.CRIME]: 'bg-gray-800',
+  [Category.HEALTH]: 'bg-teal-600',
   [Category.WEATHER]: 'bg-cyan-600',
   [Category.INFRASTRUCTURE]: 'bg-yellow-600',
   [Category.LOCAL]: 'bg-red-700',
@@ -190,4 +193,11 @@ export const BOARD_LISTING_CATEGORY_LABELS: Record<BoardListingCategory, string>
   synagogues: 'בתי כנסת בצפת',
   mikvaot: 'מקוואות',
   attractions: 'אטרקציות',
+};
+
+export const PAGE_CATEGORY_TO_MANAGED_BOARD_CATEGORY: Partial<Record<Category, ManagedBoardListingCategory>> = {
+  [Category.KOSHER_RESTAURANTS]: 'restaurants',
+  [Category.SYNAGOGUES]: 'synagogues',
+  [Category.MIKVAOT]: 'mikvaot',
+  [Category.ATTRACTIONS]: 'attractions',
 };
