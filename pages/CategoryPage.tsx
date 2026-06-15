@@ -2,23 +2,29 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { ManagedListingCard } from '../components/ManagedListingCard';
 import { PostCard } from '../components/PostCard';
 import { AdUnit } from '../components/AdUnit';
-import { CATEGORY_COLORS } from '../types';
+import { CATEGORY_COLORS, PAGE_CATEGORY_TO_MANAGED_BOARD_CATEGORY } from '../types';
 import { sortPostsByNewest } from '../services/postSort';
 
 export const CategoryPage: React.FC = () => {
   const { categoryName } = useParams<{ categoryName: string }>();
-  const { posts, ads } = useApp();
+  const { posts, ads, boardListings } = useApp();
 
   const decodedCategory = categoryName ? decodeURIComponent(categoryName) : '';
   const categoryPosts = sortPostsByNewest(posts.filter((post) => post.category === decodedCategory));
+  const managedListingCategory = PAGE_CATEGORY_TO_MANAGED_BOARD_CATEGORY[decodedCategory as keyof typeof PAGE_CATEGORY_TO_MANAGED_BOARD_CATEGORY];
+  const categoryListings = managedListingCategory
+    ? boardListings.filter((listing) => listing.isActive && listing.listingCategory === managedListingCategory)
+    : [];
   const headerBgClass = CATEGORY_COLORS[decodedCategory as keyof typeof CATEGORY_COLORS] || 'bg-gray-800';
   const topAd = ads.find((ad) => ad.area === 'category_top' && ad.isActive);
   const midAd = ads.find((ad) => ad.area === 'category_mid' && ad.isActive);
   const splitIndex = Math.ceil(categoryPosts.length / 2);
   const firstChunk = categoryPosts.slice(0, splitIndex);
   const secondChunk = categoryPosts.slice(splitIndex);
+  const isManagedListingCategoryPage = Boolean(managedListingCategory);
 
   return (
     <div className="min-h-screen bg-[#f7f5f1] pb-14">
@@ -37,7 +43,19 @@ export const CategoryPage: React.FC = () => {
           <AdUnit ad={topAd} className="w-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm" />
         </div>
 
-        {categoryPosts.length > 0 ? (
+        {isManagedListingCategoryPage ? (
+          categoryListings.length > 0 ? (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 sm:gap-6">
+              {categoryListings.map((listing) => (
+                <ManagedListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          ) : (
+            <div className="col-span-full py-20 text-center text-gray-500">
+              <p className="text-xl font-bold">עדיין לא נוספו פריטים לקטגוריה זו.</p>
+            </div>
+          )
+        ) : categoryPosts.length > 0 ? (
           <>
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 sm:gap-6">
               {firstChunk.map((post) => (

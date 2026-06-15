@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Category, Post, PostImage, Ad, AdSlide, AdArea, WeeklyPaper, Agent, BoardListing, BoardListingDealType, BoardListingCategory, DEAL_TYPE_LABELS, BOARD_LISTING_CATEGORY_LABELS } from '../types';
+import { Category, Post, PostImage, Ad, AdSlide, AdArea, WeeklyPaper, Agent, BoardListing, BoardListingDealType, BoardListingCategory, DEAL_TYPE_LABELS, BOARD_LISTING_CATEGORY_LABELS, ManagedBoardListingCategory } from '../types';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -32,7 +32,7 @@ import { api } from '../services/api';
 import { formatGregorianDate } from '../services/dateUtils';
 import { compressImage } from '../services/imageUtils';
 
-type TabKey = 'posts' | 'ads' | 'weekly-paper' | 'board' | 'users' | 'messages' | 'newsletter' | 'comments';
+type TabKey = 'posts' | 'ads' | 'weekly-paper' | 'board' | 'directory' | 'users' | 'messages' | 'newsletter' | 'comments';
 
 const initialPaperForm = {
   title: '',
@@ -52,6 +52,16 @@ const initialBoardForm = {
   sizeSqm: '',
   details: '',
   hasBalcony: false,
+  contactName: '',
+  contactPhone: '',
+};
+
+const initialDirectoryForm = {
+  title: '',
+  imageUrl: '',
+  listingCategory: 'restaurants' as ManagedBoardListingCategory,
+  location: '',
+  details: '',
   contactName: '',
   contactPhone: '',
 };
@@ -91,6 +101,8 @@ const normalizeArticleContent = (value: string) => {
     .map((paragraph) => `<p>${paragraph.replace(/\n/g, '<br />')}</p>`)
     .join('');
 };
+
+const SLIDER_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export const AdminDashboard: React.FC = () => {
   const {
@@ -146,6 +158,7 @@ export const AdminDashboard: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [paperForm, setPaperForm] = useState(initialPaperForm);
   const [boardForm, setBoardForm] = useState(initialBoardForm);
+  const [directoryForm, setDirectoryForm] = useState(initialDirectoryForm);
   const [newAdForm, setNewAdForm] = useState(initialAdForm);
   const [agentForm, setAgentForm] = useState({ name: '', phone: '', imageUrl: '' });
   const [selectedAgentId, setSelectedAgentId] = useState<string>('');
@@ -187,6 +200,24 @@ export const AdminDashboard: React.FC = () => {
     });
   }, [posts, normalizedPostSearch]);
   const totalPostsPages = Math.max(1, Math.ceil(filteredPosts.length / POSTS_PAGE_SIZE));
+  const newestFeaturedPostId = useMemo(() => {
+    const featuredPosts = posts
+      .filter((post) => post.isFeatured)
+      .sort((a, b) => {
+        const aTime = Date.parse(a.featuredAt || a.createdAt || a.date || '') || 0;
+        const bTime = Date.parse(b.featuredAt || b.createdAt || b.date || '') || 0;
+        return bTime - aTime;
+      });
+    return featuredPosts[0]?.id || null;
+  }, [posts]);
+  const realEstateListings = useMemo(
+    () => boardListings.filter((listing) => listing.listingCategory === 'real_estate'),
+    [boardListings],
+  );
+  const directoryListings = useMemo(
+    () => boardListings.filter((listing) => listing.listingCategory !== 'real_estate'),
+    [boardListings],
+  );
   const paginatedPosts = useMemo(() => {
     const start = (postsPage - 1) * POSTS_PAGE_SIZE;
     return filteredPosts.slice(start, start + POSTS_PAGE_SIZE);
@@ -529,6 +560,29 @@ export const AdminDashboard: React.FC = () => {
     showToast('מודעת לוח בתנופה פורסמה בהצלחה');
   };
 
+  const handleDirectoryListingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const listing: BoardListing = {
+      id: Date.now().toString(),
+      title: directoryForm.title.trim() || BOARD_LISTING_CATEGORY_LABELS[directoryForm.listingCategory],
+      imageUrl: directoryForm.imageUrl.trim(),
+      listingCategory: directoryForm.listingCategory,
+      location: directoryForm.location.trim(),
+      dealType: 'rent',
+      price: 0,
+      sizeSqm: 0,
+      details: directoryForm.details.trim(),
+      hasBalcony: false,
+      contactName: directoryForm.contactName.trim(),
+      contactPhone: directoryForm.contactPhone.trim(),
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+    await createBoardListing(listing);
+    setDirectoryForm(initialDirectoryForm);
+    showToast('הפריט עלה למדריך המקומי בהצלחה');
+  };
+
   const handleCreateAdSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAdForm.title.trim()) return;
@@ -580,6 +634,7 @@ export const AdminDashboard: React.FC = () => {
     { key: 'ads', label: 'באנרים', icon: Layout },
     { key: 'weekly-paper', label: 'העיתון השבועי', icon: Newspaper },
     { key: 'board', label: 'לוח בתנופה', icon: Home },
+    { key: 'directory', label: 'מדריך מקומי', icon: Building2 },
     { key: 'comments', label: `אישור תגובות${pendingComments.length > 0 ? ` (${pendingComments.length})` : ''}`, icon: MessageCircle },
     { key: 'users', label: 'משתמשים', icon: Users },
     { key: 'messages', label: 'הודעות', icon: Mail },
@@ -830,8 +885,9 @@ export const AdminDashboard: React.FC = () => {
               <div className="space-y-4">
                 {paginatedPosts.map((post) => {
                   const featuredMs = post.featuredAt ? new Date(post.featuredAt).getTime() : 0;
-                  const msRemaining = post.isFeatured && featuredMs ? featuredMs + 24 * 60 * 60 * 1000 - Date.now() : 0;
+                  const msRemaining = post.isFeatured && featuredMs ? featuredMs + SLIDER_WINDOW_MS - Date.now() : 0;
                   const isActiveInSlider = msRemaining > 0;
+                  const isPinnedUntilReplacement = post.isFeatured && !isActiveInSlider && newestFeaturedPostId === post.id;
                   const hoursLeft = isActiveInSlider ? Math.ceil(msRemaining / (60 * 60 * 1000)) : 0;
                   return (
                   <div key={post.id} className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
@@ -844,9 +900,14 @@ export const AdminDashboard: React.FC = () => {
                           ✦ בסליידר הראשי · {hoursLeft > 1 ? `נותרו ${hoursLeft} שעות` : 'פחות משעה'}
                         </p>
                       )}
-                      {post.isFeatured && !isActiveInSlider && (
+                      {isPinnedUntilReplacement && (
+                        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-black text-amber-800">
+                          נשארת ככותרת ראשית עד שתעלה כותרת חדשה
+                        </p>
+                      )}
+                      {post.isFeatured && !isActiveInSlider && !isPinnedUntilReplacement && (
                         <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-black text-gray-600">
-                          פג תוקף הסליידר (24 שעות)
+                          פג תוקף הסליידר והכותרת תוסר
                         </p>
                       )}
                     </div>
@@ -1146,7 +1207,7 @@ export const AdminDashboard: React.FC = () => {
         {activeTab === 'board' && (
           <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1fr_1.1fr]">
             <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
-              <h2 className="mb-6 flex items-center gap-2 text-xl font-black text-gray-800 sm:text-2xl"><Building2 size={24} className="text-red-700" /> העלאת מודעה ללוח בתנופה</h2>
+              <h2 className="mb-6 flex items-center gap-2 text-xl font-black text-gray-800 sm:text-2xl"><Building2 size={24} className="text-red-700" /> העלאת מודעת נדל"ן</h2>
               <div className="mb-8 rounded-2xl border border-blue-100 bg-blue-50 p-5">
                 <h3 className="mb-4 text-lg font-black text-blue-900">מתווכים</h3>
                 <form onSubmit={handleAgentSubmit} className="mb-5 grid gap-3 sm:grid-cols-3">
@@ -1255,9 +1316,7 @@ export const AdminDashboard: React.FC = () => {
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-bold text-gray-700">קטגוריה להצגה באתר</label>
-                    <select value={boardForm.listingCategory} onChange={(e) => setBoardForm({ ...boardForm, listingCategory: e.target.value as BoardListingCategory })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500">
-                      {Object.entries(BOARD_LISTING_CATEGORY_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                    </select>
+                    <input value={BOARD_LISTING_CATEGORY_LABELS.real_estate} readOnly className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 font-black text-gray-700 outline-none" />
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-bold text-gray-700">כותרת המודעה</label>
@@ -1316,9 +1375,9 @@ export const AdminDashboard: React.FC = () => {
               </form>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
-              <h3 className="mb-4 text-lg font-black text-gray-800 sm:text-xl">מודעות פעילות ({boardListings.length})</h3>
+              <h3 className="mb-4 text-lg font-black text-gray-800 sm:text-xl">מודעות נדל"ן פעילות ({realEstateListings.length})</h3>
               <div className="space-y-4">
-                {boardListings.map((listing) => (
+                {realEstateListings.map((listing) => (
                   <div key={listing.id} className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex gap-4">
                       <div className="h-20 w-28 overflow-hidden rounded-lg bg-gray-200">{listing.imageUrl ? <img src={listing.imageUrl} alt={listing.title} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}</div>
@@ -1334,6 +1393,80 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
                     <button onClick={() => deleteBoardListing(listing.id).then(() => showToast('המודעה הוסרה'))} className="rounded-lg p-2 text-red-500 transition hover:bg-red-50" title="מחק מודעה"><Trash2 size={18} /></button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'directory' && (
+          <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1fr_1.1fr]">
+            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+              <h2 className="mb-2 flex items-center gap-2 text-xl font-black text-gray-800 sm:text-2xl"><Building2 size={24} className="text-red-700" /> מדריך מקומי</h2>
+              <p className="mb-6 text-sm font-bold text-gray-500">כאן מעלים בתי כנסת, מקוואות, אטרקציות ומסעדות כשרות. כל השדות אופציונליים.</p>
+              <form onSubmit={handleDirectoryListingSubmit} className="space-y-5">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-gray-700">קטגוריה</label>
+                    <select value={directoryForm.listingCategory} onChange={(e) => setDirectoryForm({ ...directoryForm, listingCategory: e.target.value as ManagedBoardListingCategory })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500">
+                      {Object.entries(BOARD_LISTING_CATEGORY_LABELS)
+                        .filter(([value]) => value !== 'real_estate')
+                        .map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-gray-700">שם / כותרת</label>
+                    <input type="text" value={directoryForm.title} onChange={(e) => setDirectoryForm({ ...directoryForm, title: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="אפשר להשאיר ריק" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-gray-700">כתובת</label>
+                    <input type="text" value={directoryForm.location} onChange={(e) => setDirectoryForm({ ...directoryForm, location: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="רחוב / שכונה / אזור" />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-gray-700">מספר ליצירת קשר</label>
+                    <input type="tel" value={directoryForm.contactPhone} onChange={(e) => setDirectoryForm({ ...directoryForm, contactPhone: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="טלפון / וואטסאפ" />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-gray-700">איש קשר</label>
+                  <input type="text" value={directoryForm.contactName} onChange={(e) => setDirectoryForm({ ...directoryForm, contactName: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="לא חובה" />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-gray-700">פרטים נוספים</label>
+                  <textarea value={directoryForm.details} onChange={(e) => setDirectoryForm({ ...directoryForm, details: e.target.value })} className="h-28 w-full resize-none rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="שעות פתיחה, הערות, תיאור קצר ועוד" />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-gray-700">תמונה</label>
+                  <div className="space-y-2">
+                    <input type="text" value={directoryForm.imageUrl} onChange={(e) => setDirectoryForm({ ...directoryForm, imageUrl: e.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" placeholder="קישור לתמונה או העלאה" />
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-3 text-sm font-black text-gray-700 transition hover:bg-gray-200">
+                      <Upload size={16} /> העלה תמונה
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (url) => setDirectoryForm({ ...directoryForm, imageUrl: url }))} />
+                    </label>
+                  </div>
+                </div>
+                <button type="submit" className="flex items-center gap-2 rounded-lg bg-red-700 px-8 py-3 font-black text-white shadow-lg transition hover:bg-red-800"><Save size={18} /> פרסם פריט</button>
+              </form>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+              <h3 className="mb-4 text-lg font-black text-gray-800 sm:text-xl">פריטים פעילים במדריך ({directoryListings.length})</h3>
+              <div className="space-y-4">
+                {directoryListings.map((listing) => (
+                  <div key={listing.id} className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex gap-4">
+                      <div className="flex h-20 w-28 items-center justify-center overflow-hidden rounded-lg bg-gray-200 text-center text-xs font-black text-gray-500">{listing.imageUrl ? <img src={listing.imageUrl} alt={listing.title} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : 'ללא תמונה'}</div>
+                      <div>
+                        <p className="font-black text-gray-900">{listing.title || BOARD_LISTING_CATEGORY_LABELS[listing.listingCategory]}</p>
+                        <p className="text-sm font-bold text-red-700">{BOARD_LISTING_CATEGORY_LABELS[listing.listingCategory]}</p>
+                        {listing.location ? <p className="mt-1 text-sm text-gray-500">כתובת: {listing.location}</p> : null}
+                        {listing.contactPhone ? <p className="mt-1 text-sm text-gray-500" dir="ltr">{listing.contactPhone}</p> : null}
+                        {listing.details ? <p className="mt-1 text-sm text-gray-500 line-clamp-2">{listing.details}</p> : null}
+                      </div>
+                    </div>
+                    <button onClick={() => deleteBoardListing(listing.id).then(() => showToast('הפריט הוסר'))} className="rounded-lg p-2 text-red-500 transition hover:bg-red-50" title="מחק פריט"><Trash2 size={18} /></button>
                   </div>
                 ))}
               </div>

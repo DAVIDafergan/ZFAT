@@ -11,7 +11,7 @@ const boardListingSchema = new mongoose.Schema({
   location: { type: String, default: '' },
   dealType: {
     type: String,
-    enum: ['rent', 'sale'],
+    enum: ['rent', 'sale', 'vacation'],
     default: 'rent',
   },
   price: { type: Number, default: 0, min: 0 },
