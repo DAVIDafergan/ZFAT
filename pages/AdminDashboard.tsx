@@ -305,6 +305,21 @@ export const AdminDashboard: React.FC = () => {
     e.currentTarget.value = '';
     setFeedback({ uploadName: file.name, uploadState: 'uploading' });
 
+    // Prefer uploading the real file to S3 - keeps the post document small and avoids
+    // MongoDB's 16MB document limit, which is what causes silent save failures and
+    // unrendered images when several photos are embedded as base64 instead.
+    try {
+      const uploadedUrl = await api.uploadFile(file, 'articles');
+      onUploaded(uploadedUrl);
+      setFeedback({ uploadName: file.name, uploadState: 'ready' });
+      showToast(`התמונה "${file.name}" הועלתה ונשמרה בהצלחה`);
+      return;
+    } catch (s3Error) {
+      // S3 not configured on the server (or a transient failure) - fall back to the
+      // previous behavior so uploads still work, just less efficiently.
+      console.warn('[AdminDashboard] S3 upload failed, falling back to local compression', s3Error);
+    }
+
     try {
       const compressedUrl = await compressImage(file);
       onUploaded(compressedUrl);
