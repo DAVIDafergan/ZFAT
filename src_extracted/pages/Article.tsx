@@ -13,10 +13,12 @@ import { api } from '../services/api';
 
 export const Article: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { posts, ads, user, comments, addComment, toggleLikeComment, incrementViews, isLoading } = useApp();
+  const { posts, ads, user, comments, addComment, toggleLikeComment, incrementViews } = useApp();
   const [commentText, setCommentText] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'top'>('newest');
   const [commentSubmitted, setCommentSubmitted] = useState(false);
+  const [isPostingComment, setIsPostingComment] = useState(false);
+  const [commentError, setCommentError] = useState('');
   const [fallbackPost, setFallbackPost] = useState<Post | null>(null);
   const [fallbackChecked, setFallbackChecked] = useState(false);
 
@@ -28,15 +30,17 @@ export const Article: React.FC = () => {
   const post = posts.find((p) => p.id === id) || (fallbackPost?.id === id ? fallbackPost : undefined);
 
   // A brand-new or freshly shared article can momentarily be missing from the bulk
-  // posts list (server cache window, a slow/flaky connection, etc.). Before declaring
-  // "not found", try fetching it directly by id - this is a separate, uncached lookup.
+  // posts list (a recent-cache shortcut on app startup, a server cache window, a
+  // slow/flaky connection, etc.). Before declaring "not found", always try fetching
+  // it directly by id - this is a separate, uncached lookup that doesn't wait on the
+  // bulk list at all, so it resolves as fast as possible.
   useEffect(() => {
     setFallbackPost(null);
     setFallbackChecked(false);
   }, [id]);
 
   useEffect(() => {
-    if (!id || isLoading || post || fallbackChecked) return;
+    if (!id || post || fallbackChecked) return;
     let cancelled = false;
     api.fetchPostById(id)
       .then((found) => {
@@ -49,7 +53,7 @@ export const Article: React.FC = () => {
         if (!cancelled) setFallbackChecked(true);
       });
     return () => { cancelled = true; };
-  }, [id, isLoading, post, fallbackChecked]);
+  }, [id, post, fallbackChecked]);
 
   const inlineAd = ads.find(a => a.area === 'article_inline' && a.isActive);
   const bottomAd = ads.find(a => a.area === 'article_bottom' && a.isActive);
@@ -62,7 +66,7 @@ export const Article: React.FC = () => {
     return list;
   }, [articleComments, sortBy]);
 
-  if (!post && (isLoading || !fallbackChecked)) {
+  if (!post && !fallbackChecked) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center bg-[#f7f5f1]">
         <p className="text-lg font-black text-gray-600">טוען כתבה...</p>
@@ -156,9 +160,9 @@ export const Article: React.FC = () => {
     return <>{elements}</>;
   };
 
-  const handlePostComment = (e: React.FormEvent) => {
+  const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || isPostingComment) return;
     const newComment: Comment = {
       id: Date.now().toString(),
       postId: post.id,
@@ -169,11 +173,19 @@ export const Article: React.FC = () => {
       likes: 0,
       likedBy: [],
     };
-    addComment(newComment);
-    setCommentText('');
-    setSortBy('newest');
-    setCommentSubmitted(true);
-    setTimeout(() => setCommentSubmitted(false), 8000);
+    setIsPostingComment(true);
+    setCommentError('');
+    try {
+      await addComment(newComment);
+      setCommentText('');
+      setSortBy('newest');
+      setCommentSubmitted(true);
+      setTimeout(() => setCommentSubmitted(false), 8000);
+    } catch (error) {
+      setCommentError(error instanceof Error ? error.message : 'שליחת התגובה נכשלה. ודאו שיש חיבור לאינטרנט ונסו שוב.');
+    } finally {
+      setIsPostingComment(false);
+    }
   };
 
   return (
@@ -249,10 +261,15 @@ export const Article: React.FC = () => {
                 )}
                 <textarea value={commentText} onChange={(e) => setCommentText(e.target.value)} className="min-h-[120px] w-full resize-none rounded-[1.25rem] border border-gray-200 bg-gray-50 p-4 text-base outline-none transition focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100 sm:rounded-[1.5rem]" placeholder={user ? `היי ${user.name}, מה דעתך?` : 'כתוב תגובה...'} />
                 <div className="mt-3 flex justify-end">
-                  <button type="submit" disabled={!commentText.trim()} className="inline-flex items-center gap-2 rounded-full bg-red-700 px-6 py-3 text-sm font-black text-white shadow-md transition hover:bg-red-800 disabled:opacity-50">
-                    <Send size={16} /> פרסם תגובה
+                  <button type="submit" disabled={!commentText.trim() || isPostingComment} className="inline-flex items-center gap-2 rounded-full bg-red-700 px-6 py-3 text-sm font-black text-white shadow-md transition hover:bg-red-800 disabled:opacity-50">
+                    <Send size={16} /> {isPostingComment ? 'שולח...' : 'פרסם תגובה'}
                   </button>
                 </div>
+                {commentError && (
+                  <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                    {commentError}
+                  </div>
+                )}
                 {commentSubmitted && (
                   <div className="mt-3 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm font-bold text-yellow-800">
                     ✓ תגובתך התקבלה ותפורסם לאחר אישור המנהל.
@@ -278,7 +295,7 @@ export const Article: React.FC = () => {
                   </div>
                   <p className="mb-4 pr-12 text-base leading-8 text-gray-700">{comment.content}</p>
                   <div className="pr-12">
-                    <button onClick={() => toggleLikeComment(comment.id)} className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-bold transition ${isLiked ? 'bg-red-100 text-red-700' : 'bg-white text-gray-500 hover:text-red-600'}`} disabled={!user} title={!user ? 'התחבר כדי לעשות לייק' : ''}>
+                    <button onClick={() => { toggleLikeComment(comment.id).catch(() => {}); }} className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-bold transition ${isLiked ? 'bg-red-100 text-red-700' : 'bg-white text-gray-500 hover:text-red-600'}`} disabled={!user} title={!user ? 'התחבר כדי לעשות לייק' : ''}>
                       <ThumbsUp size={16} className={isLiked ? 'fill-current' : ''} />
                       <span>{comment.likes} לייקים</span>
                     </button>
