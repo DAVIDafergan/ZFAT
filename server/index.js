@@ -358,6 +358,7 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
     <meta name="twitter:card" content="summary_large_image" />
     <meta http-equiv="refresh" content="0; url=${articleUrl}" />
     <link rel="canonical" href="${shortUrl}" />
+    <script>window.location.replace(${JSON.stringify(articleUrl)});</script>
     <style>body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f3f4f6;color:#111827;margin:0}a{color:#b91c1c;font-weight:700}</style>
   </head>
   <body>
@@ -409,6 +410,7 @@ app.get('/share/article/:id', spaFallbackLimiter, async (req, res) => {
     <meta name="twitter:image" content="${image}" />
     <link rel="canonical" href="${shareUrl}" />
     <meta http-equiv="refresh" content="0; url=${articleUrl}" />
+    <script>window.location.replace(${JSON.stringify(articleUrl)});</script>
     <style>body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f3f4f6;color:#111827;margin:0}a{color:#b91c1c;font-weight:700}</style>
   </head>
   <body>
