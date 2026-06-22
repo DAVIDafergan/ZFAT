@@ -25,6 +25,7 @@ import {
   MessageCircle,
   CheckCircle,
   Search,
+  Loader2,
 } from 'lucide-react';
 import { getWeeklyPaperDateLabel, normalizeShareCode } from '../services/siteConfig';
 import { AD_PLACEMENTS, AD_PLACEMENT_MAP } from '../services/adPlacements';
@@ -149,6 +150,7 @@ export const AdminDashboard: React.FC = () => {
   const [mainImageFeedback, setMainImageFeedback] = useState<UploadFeedback>({ uploadName: '', uploadState: 'idle' });
   const [additionalPostImages, setAdditionalPostImages] = useState<ArticleImageDraft[]>([]);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [isSubmittingPost, setIsSubmittingPost] = useState(false);
   const [postsPage, setPostsPage] = useState(1);
   const [postSearchQuery, setPostSearchQuery] = useState('');
   const [editingAdId, setEditingAdId] = useState<string | null>(null);
@@ -317,6 +319,7 @@ export const AdminDashboard: React.FC = () => {
 
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingPost) return;
     const normalizedContent = normalizeArticleContent(newPost.content || '');
     if (!newPost.title || !normalizedContent) return;
     const normalizedExcerpt = (newPost.excerpt || '').trim() || stripHtml(normalizedContent).slice(0, 180);
@@ -330,53 +333,62 @@ export const AdminDashboard: React.FC = () => {
       ...normalizedAdditionalImages,
     ].filter((image) => Boolean(image.url));
     const nextTags = tagsInput.split(',').map((tag) => tag.trim()).filter(Boolean);
-    if (editingPostId) {
-      const current = posts.find((post) => post.id === editingPostId);
-      if (!current) return;
-      await updatePost(editingPostId, {
-        title: newPost.title,
-        excerpt: normalizedExcerpt,
-        content: normalizedContent,
-        category: newPost.category as Category,
-        author: current.author || user?.name || 'Admin',
-        imageUrl: primaryImageUrl,
-        images: nextImages,
-        tags: nextTags,
-        isFeatured: Boolean(newPost.isFeatured),
-        featuredAt: newPost.isFeatured ? new Date().toISOString() : undefined,
-        shortLinkCode: current.shortLinkCode || normalizeShareCode('', current.id),
-      });
-      showToast('הכתבה עודכנה בהצלחה');
-    } else {
-      const nowIso = new Date().toISOString();
-      const post: Post = {
-        id: Date.now().toString(),
-        title: newPost.title,
-        excerpt: normalizedExcerpt,
-        content: normalizedContent,
-        category: newPost.category as Category,
-        author: user?.name || 'Admin',
-        date: nowIso,
-        publishedAt: nowIso,
-        createdAt: nowIso,
-        imageUrl: primaryImageUrl,
-        images: nextImages,
-        tags: nextTags,
-        isFeatured: Boolean(newPost.isFeatured),
-        featuredAt: newPost.isFeatured ? nowIso : undefined,
-        views: 0,
-        shortLinkCode: normalizeShareCode('', Date.now().toString()),
-      };
-      await addPost(post);
-      showToast(`הכתבה פורסמה בהצלחה · קוד קצר ${post.shortLinkCode}`);
-    }
 
-    setNewPost({ title: '', category: Category.NEWS, excerpt: '', content: '', imageUrl: '', tags: [], isFeatured: false });
-    setTagsInput('');
-    setMainImagePhotographer('');
-    setMainImageFeedback({ uploadName: '', uploadState: 'idle' });
-    setAdditionalPostImages([]);
-    setEditingPostId(null);
+    setIsSubmittingPost(true);
+    try {
+      if (editingPostId) {
+        const current = posts.find((post) => post.id === editingPostId);
+        if (!current) return;
+        await updatePost(editingPostId, {
+          title: newPost.title,
+          excerpt: normalizedExcerpt,
+          content: normalizedContent,
+          category: newPost.category as Category,
+          author: current.author || user?.name || 'Admin',
+          imageUrl: primaryImageUrl,
+          images: nextImages,
+          tags: nextTags,
+          isFeatured: Boolean(newPost.isFeatured),
+          featuredAt: newPost.isFeatured ? new Date().toISOString() : undefined,
+          shortLinkCode: current.shortLinkCode || normalizeShareCode('', current.id),
+        });
+        showToast('הכתבה עודכנה בהצלחה');
+      } else {
+        const nowIso = new Date().toISOString();
+        const post: Post = {
+          id: Date.now().toString(),
+          title: newPost.title,
+          excerpt: normalizedExcerpt,
+          content: normalizedContent,
+          category: newPost.category as Category,
+          author: user?.name || 'Admin',
+          date: nowIso,
+          publishedAt: nowIso,
+          createdAt: nowIso,
+          imageUrl: primaryImageUrl,
+          images: nextImages,
+          tags: nextTags,
+          isFeatured: Boolean(newPost.isFeatured),
+          featuredAt: newPost.isFeatured ? nowIso : undefined,
+          views: 0,
+          shortLinkCode: normalizeShareCode('', Date.now().toString()),
+        };
+        await addPost(post);
+        showToast(`הכתבה פורסמה בהצלחה · קוד קצר ${post.shortLinkCode}`);
+      }
+
+      setNewPost({ title: '', category: Category.NEWS, excerpt: '', content: '', imageUrl: '', tags: [], isFeatured: false });
+      setTagsInput('');
+      setMainImagePhotographer('');
+      setMainImageFeedback({ uploadName: '', uploadState: 'idle' });
+      setAdditionalPostImages([]);
+      setEditingPostId(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'הפרסום נכשל. ודאו שיש חיבור תקין לאינטרנט ונסו שוב.';
+      showToast(`שגיאה: ${message}`);
+    } finally {
+      setIsSubmittingPost(false);
+    }
   };
 
   const startEditingPost = (post: Post) => {
@@ -851,11 +863,23 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <button type="submit" className="flex items-center gap-2 rounded-lg bg-red-700 px-8 py-3 font-black text-white shadow-lg transition hover:bg-red-800">
-                  <Save size={20} /> {editingPostId ? 'שמור שינויים' : 'פרסם כתבה'}
+                <button
+                  type="submit"
+                  disabled={isSubmittingPost}
+                  className="flex items-center gap-2 rounded-lg bg-red-700 px-8 py-3 font-black text-white shadow-lg transition hover:bg-red-800 disabled:cursor-not-allowed disabled:bg-red-400"
+                >
+                  {isSubmittingPost ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" /> {editingPostId ? 'שומר שינויים...' : 'מפרסם כתבה...'}
+                    </>
+                  ) : (
+                    <>
+                      <Save size={20} /> {editingPostId ? 'שמור שינויים' : 'פרסם כתבה'}
+                    </>
+                  )}
                 </button>
                 {editingPostId && (
-                  <button type="button" onClick={resetPostForm} className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-black text-gray-700 transition hover:bg-gray-50">
+                  <button type="button" onClick={resetPostForm} disabled={isSubmittingPost} className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-black text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
                     בטל עריכה
                   </button>
                 )}
