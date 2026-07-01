@@ -5,6 +5,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Lock, User, Loader2 } from 'lucide-react';
 
 export const Login: React.FC = () => {
+  const DEFAULT_SITE_REVEAL_AT = '2026-07-04T18:49:15.123Z';
+  const configuredRevealAt = `${(import.meta as any).env?.VITE_SITE_REVEAL_AT || ''}`.trim();
+  const revealAtMs = new Date(configuredRevealAt || DEFAULT_SITE_REVEAL_AT).getTime();
+  const isLaunchLocked = Number.isFinite(revealAtMs) && Date.now() < revealAtMs;
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -54,7 +58,9 @@ export const Login: React.FC = () => {
               <User size={38} />
             </div>
             <h2 className="text-3xl font-black tracking-tight text-gray-900 sm:text-[2.1rem]">התחברות לאתר</h2>
-            <p className="mt-2 text-sm font-medium text-gray-500">היכנסו לחשבון ותמשיכו להתעדכן בכל מה שחדש בעיר.</p>
+            <p className="mt-2 text-sm font-medium text-gray-500">
+              {isLaunchLocked ? 'בשלב זה הכניסה פתוחה למנהל האתר בלבד.' : 'היכנסו לחשבון ותמשיכו להתעדכן בכל מה שחדש בעיר.'}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="relative z-10 space-y-5">
@@ -101,14 +107,16 @@ export const Login: React.FC = () => {
             </button>
           </form>
         
-          <div className="relative z-10 mt-8 border-t border-red-100 pt-6 text-center">
-            <p className="text-sm text-gray-600">
-              עדיין אין לך משתמש?{' '}
-              <Link to="/register" className="font-bold text-red-700 hover:underline">
-                הירשם כאן
-              </Link>
-            </p>
-          </div>
+          {!isLaunchLocked && (
+            <div className="relative z-10 mt-8 border-t border-red-100 pt-6 text-center">
+              <p className="text-sm text-gray-600">
+                עדיין אין לך משתמש?{' '}
+                <Link to="/register" className="font-bold text-red-700 hover:underline">
+                  הירשם כאן
+                </Link>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

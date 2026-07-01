@@ -33,6 +33,70 @@ const Contact = lazy(() => import('./pages/Contact').then((module) => ({ default
 const SearchResults = lazy(() => import('./pages/SearchResults').then((module) => ({ default: module.SearchResults })));
 const WeeklyNewspaper = lazy(() => import('./pages/WeeklyNewspaper').then((module) => ({ default: module.WeeklyNewspaper })));
 const BoardPage = lazy(() => import('./pages/BoardPage').then((module) => ({ default: module.BoardPage })));
+const DEFAULT_SITE_REVEAL_AT = '2026-07-04T18:49:15.123Z';
+
+const resolveRevealAtMs = () => {
+  const configured = `${(import.meta as any).env?.VITE_SITE_REVEAL_AT || ''}`.trim();
+  const parsed = new Date(configured || DEFAULT_SITE_REVEAL_AT).getTime();
+  return Number.isNaN(parsed) ? new Date(DEFAULT_SITE_REVEAL_AT).getTime() : parsed;
+};
+
+const SITE_REVEAL_AT_MS = resolveRevealAtMs();
+
+const getRevealRemainingMs = () => {
+  if (!Number.isFinite(SITE_REVEAL_AT_MS)) return 0;
+  return Math.max(0, SITE_REVEAL_AT_MS - Date.now());
+};
+
+const LaunchCountdownScreen: React.FC<{ remainingMs: number }> = ({ remainingMs }) => {
+  const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const format = (value: number) => value.toString().padStart(2, '0');
+
+  return (
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#9d1117] px-4 text-white">
+      <div className="pointer-events-none absolute -right-24 top-8 h-72 w-72 rounded-full bg-white/15 blur-3xl" />
+      <div className="pointer-events-none absolute -left-20 bottom-0 h-80 w-80 rounded-full bg-black/35 blur-3xl" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.2),transparent_55%)]" />
+
+      <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center gap-6 text-center">
+        <img
+          src={LOGO_URL}
+          alt="צפת בתנופה"
+          className="h-20 w-auto animate-[fadeIn_0.85s_ease-out_both] drop-shadow-[0_16px_38px_rgba(0,0,0,0.35)] sm:h-28"
+        />
+        <h1 className="news-headline text-4xl leading-tight sm:text-6xl md:text-7xl animate-[fadeInUp_0.85s_ease-out_0.1s_both]">בקרוב...</h1>
+        <p className="text-base font-bold text-white/90 sm:text-xl animate-[fadeInUp_0.85s_ease-out_0.2s_both]">
+          אנחנו עולים עם האתר החדש בעוד:
+        </p>
+
+        <div className="mt-2 grid grid-cols-3 gap-3 sm:gap-5 animate-[fadeInUp_0.85s_ease-out_0.3s_both]">
+          {[
+            { label: 'שעות', value: format(hours) },
+            { label: 'דקות', value: format(minutes) },
+            { label: 'שניות', value: format(seconds) },
+          ].map((segment) => (
+            <div key={segment.label} className="min-w-[96px] rounded-2xl border border-white/20 bg-black/30 px-4 py-4 shadow-2xl backdrop-blur-sm sm:min-w-[130px] sm:px-6 sm:py-5">
+              <div className="text-4xl font-black tracking-tight sm:text-5xl">{segment.value}</div>
+              <div className="mt-1 text-xs font-bold text-white/80 sm:text-sm">{segment.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="absolute bottom-4 left-4 z-20">
+        <Link
+          to="/login"
+          className="rounded-full border border-white/35 bg-black/30 px-4 py-2 text-xs font-black text-white transition hover:bg-black/45"
+        >
+          התחברות מנהל
+        </Link>
+      </div>
+    </div>
+  );
+};
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
@@ -60,6 +124,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 }
 
 const App: React.FC = () => {
+  const [launchRemainingMs, setLaunchRemainingMs] = useState(getRevealRemainingMs());
   const [isLoading, setIsLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -83,6 +148,7 @@ const App: React.FC = () => {
   const [footerEmail, setFooterEmail] = useState('');
   const [footerNewsletterStatus, setFooterNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [shortPathHandled, setShortPathHandled] = useState(false);
+  const isSiteLocked = launchRemainingMs > 0 && user?.role !== 'admin';
 
   const mergeRegisteredUser = (incomingUser: User) => {
     setRegisteredUsers((prev) => {
@@ -91,6 +157,21 @@ const App: React.FC = () => {
       return [...nextUsers, incomingUser];
     });
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLaunchRemainingMs((previous) => {
+        if (previous <= 0) return 0;
+        const nextValue = getRevealRemainingMs();
+        if (nextValue <= 0) {
+          window.location.reload();
+          return 0;
+        }
+        return nextValue;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -131,8 +212,24 @@ const App: React.FC = () => {
 
       const hasToken = Boolean(localStorage.getItem('zfat_jwt'));
       const savedUser = localStorage.getItem('zfat_user');
+      let hasSavedAdminSession = false;
       if (hasToken && savedUser) {
-        try { setUser(JSON.parse(savedUser)); } catch (_) {}
+        try {
+          const parsedUser = JSON.parse(savedUser);
+          if (launchRemainingMs <= 0) {
+            setUser(parsedUser);
+          }
+          hasSavedAdminSession = parsedUser?.role === 'admin';
+        } catch (_) {}
+      }
+
+      if (launchRemainingMs > 0 && !hasSavedAdminSession) {
+        const skeletonEl = document.getElementById('app-skeleton');
+        if (skeletonEl) skeletonEl.style.display = 'none';
+        setIsLoading(false);
+        const splashEl = document.getElementById('splash-overlay');
+        if (splashEl) splashEl.style.animationPlayState = 'running';
+        return;
       }
 
       // 3. If no cache: wake-up ping so the server starts spinning up
@@ -310,13 +407,25 @@ const App: React.FC = () => {
       const authenticatedUser = await api.login(usernameOrEmail, password);
       setUser(authenticatedUser);
       if (authenticatedUser.role === 'admin') {
-        const [users, pending] = await Promise.all([
+        const [criticalData, secondaryData, users, pending] = await Promise.all([
+          api.fetchCriticalData(),
+          api.fetchSecondaryData(),
           api.fetchUsers(),
           api.fetchPendingComments(),
         ]);
+        setPosts(sortPostsByNewest(criticalData.posts));
+        setAds(criticalData.ads);
+        setComments(secondaryData.comments || []);
+        setWeeklyPapers(secondaryData.weeklyPapers || []);
+        setAgents(secondaryData.agents || []);
+        setBoardListings(secondaryData.boardListings || []);
         setRegisteredUsers(users);
         setPendingComments(pending);
       } else {
+        if (launchRemainingMs > 0) {
+          logout();
+          return { success: false, error: 'הגישה לאתר פתוחה כעת למנהל בלבד.' };
+        }
         mergeRegisteredUser(authenticatedUser);
       }
       return { success: true };
@@ -526,9 +635,9 @@ const App: React.FC = () => {
     }}>
       <HashRouter>
         <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-[#f7f5f1] text-gray-900">
-          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-1/2 focus:-translate-x-1/2 focus:rounded-full focus:bg-yellow-400 focus:px-4 focus:py-2 focus:font-black focus:text-black focus:z-[100] focus:shadow-xl">דלג לתוכן הראשי</a>
-          <Header onSearch={() => {}} user={user} />
-          <NewsTicker posts={tickerPosts} />
+          {!isSiteLocked && <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-1/2 focus:-translate-x-1/2 focus:rounded-full focus:bg-yellow-400 focus:px-4 focus:py-2 focus:font-black focus:text-black focus:z-[100] focus:shadow-xl">דלג לתוכן הראשי</a>}
+          {!isSiteLocked && <Header onSearch={() => {}} user={user} />}
+          {!isSiteLocked && <NewsTicker posts={tickerPosts} />}
 
           <main id="main-content" className="flex-1 focus:outline-none" tabIndex={-1}>
             <ErrorBoundary>
@@ -540,29 +649,38 @@ const App: React.FC = () => {
                 }
               >
                 <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/article/:id" element={<Article />} />
-                  <Route path="/category/:categoryName" element={<CategoryPage />} />
-                  <Route path="/weekly-paper" element={<WeeklyNewspaper />} />
-                  <Route path="/board" element={<BoardPage />} />
-                  <Route path="/admin" element={
-                    authLoading ? (
-                      <div className="flex min-h-[50vh] items-center justify-center">
-                        <Loader2 size={28} className="animate-spin text-red-700" />
-                      </div>
-                    ) : user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/login" replace />
-                  } />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/search" element={<SearchResults />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
+                  {isSiteLocked ? (
+                    <>
+                      <Route path="/login" element={<Login />} />
+                      <Route path="*" element={<LaunchCountdownScreen remainingMs={launchRemainingMs} />} />
+                    </>
+                  ) : (
+                    <>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/article/:id" element={<Article />} />
+                      <Route path="/category/:categoryName" element={<CategoryPage />} />
+                      <Route path="/weekly-paper" element={<WeeklyNewspaper />} />
+                      <Route path="/board" element={<BoardPage />} />
+                      <Route path="/admin" element={
+                        authLoading ? (
+                          <div className="flex min-h-[50vh] items-center justify-center">
+                            <Loader2 size={28} className="animate-spin text-red-700" />
+                          </div>
+                        ) : user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/login" replace />
+                      } />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/register" element={<Register />} />
+                      <Route path="/contact" element={<Contact />} />
+                      <Route path="/search" element={<SearchResults />} />
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </>
+                  )}
                 </Routes>
               </Suspense>
             </ErrorBoundary>
           </main>
 
-          <footer className="mt-12 bg-gradient-to-b from-[#0b1221] via-[#0f172a] to-[#05070f] py-16 text-gray-300">
+          {!isSiteLocked && <footer className="mt-12 bg-gradient-to-b from-[#0b1221] via-[#0f172a] to-[#05070f] py-16 text-gray-300">
             <div className="container mx-auto px-4">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm">
@@ -618,10 +736,10 @@ const App: React.FC = () => {
                 </a>
               </div>
             </div>
-          </footer>
+          </footer>}
 
-          <StickyWhatsappButton />
-          <AccessibilityWidget />
+          {!isSiteLocked && <StickyWhatsappButton />}
+          {!isSiteLocked && <AccessibilityWidget />}
         </div>
       </HashRouter>
     </AppContext.Provider>
