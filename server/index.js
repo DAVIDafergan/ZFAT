@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const Post = require('./models/Post');
 const User = require('./models/User');
 const { normalizeShortCode } = require('./utils/shortLink');
@@ -61,6 +62,9 @@ const hasDistIndex = fs.existsSync(distIndexPath);
 const defaultAdminName = (process.env.ADMIN_NAME || 'ניהול').trim();
 const defaultAdminEmail = (process.env.ADMIN_EMAIL || 'ZP@GMAIL.COM').trim().toLowerCase();
 const defaultAdminPassword = process.env.ADMIN_PASSWORD || '1234567';
+const DEFAULT_SITE_REVEAL_AT = '2026-07-04T18:49:15.123Z';
+const siteRevealAtRaw = `${process.env.SITE_REVEAL_AT || DEFAULT_SITE_REVEAL_AT}`.trim();
+const siteRevealAtMs = new Date(siteRevealAtRaw).getTime();
 const mongoStateLabels = {
   0: 'disconnected',
   1: 'connected',
@@ -191,6 +195,55 @@ const corsOptions = {
 app.use('/api', cors(corsOptions));
 
 app.use(express.json({ limit: '50mb' }));
+
+const isLaunchLocked = () => Number.isFinite(siteRevealAtMs) && Date.now() < siteRevealAtMs;
+
+const getUserFromAuthorizationHeader = (req) => {
+  const authHeader = `${req.get('authorization') || ''}`;
+  if (!authHeader.startsWith('Bearer ')) return null;
+  const token = authHeader.slice(7);
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch {
+    return null;
+  }
+};
+
+app.get('/api/launch-status', (req, res) => {
+  const launchLocked = isLaunchLocked();
+  const revealAt = Number.isFinite(siteRevealAtMs) ? new Date(siteRevealAtMs).toISOString() : null;
+  res.json({
+    launchLocked,
+    revealAt,
+    remainingMs: launchLocked && Number.isFinite(siteRevealAtMs) ? Math.max(0, siteRevealAtMs - Date.now()) : 0,
+  });
+});
+
+app.use((req, res, next) => {
+  if (!isLaunchLocked()) return next();
+  if (req.path === '/health') return next();
+  if (req.path === '/api/launch-status') return next();
+  if (req.path === '/api/auth/login' || req.path === '/api/auth/me') return next();
+
+  const authenticatedUser = getUserFromAuthorizationHeader(req);
+  if (authenticatedUser?.role === 'admin') {
+    req.user = req.user || authenticatedUser;
+    return next();
+  }
+
+  if (req.path.startsWith('/api')) {
+    return res.status(423).json({
+      message: 'האתר ייפתח בקרוב. ההתחברות פתוחה כעת למנהל בלבד.',
+      revealAt: Number.isFinite(siteRevealAtMs) ? new Date(siteRevealAtMs).toISOString() : null,
+    });
+  }
+
+  if (req.path.startsWith('/p/') || req.path.startsWith('/share/article/')) {
+    return res.status(423).send('האתר ייפתח בקרוב. הגישה לכתבות תתאפשר לאחר ההשקה.');
+  }
+
+  return next();
+});
 
 const getMongoStatus = () => ({
   state: mongoStateLabels[mongoose.connection.readyState] || 'unknown',

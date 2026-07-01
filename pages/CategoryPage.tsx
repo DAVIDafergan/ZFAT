@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { ManagedListingCard } from '../components/ManagedListingCard';
@@ -9,8 +9,10 @@ import { CATEGORY_COLORS, PAGE_CATEGORY_TO_MANAGED_BOARD_CATEGORY } from '../typ
 import { sortPostsByNewest } from '../services/postSort';
 
 export const CategoryPage: React.FC = () => {
+  const POSTS_BATCH_SIZE = 10;
   const { categoryName } = useParams<{ categoryName: string }>();
   const { posts, ads, boardListings } = useApp();
+  const [visiblePostsCount, setVisiblePostsCount] = useState(POSTS_BATCH_SIZE);
 
   const decodedCategory = categoryName ? decodeURIComponent(categoryName) : '';
   const categoryPosts = sortPostsByNewest(posts.filter((post) => post.category === decodedCategory));
@@ -21,10 +23,13 @@ export const CategoryPage: React.FC = () => {
   const headerBgClass = CATEGORY_COLORS[decodedCategory as keyof typeof CATEGORY_COLORS] || 'bg-gray-800';
   const topAd = ads.find((ad) => ad.area === 'category_top' && ad.isActive);
   const midAd = ads.find((ad) => ad.area === 'category_mid' && ad.isActive);
-  const splitIndex = Math.ceil(categoryPosts.length / 2);
-  const firstChunk = categoryPosts.slice(0, splitIndex);
-  const secondChunk = categoryPosts.slice(splitIndex);
+  const visiblePosts = categoryPosts.slice(0, visiblePostsCount);
+  const hasMorePosts = visiblePostsCount < categoryPosts.length;
   const isManagedListingCategoryPage = Boolean(managedListingCategory);
+
+  useEffect(() => {
+    setVisiblePostsCount(POSTS_BATCH_SIZE);
+  }, [decodedCategory, categoryPosts.length]);
 
   return (
     <div className="min-h-screen bg-[#f7f5f1] pb-14">
@@ -58,20 +63,28 @@ export const CategoryPage: React.FC = () => {
         ) : categoryPosts.length > 0 ? (
           <>
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 sm:gap-6">
-              {firstChunk.map((post) => (
+              {visiblePosts.map((post) => (
                 <PostCard key={post.id} post={post} />
               ))}
             </div>
 
-            <div className="my-10">
-              <AdUnit ad={midAd} className="w-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm" />
-            </div>
+            {categoryPosts.length > POSTS_BATCH_SIZE && (
+              <div className="my-10">
+                <AdUnit ad={midAd} className="w-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm" />
+              </div>
+            )}
 
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 sm:gap-6">
-              {secondChunk.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))}
-            </div>
+            {hasMorePosts && (
+              <div className="mt-10 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setVisiblePostsCount((prev) => prev + POSTS_BATCH_SIZE)}
+                  className="rounded-full bg-red-700 px-8 py-3 text-sm font-black text-white shadow-lg transition hover:bg-red-800"
+                >
+                  טען עוד
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <div className="col-span-full py-20 text-center text-gray-500">
