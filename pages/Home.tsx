@@ -42,7 +42,10 @@ export const Home: React.FC = () => {
     ? activeSliderPosts
     : (newestFeaturedPost ? [newestFeaturedPost] : sortedPosts.slice(0, 1));
   const sliderPostIds = new Set(sliderPosts.map((post) => post.id));
-  const latestPosts = sortedPosts.filter((post) => !sliderPostIds.has(post.id)).slice(0, 10);
+  const homepageFeedPosts = sortedPosts.filter((post) => !sliderPostIds.has(post.id));
+  const mainEditionPosts = homepageFeedPosts.slice(0, 10);
+  const mainEditionPostIds = new Set(mainEditionPosts.map((post) => post.id));
+  const moreHeadlinesPosts = homepageFeedPosts.filter((post) => !mainEditionPostIds.has(post.id)).slice(0, 10);
   const leaderboardAd = ads.find(a => a.area === 'leaderboard' && a.isActive);
   const sidebarAd = ads.find(a => a.area === 'sidebar' && a.isActive);
   const sidebarVideoAd = ads.find(a => a.area === 'sidebar_video' && a.isActive);
@@ -129,7 +132,7 @@ export const Home: React.FC = () => {
               <h2 className="news-headline text-2xl font-black leading-snug text-white sm:text-3xl">חדשות אחרונות</h2>
             </div>
             <div className="space-y-3 p-4 sm:space-y-4 sm:p-6">
-              {latestPosts.map((post, index) => (
+              {mainEditionPosts.map((post, index) => (
                 <Link key={post.id} to={`/article/${post.id}`} className="group block">
                   <article className="mobile-card-transition flex flex-row-reverse items-start gap-3 p-3 rounded-[1.2rem] border border-white/10 bg-[#101827] transition hover:border-red-500/40 hover:bg-[#131d2f] sm:[direction:ltr] sm:flex-row sm:items-start sm:gap-4 sm:p-4">
                     <div className="order-2 flex-1 min-w-0 text-right [direction:rtl] sm:order-2">
@@ -238,7 +241,7 @@ export const Home: React.FC = () => {
                 <Link to={`/category/${Category.NEWS}`} className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-black text-white/80 transition hover:bg-white/20">לכל המבזקים</Link>
               </div>
               <div className="grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-2">
-                {latestPosts.map((post, idx) => (
+                {moreHeadlinesPosts.map((post, idx) => (
                   <div key={`${post.id}-repeat`} className="animate-stagger-in" style={{ animationDelay: `${idx * 0.07}s` }}>
                     <PostCard post={post} layout="list" />
                   </div>
