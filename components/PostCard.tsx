@@ -57,7 +57,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, layout = 'grid' }) => 
     return (
       <article className="mobile-card-transition group flex min-h-[120px] h-auto flex-row-reverse gap-3 overflow-hidden border-b border-gray-200 bg-white py-2 transition sm:h-auto sm:gap-5 sm:rounded-[1.75rem] sm:border sm:border-gray-100 sm:bg-white/95 sm:p-4 sm:shadow-sm sm:hover:-translate-x-1 sm:hover:shadow-xl">
         {post.imageUrl && (
-          <Link to={`/article/${post.id}`} className="relative h-full w-[34%] shrink-0 overflow-hidden sm:aspect-[4/3] sm:w-[34%] sm:rounded-[1rem] sm:shadow-inner md:w-1/4 md:rounded-[1.25rem]">
+          <Link to={`/article/${post.id}`} className="relative aspect-[4/3] w-[34%] shrink-0 self-start overflow-hidden rounded-[0.85rem] sm:w-[34%] sm:rounded-[1rem] sm:shadow-inner md:w-1/4 md:rounded-[1.25rem]">
             <img src={post.imageUrl} alt={post.title} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
             <span className={`absolute top-0 right-0 hidden rounded-bl-2xl px-3 py-1 text-[10px] font-black text-white shadow-md sm:inline md:text-xs ${categoryColor}`}>{post.category}</span>
           </Link>
