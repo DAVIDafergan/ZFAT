@@ -242,9 +242,9 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     if (activeTab === 'site-data' && !siteStats) {
       setStatsLoading(true);
-      api.get('/api/stats/stats')
+      api.getSiteStats()
         .then(res => {
-          setSiteStats(res.data);
+          setSiteStats(res);
           setStatsLoading(false);
         })
         .catch(err => {

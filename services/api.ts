@@ -839,4 +839,14 @@ export const api = {
     setStorage('zfat_subscribers', [...subs, newSub]);
     return true;
   },
+
+  getSiteStats: async () => {
+    try {
+      const data = await fetchJson('/api/stats/stats', { headers: authHeaders() });
+      return data;
+    } catch (error) {
+      console.error('[API] Failed to fetch site stats:', error);
+      throw error;
+    }
+  },
 };
