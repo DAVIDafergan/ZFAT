@@ -26,8 +26,8 @@ router.get('/stats', statsLimiter, auth, adminOnly, async (req, res) => {
     // Get newsletter subscribers count
     const newsletterSubscribers = await NewsletterSubscriber.countDocuments({ isActive: true });
 
-    // Get total visits
-    const totalVisits = await SiteVisit.countDocuments({});
+    // Get total visits (offset by 1151 to start counter from that baseline)
+    const totalVisits = await SiteVisit.countDocuments({}) + 1151;
 
     // Get visits by month for the last 12 months
     const now = new Date();
