@@ -26,6 +26,8 @@ import {
   CheckCircle,
   Search,
   Loader2,
+  BarChart3,
+  Eye,
 } from 'lucide-react';
 import { getWeeklyPaperDateLabel, normalizeShareCode } from '../services/siteConfig';
 import { AD_PLACEMENTS, AD_PLACEMENT_MAP } from '../services/adPlacements';
@@ -33,7 +35,7 @@ import { api } from '../services/api';
 import { formatGregorianDate } from '../services/dateUtils';
 import { compressImage } from '../services/imageUtils';
 
-type TabKey = 'posts' | 'ads' | 'weekly-paper' | 'board' | 'directory' | 'users' | 'messages' | 'newsletter' | 'comments';
+type TabKey = 'posts' | 'ads' | 'weekly-paper' | 'board' | 'directory' | 'users' | 'messages' | 'newsletter' | 'comments' | 'site-data';
 
 const initialPaperForm = {
   title: '',
@@ -136,6 +138,8 @@ export const AdminDashboard: React.FC = () => {
   } = useApp();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabKey>('posts');
+  const [siteStats, setSiteStats] = useState<any>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [newPost, setNewPost] = useState<Partial<Post>>({
     title: '',
     category: Category.NEWS,
@@ -234,6 +238,23 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     setPostsPage(1);
   }, [normalizedPostSearch]);
+
+  useEffect(() => {
+    if (activeTab === 'site-data' && !siteStats) {
+      setStatsLoading(true);
+      api.get('/api/stats/stats')
+        .then(res => {
+          setSiteStats(res.data);
+          setStatsLoading(false);
+        })
+        .catch(err => {
+          console.error('Error fetching stats:', err);
+          setStatsLoading(false);
+          showToast('שגיאה בטעינת נתוני האתר');
+        });
+    }
+  }, [activeTab]);
+
 
   const handleLogout = () => {
     logout();
@@ -657,6 +678,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const tabs: Array<{ key: TabKey; label: string; icon: React.ComponentType<{ size?: number }> }> = [
+    { key: 'site-data', label: 'נתוני אתר', icon: BarChart3 },
     { key: 'posts', label: 'הוספת כתבה', icon: Plus },
     { key: 'ads', label: 'באנרים', icon: Layout },
     { key: 'weekly-paper', label: 'העיתון השבועי', icon: Newspaper },
@@ -688,6 +710,100 @@ export const AdminDashboard: React.FC = () => {
             </button>
           ))}
         </div>
+
+        {activeTab === 'site-data' && (
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+            <div className="mb-6">
+              <h2 className="text-xl font-black text-gray-800 sm:text-2xl">נתוני אתר</h2>
+            </div>
+            
+            {statsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 size={32} className="animate-spin text-red-600" />
+              </div>
+            ) : siteStats ? (
+              <div className="space-y-8">
+                {/* Metrics Grid */}
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-sm font-bold text-gray-600">סך הכל כניסות לאתר</span>
+                      <Eye size={20} className="text-blue-600" />
+                    </div>
+                    <p className="text-3xl font-black text-blue-900">{siteStats.totalVisits.toLocaleString('he-IL')}</p>
+                  </div>
+                  
+                  <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-green-50 to-green-100 p-6">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-sm font-bold text-gray-600">כתבות פעילות</span>
+                      <FileText size={20} className="text-green-600" />
+                    </div>
+                    <p className="text-3xl font-black text-green-900">{siteStats.activeArticles}</p>
+                  </div>
+                  
+                  <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-purple-50 to-purple-100 p-6">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-sm font-bold text-gray-600">תגובות באתר</span>
+                      <MessageCircle size={20} className="text-purple-600" />
+                    </div>
+                    <p className="text-3xl font-black text-purple-900">{siteStats.totalComments}</p>
+                  </div>
+                  
+                  <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-orange-50 to-orange-100 p-6">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-sm font-bold text-gray-600">מנויי ניוזלטר</span>
+                      <Mail size={20} className="text-orange-600" />
+                    </div>
+                    <p className="text-3xl font-black text-orange-900">{siteStats.newsletterSubscribers}</p>
+                  </div>
+                </div>
+
+                {/* Visits by Month */}
+                <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+                  <h3 className="mb-4 text-lg font-black text-gray-800">כניסות לפי חודש</h3>
+                  <div className="space-y-2">
+                    {siteStats.visitsByMonth.length > 0 ? (
+                      siteStats.visitsByMonth.map((month: any) => (
+                        <div key={`${month.year}-${month.month}`} className="flex items-center justify-between rounded-lg bg-white p-3">
+                          <span className="font-bold text-gray-700">{month.monthLabel}</span>
+                          <div className="flex items-center gap-3">
+                            <div className="h-6 rounded bg-gradient-to-r from-red-400 to-red-600" style={{ width: `${Math.min((month.count / (siteStats.visitsByMonth[0]?.count || 1)) * 200, 200)}px` }}></div>
+                            <span className="w-16 text-right font-bold text-gray-800">{month.count.toLocaleString('he-IL')}</span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center text-gray-500">אין נתונים של כניסות עדיין</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Top Articles */}
+                {siteStats.topArticles.length > 0 && (
+                  <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+                    <h3 className="mb-4 text-lg font-black text-gray-800">כתבות מובילות לפי צפיות</h3>
+                    <div className="space-y-2">
+                      {siteStats.topArticles.map((article: any, idx: number) => (
+                        <div key={article._id} className="flex items-center gap-3 rounded-lg bg-white p-3">
+                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-sm font-bold text-white">{idx + 1}</span>
+                          <div className="flex-1 truncate">
+                            <p className="truncate font-bold text-gray-800">{article.title}</p>
+                            <p className="text-xs text-gray-500">{new Date(article.publishedAt).toLocaleDateString('he-IL')}</p>
+                          </div>
+                          <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-blue-100 px-3 py-1 text-sm font-bold text-blue-800">
+                            <Eye size={16} /> {article.views}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">לא הצלחנו לטעון את נתוני האתר</div>
+            )}
+          </div>
+        )}
 
         {activeTab === 'posts' && (
           <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
@@ -934,21 +1050,26 @@ export const AdminDashboard: React.FC = () => {
                       <p className="font-black text-gray-900">{post.title}</p>
                       <p className="mt-1 text-sm font-bold text-red-700">{post.category} · {formatGregorianDate(post.date)}</p>
                       <p className="mt-2 line-clamp-2 text-sm text-gray-600">{post.excerpt || 'ללא תקציר'}</p>
-                      {isActiveInSlider && (
-                        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-black text-green-800">
-                          ✦ בסליידר הראשי · {hoursLeft > 1 ? `נותרו ${hoursLeft} שעות` : 'פחות משעה'}
-                        </p>
-                      )}
-                      {isPinnedUntilReplacement && (
-                        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-black text-amber-800">
-                          נשארת ככותרת ראשית עד שתעלה כותרת חדשה
-                        </p>
-                      )}
-                      {post.isFeatured && !isActiveInSlider && !isPinnedUntilReplacement && (
-                        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-black text-gray-600">
-                          פג תוקף הסליידר והכותרת תוסר
-                        </p>
-                      )}
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-black text-blue-800">
+                          <Eye size={12} /> {post.views || 0} צפיות
+                        </span>
+                        {isActiveInSlider && (
+                          <p className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-black text-green-800">
+                            ✦ בסליידר הראשי · {hoursLeft > 1 ? `נותרו ${hoursLeft} שעות` : 'פחות משעה'}
+                          </p>
+                        )}
+                        {isPinnedUntilReplacement && (
+                          <p className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-black text-amber-800">
+                            נשארת ככותרת ראשית עד שתעלה כותרת חדשה
+                          </p>
+                        )}
+                        {post.isFeatured && !isActiveInSlider && !isPinnedUntilReplacement && (
+                          <p className="inline-flex items-center gap-1 rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-black text-gray-600">
+                            פג תוקף הסליידר והכותרת תוסר
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => startEditingPost(post)} className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-black text-gray-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700">
