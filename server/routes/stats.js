@@ -5,13 +5,14 @@ const Post = require('../models/Post');
 const Comment = require('../models/Comment');
 const NewsletterSubscriber = require('../models/NewsletterSubscriber');
 const SiteVisit = require('../models/SiteVisit');
-const adminOnly = require('../middleware/adminOnly');
+const auth = require('../middleware/auth');
+const { adminOnly } = require('../middleware/adminOnly');
 
 const statsLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי בקשות לסטטיסטיקות' } });
 const visitLimiter = rateLimit({ windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי בקשות לרישום ביקורים' } });
 
 // Get site statistics (admin only)
-router.get('/stats', statsLimiter, adminOnly(), async (req, res) => {
+router.get('/stats', statsLimiter, auth, adminOnly, async (req, res) => {
   try {
     // Get active articles count (where isFeatured is true)
     const activeArticles = await Post.countDocuments({ isFeatured: true });
