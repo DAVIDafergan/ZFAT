@@ -1,13 +1,17 @@
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const Post = require('../models/Post');
 const Comment = require('../models/Comment');
 const NewsletterSubscriber = require('../models/NewsletterSubscriber');
 const SiteVisit = require('../models/SiteVisit');
 const adminOnly = require('../middleware/adminOnly');
 
+const statsLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי בקשות לסטטיסטיקות' } });
+const visitLimiter = rateLimit({ windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי בקשות לרישום ביקורים' } });
+
 // Get site statistics (admin only)
-router.get('/stats', adminOnly(), async (req, res) => {
+router.get('/stats', statsLimiter, adminOnly(), async (req, res) => {
   try {
     // Get active articles count (where isFeatured is true)
     const activeArticles = await Post.countDocuments({ isFeatured: true });
@@ -82,7 +86,7 @@ router.get('/stats', adminOnly(), async (req, res) => {
 });
 
 // Log a visit (called when article is viewed)
-router.post('/visits', async (req, res) => {
+router.post('/visits', visitLimiter, async (req, res) => {
   try {
     const { postId } = req.body;
 
