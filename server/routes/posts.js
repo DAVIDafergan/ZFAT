@@ -81,12 +81,24 @@ router.put('/:id', mutateLimiter, auth, editorOrAbove, validateObjectId(), async
       ...(req.body.shortLinkCode ? { shortLinkCode: normalizeShortCode(req.body.shortLinkCode, req.params.id) } : {}),
     };
     delete updates.date;
-    delete updates.publishedAt;
     delete updates.published_at;
     delete updates.createdAt;
     delete updates.created_at;
     delete updates.updatedAt;
     delete updates.updated_at;
+
+    // Allow explicit publishedAt update (for reordering posts); validate and coerce
+    if (updates.publishedAt) {
+      const parsed = new Date(updates.publishedAt);
+      if (Number.isNaN(parsed.getTime())) {
+        delete updates.publishedAt;
+      } else {
+        updates.publishedAt = parsed;
+      }
+    } else {
+      delete updates.publishedAt;
+    }
+
     const post = await Post.findById(objectId);
     if (!post) return res.status(404).json({ message: 'כתבה לא נמצאה' });
 

@@ -386,6 +386,7 @@ export const AdminDashboard: React.FC = () => {
           tags: nextTags,
           isFeatured: Boolean(newPost.isFeatured),
           featuredAt: newPost.isFeatured ? new Date().toISOString() : undefined,
+          publishedAt: newPost.publishedAt || undefined,
           shortLinkCode: current.shortLinkCode || normalizeShareCode('', current.id),
         });
         showToast('הכתבה עודכנה בהצלחה');
@@ -436,6 +437,7 @@ export const AdminDashboard: React.FC = () => {
       imageUrl: post.imageUrl,
       tags: post.tags,
       isFeatured: post.isFeatured,
+      publishedAt: post.publishedAt || post.date,
     });
     const existingImages = Array.isArray(post.images) ? post.images.filter((image) => image.url) : [];
     const fallbackMain = post.imageUrl ? [{ url: post.imageUrl, photographer: '' }] : [];
@@ -824,6 +826,19 @@ export const AdminDashboard: React.FC = () => {
                   </select>
                 </div>
               </div>
+
+              {editingPostId && (
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-gray-700">תאריך ושעת פרסום <span className="font-normal text-gray-500">(שנה כדי להזיז את הכתבה לראש הקטגוריה)</span></label>
+                  <input
+                    type="datetime-local"
+                    value={newPost.publishedAt ? (() => { const d = new Date(newPost.publishedAt); return Number.isNaN(d.getTime()) ? '' : new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); })() : ''}
+                    onChange={(e) => setNewPost({ ...newPost, publishedAt: e.target.value ? new Date(e.target.value).toISOString() : newPost.publishedAt })}
+                    className="rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
+                    dir="ltr"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="mb-2 block text-sm font-bold text-gray-700">תקציר</label>
