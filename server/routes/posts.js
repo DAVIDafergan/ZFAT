@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const Post = require('../models/Post');
+const SiteVisit = require('../models/SiteVisit');
 const auth = require('../middleware/auth');
 const { editorOrAbove, adminOnly } = require('../middleware/adminOnly');
 const { generateShortCode, normalizeShortCode } = require('../utils/shortLink');
@@ -123,6 +124,19 @@ router.patch('/:id/views', listLimiter, validateObjectId(), async (req, res) => 
   try {
     const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
     const post = await Post.findByIdAndUpdate(objectId, { $inc: { views: 1 } }, { new: true });
+    
+    // Log the visit
+    try {
+      const visit = new SiteVisit({
+        postId: objectId,
+        visitedAt: new Date()
+      });
+      await visit.save();
+    } catch (visitErr) {
+      console.error('Error logging visit:', visitErr);
+      // Don't fail the response if visit logging fails
+    }
+    
     res.json({ views: post?.views || 0 });
   } catch (err) {
     res.status(500).json({ message: err.message });

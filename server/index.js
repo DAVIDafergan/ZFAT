@@ -291,6 +291,7 @@ app.use('/api/weekly-papers', require('./routes/weeklyPapers'));
 app.use('/api/agents', require('./routes/agents'));
 app.use('/api/board-listings', require('./routes/boardListings'));
 app.use('/api/uploads', require('./routes/uploads'));
+app.use('/api/stats', require('./routes/stats'));
 
 app.get('/health', (req, res) => {
   const database = getMongoStatus();
