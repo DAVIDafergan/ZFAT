@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "postinstall": "npm --prefix server install",
+    "prestart": "npm run build",
     "start": "node server/index.js",
     "migrate:images": "node server/scripts/migrateBase64ImagesToS3.js"
   },
