@@ -23,9 +23,9 @@ export const API_URL = (() => {
 })();
 
 export const SITE_URL = (() => {
-  const configured = readEnv('VITE_PUBLIC_SITE_URL') || readEnv('VITE_API_URL');
+  const configured = readEnv('VITE_PUBLIC_SITE_URL');
   if (configured) return trimSlash(configured);
-  return getBrowserOrigin() || DEFAULT_SITE_URL;
+  return DEFAULT_SITE_URL;
 })();
 
 export const USE_SERVER = readEnv('VITE_USE_SERVER') !== 'false';

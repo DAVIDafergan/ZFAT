@@ -105,8 +105,6 @@ const normalizeArticleContent = (value: string) => {
     .join('');
 };
 
-const SLIDER_WINDOW_MS = 24 * 60 * 60 * 1000;
-
 export const AdminDashboard: React.FC = () => {
   const {
     user,
@@ -206,16 +204,6 @@ export const AdminDashboard: React.FC = () => {
     });
   }, [posts, normalizedPostSearch]);
   const totalPostsPages = Math.max(1, Math.ceil(filteredPosts.length / POSTS_PAGE_SIZE));
-  const newestFeaturedPostId = useMemo(() => {
-    const featuredPosts = posts
-      .filter((post) => post.isFeatured)
-      .sort((a, b) => {
-        const aTime = Date.parse(a.featuredAt || a.createdAt || a.date || '') || 0;
-        const bTime = Date.parse(b.featuredAt || b.createdAt || b.date || '') || 0;
-        return bTime - aTime;
-      });
-    return featuredPosts[0]?.id || null;
-  }, [posts]);
   const realEstateListings = useMemo(
     () => boardListings.filter((listing) => listing.listingCategory === 'real_estate'),
     [boardListings],
@@ -1054,11 +1042,6 @@ export const AdminDashboard: React.FC = () => {
 
               <div className="space-y-4">
                 {paginatedPosts.map((post) => {
-                  const featuredMs = post.featuredAt ? new Date(post.featuredAt).getTime() : 0;
-                  const msRemaining = post.isFeatured && featuredMs ? featuredMs + SLIDER_WINDOW_MS - Date.now() : 0;
-                  const isActiveInSlider = msRemaining > 0;
-                  const isPinnedUntilReplacement = post.isFeatured && !isActiveInSlider && newestFeaturedPostId === post.id;
-                  const hoursLeft = isActiveInSlider ? Math.ceil(msRemaining / (60 * 60 * 1000)) : 0;
                   return (
                   <div key={post.id} className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
                     <div className="min-w-[220px] flex-1">
@@ -1069,21 +1052,9 @@ export const AdminDashboard: React.FC = () => {
                         <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-black text-blue-800">
                           <Eye size={12} /> {post.views || 0} צפיות
                         </span>
-                        {isActiveInSlider && (
-                          <p className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-black text-green-800">
-                            ✦ בסליידר הראשי · {hoursLeft > 1 ? `נותרו ${hoursLeft} שעות` : 'פחות משעה'}
-                          </p>
-                        )}
-                        {isPinnedUntilReplacement && (
-                          <p className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-black text-amber-800">
-                            נשארת ככותרת ראשית עד שתעלה כותרת חדשה
-                          </p>
-                        )}
-                        {post.isFeatured && !isActiveInSlider && !isPinnedUntilReplacement && (
-                          <p className="inline-flex items-center gap-1 rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-black text-gray-600">
-                            פג תוקף הסליידר והכותרת תוסר
-                          </p>
-                        )}
+                        <p className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-black ${post.isFeatured ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>
+                          {post.isFeatured ? 'מוצגת בסליידר' : 'לא מוצגת'}
+                        </p>
                       </div>
                     </div>
                     <div className="flex gap-2">

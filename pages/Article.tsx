@@ -1,28 +1,75 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { CATEGORY_COLORS, Comment } from '../types';
+import { CATEGORY_COLORS, Comment, Post } from '../types';
 import { Calendar, User, Tag, ThumbsUp, MessageCircle, Send, ArrowUpDown } from 'lucide-react';
 import { AdUnit } from '../components/AdUnit';
 import { PostCard } from '../components/PostCard';
 import { ShareButtons } from '../components/ShareButtons';
+import { api } from '../services/api';
 import { buildShareUrl } from '../services/siteConfig';
 import { formatGregorianDate, formatHebrewDate } from '../services/dateUtils';
 import { sortPostsByNewest } from '../services/postSort';
 
 export const Article: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { posts, ads, user, comments, addComment, toggleLikeComment, incrementViews, isLoading } = useApp();
+  const { posts, ads, user, comments, addComment, toggleLikeComment, incrementViews } = useApp();
   const [commentText, setCommentText] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'top'>('newest');
   const [commentSubmitted, setCommentSubmitted] = useState(false);
+  const [fallbackPost, setFallbackPost] = useState<Post | null>(null);
+  const [isFallbackLoading, setIsFallbackLoading] = useState(false);
+  const [fallbackChecked, setFallbackChecked] = useState(false);
+  const [fallbackError, setFallbackError] = useState(false);
 
   useEffect(() => {
-    if (id) incrementViews(id);
     window.scrollTo(0, 0);
   }, [id]);
 
-  const post = posts.find((p) => p.id === id);
+  const post = posts.find((p) => p.id === id) || (fallbackPost?.id === id ? fallbackPost : undefined);
+
+  useEffect(() => {
+    setFallbackPost(null);
+    setIsFallbackLoading(false);
+    setFallbackChecked(false);
+    setFallbackError(false);
+  }, [id]);
+
+  useEffect(() => {
+    if (!id || post) {
+      setIsFallbackLoading(false);
+      if (post) setFallbackChecked(true);
+      return;
+    }
+
+    let cancelled = false;
+    setIsFallbackLoading(true);
+    setFallbackError(false);
+    api.fetchPostById(id)
+      .then((found) => {
+        if (cancelled) return;
+        setFallbackPost(found);
+        setFallbackChecked(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setFallbackChecked(true);
+        setFallbackError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setIsFallbackLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, post]);
+
+  useEffect(() => {
+    if (!post?.id) return;
+    incrementViews(post.id);
+  }, [incrementViews, post?.id]);
+
   const inlineAd = ads.find(a => a.area === 'article_inline' && a.isActive);
   const bottomAd = ads.find(a => a.area === 'article_bottom' && a.isActive);
   const articleComments = comments.filter(c => c.postId === post?.id);
@@ -34,10 +81,24 @@ export const Article: React.FC = () => {
     return list;
   }, [articleComments, sortBy]);
 
-  if (!post && isLoading) {
+  if (!post && (isFallbackLoading || !fallbackChecked)) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center bg-[#f7f5f1]">
         <p className="text-lg font-black text-gray-600">טוען כתבה...</p>
+      </div>
+    );
+  }
+
+  if (!post && fallbackError) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center bg-[#f7f5f1] px-4">
+        <div className="rounded-2xl border border-gray-200 bg-white px-6 py-8 text-center shadow-sm">
+          <h1 className="text-2xl font-black text-gray-900">לא ניתן לטעון את הכתבה</h1>
+          <p className="mt-3 text-sm font-bold text-gray-500">אירעה שגיאה זמנית בטעינת הכתבה. נסו שוב בעוד רגע.</p>
+          <Link to="/" className="mt-5 inline-flex rounded-full bg-red-700 px-5 py-2.5 text-sm font-black text-white hover:bg-red-800">
+            חזרה לעמוד הבית
+          </Link>
+        </div>
       </div>
     );
   }
