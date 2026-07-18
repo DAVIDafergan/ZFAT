@@ -168,6 +168,42 @@ const sendShareErrorPage = (res, statusCode, message) => sendSimpleHtmlPage({
   linkLabel: 'חזרה לעמוד הבית',
 });
 
+const sendShareRedirectPage = ({ res, title, description, image, pageUrl, redirectUrl }) => {
+  const safeTitle = escapeHtml(title);
+  const safeDescription = escapeHtml(description);
+  const safeImage = escapeHtml(image);
+  const safePageUrl = escapeHtml(pageUrl);
+  const safeRedirectUrl = escapeHtml(redirectUrl);
+  res.send(`<!DOCTYPE html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <title>${safeTitle}</title>
+    <meta name="description" content="${safeDescription}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:locale" content="he_IL" />
+    <meta property="og:site_name" content="צפת בתנופה" />
+    <meta property="og:title" content="${safeTitle}" />
+    <meta property="og:description" content="${safeDescription}" />
+    <meta property="og:image" content="${safeImage}" />
+    <meta property="og:url" content="${safePageUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${safeTitle}" />
+    <meta name="twitter:description" content="${safeDescription}" />
+    <meta name="twitter:image" content="${safeImage}" />
+    <meta http-equiv="refresh" content="0; url=${safeRedirectUrl}" />
+    <link rel="canonical" href="${safePageUrl}" />
+    <script>window.location.replace(${JSON.stringify(redirectUrl)});</script>
+    <style>body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f3f4f6;color:#111827;margin:0}a{color:#b91c1c;font-weight:700}</style>
+  </head>
+  <body>
+    <main>
+      <p>מעבירים אתכם לכתבה… <a href="${safeRedirectUrl}">לחצו כאן אם לא הופניתם אוטומטית</a></p>
+    </main>
+  </body>
+</html>`);
+};
+
 const shortLinkLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 60,
@@ -414,41 +450,16 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
 
     if (!post) return sendShareErrorPage(res, 404, 'הקישור לכתבה לא נמצא. מעבירים אתכם לעמוד הבית.');
 
-    const title = escapeHtml(post.title || 'צפת בתנופה');
-    const description = escapeHtml(post.excerpt || 'כתבה מתוך אתר צפת בתנופה');
-    const image = escapeHtml(resolveShareImage({
+    const title = post.title || 'צפת בתנופה';
+    const description = post.excerpt || 'כתבה מתוך אתר צפת בתנופה';
+    const image = resolveShareImage({
       rawImage: resolvePostPrimaryImage(post),
       postId: post._id,
       fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
-    }));
+    });
     const articleUrl = `${publicSiteUrl}/#/article/${post._id}`;
     const shortUrl = `${publicSiteUrl}/p/${requestedCode || rawCode}`;
-
-    res.send(`<!DOCTYPE html>
-<html lang="he" dir="rtl">
-  <head>
-    <meta charset="utf-8" />
-    <title>${title}</title>
-    <meta name="description" content="${description}" />
-    <meta property="og:type" content="article" />
-    <meta property="og:locale" content="he_IL" />
-    <meta property="og:site_name" content="צפת בתנופה" />
-    <meta property="og:title" content="${title}" />
-    <meta property="og:description" content="${description}" />
-    <meta property="og:image" content="${image}" />
-    <meta property="og:url" content="${shortUrl}" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta http-equiv="refresh" content="0; url=${articleUrl}" />
-    <link rel="canonical" href="${shortUrl}" />
-    <script>window.location.replace(${JSON.stringify(articleUrl)});</script>
-    <style>body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f3f4f6;color:#111827;margin:0}a{color:#b91c1c;font-weight:700}</style>
-  </head>
-  <body>
-    <main>
-      <p>מעבירים אתכם לכתבה… <a href="${articleUrl}">לחצו כאן אם לא הופניתם אוטומטית</a></p>
-    </main>
-  </body>
-</html>`);
+    sendShareRedirectPage({ res, title, description, image, pageUrl: shortUrl, redirectUrl: articleUrl });
   } catch (err) {
     sendShareErrorPage(res, 500, 'אירעה שגיאה בפתיחת הקישור. מעבירים אתכם לעמוד הבית.');
   }
@@ -462,47 +473,18 @@ app.get('/share/article/:id', spaFallbackLimiter, async (req, res) => {
     const post = await Post.findById(req.params.id).lean();
     if (!post) return sendShareErrorPage(res, 404, 'הכתבה לא נמצאה. מעבירים אתכם לעמוד הבית.');
 
-    const title = escapeHtml(post.title || 'צפת בתנופה');
-    const description = escapeHtml(post.excerpt || 'כתבה מתוך אתר צפת בתנופה');
-    const image = escapeHtml(resolveShareImage({
+    const title = post.title || 'צפת בתנופה';
+    const description = post.excerpt || 'כתבה מתוך אתר צפת בתנופה';
+    const image = resolveShareImage({
       rawImage: resolvePostPrimaryImage(post),
       postId: post._id,
       fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
-    }));
+    });
     const articleUrl = `${publicSiteUrl}/#/article/${post._id}`;
     const shareUrl = `${publicSiteUrl}/share/article/${post._id}`;
 
     res.setHeader('Cache-Control', 'no-cache');
-    res.send(`<!DOCTYPE html>
-<html lang="he" dir="rtl">
-  <head>
-    <meta charset="utf-8" />
-    <title>${title}</title>
-    <meta name="description" content="${description}" />
-    <meta property="og:type" content="article" />
-    <meta property="og:locale" content="he_IL" />
-    <meta property="og:site_name" content="צפת בתנופה" />
-    <meta property="og:title" content="${title}" />
-    <meta property="og:description" content="${description}" />
-    <meta property="og:image" content="${image}" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:url" content="${shareUrl}" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${title}" />
-    <meta name="twitter:description" content="${description}" />
-    <meta name="twitter:image" content="${image}" />
-    <link rel="canonical" href="${shareUrl}" />
-    <meta http-equiv="refresh" content="0; url=${articleUrl}" />
-    <script>window.location.replace(${JSON.stringify(articleUrl)});</script>
-    <style>body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f3f4f6;color:#111827;margin:0}a{color:#b91c1c;font-weight:700}</style>
-  </head>
-  <body>
-    <main>
-      <p>מעבירים אתכם לכתבה… <a href="${articleUrl}">לחצו כאן אם לא הופניתם אוטומטית</a></p>
-    </main>
-  </body>
-</html>`);
+    sendShareRedirectPage({ res, title, description, image, pageUrl: shareUrl, redirectUrl: articleUrl });
   } catch (err) {
     sendShareErrorPage(res, 500, 'אירעה שגיאה בטעינת הכתבה. מעבירים אתכם לעמוד הבית.');
   }
