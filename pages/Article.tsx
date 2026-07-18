@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { CATEGORY_COLORS, Comment, Post } from '../types';
@@ -21,6 +21,7 @@ export const Article: React.FC = () => {
   const [isFallbackLoading, setIsFallbackLoading] = useState(false);
   const [fallbackChecked, setFallbackChecked] = useState(false);
   const [fallbackError, setFallbackError] = useState(false);
+  const lastCountedId = useRef<string | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -67,6 +68,8 @@ export const Article: React.FC = () => {
 
   useEffect(() => {
     if (!post?.id) return;
+    if (lastCountedId.current === post.id) return;
+    lastCountedId.current = post.id;
     incrementViews(post.id);
   }, [incrementViews, post?.id]);
 
