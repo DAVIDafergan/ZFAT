@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Header } from './components/Header';
 import { NewsTicker } from './components/NewsTicker';
@@ -348,10 +348,10 @@ const App: React.FC = () => {
     setPosts((prev) => prev.filter((post) => post.id !== id));
   };
 
-  const incrementViews = (id: string) => {
+  const incrementViews = useCallback((id: string) => {
     api.incrementViews(id);
     setPosts((prev) => prev.map((post) => post.id === id ? { ...post, views: (post.views || 0) + 1 } : post));
-  };
+  }, []);
 
   const updateAd = async (id: string, updates: Partial<Ad>) => {
     await api.updateAd(id, updates);
