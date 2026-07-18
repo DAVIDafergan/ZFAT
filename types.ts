@@ -14,7 +14,9 @@ export enum Category {
   KOSHER_RESTAURANTS = 'מסעדות כשרות',
   MIKVAOT = 'מקוואות',
   ATTRACTIONS = 'אטרקציות',
-  SIMCHAOT = 'שמחות'
+  SIMCHAOT = 'שמחות',
+  OPINIONS = 'דעות',
+  EDUCATION = 'חינוך'
 }
 
 export interface PostImage {
@@ -179,6 +181,8 @@ export const CATEGORY_COLORS: Record<Category, string> = {
   [Category.MIKVAOT]: 'bg-sky-700',
   [Category.ATTRACTIONS]: 'bg-violet-600',
   [Category.SIMCHAOT]: 'bg-pink-600',
+  [Category.OPINIONS]: 'bg-amber-600',
+  [Category.EDUCATION]: 'bg-blue-400',
 };
 
 export const DEAL_TYPE_LABELS: Record<BoardListingDealType, string> = {
