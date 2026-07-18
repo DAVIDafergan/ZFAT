@@ -174,6 +174,8 @@ const sendShareRedirectPage = ({ res, title, description, image, pageUrl, redire
   const safeImage = escapeHtml(image);
   const safePageUrl = escapeHtml(pageUrl);
   const safeRedirectUrl = escapeHtml(redirectUrl);
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache');
   res.send(`<!DOCTYPE html>
 <html lang="he" dir="rtl">
   <head>
@@ -191,7 +193,6 @@ const sendShareRedirectPage = ({ res, title, description, image, pageUrl, redire
     <meta name="twitter:title" content="${safeTitle}" />
     <meta name="twitter:description" content="${safeDescription}" />
     <meta name="twitter:image" content="${safeImage}" />
-    <meta http-equiv="refresh" content="0; url=${safeRedirectUrl}" />
     <link rel="canonical" href="${safePageUrl}" />
     <script>window.location.replace(${JSON.stringify(redirectUrl)});</script>
     <style>body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f3f4f6;color:#111827;margin:0}a{color:#b91c1c;font-weight:700}</style>
@@ -483,7 +484,6 @@ app.get('/share/article/:id', spaFallbackLimiter, async (req, res) => {
     const articleUrl = `${publicSiteUrl}/#/article/${post._id}`;
     const shareUrl = `${publicSiteUrl}/share/article/${post._id}`;
 
-    res.setHeader('Cache-Control', 'no-cache');
     sendShareRedirectPage({ res, title, description, image, pageUrl: shareUrl, redirectUrl: articleUrl });
   } catch (err) {
     sendShareErrorPage(res, 500, 'אירעה שגיאה בטעינת הכתבה. מעבירים אתכם לעמוד הבית.');
