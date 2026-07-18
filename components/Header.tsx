@@ -12,10 +12,12 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLLIElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { logout, posts } = useApp();
@@ -33,14 +35,19 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
 
   useEffect(() => {
     setIsMenuOpen(false);
+    setIsMoreMenuOpen(false);
     setIsUserMenuOpen(false);
     setSearchQuery('');
   }, [location]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (searchRef.current && !searchRef.current.contains(target)) {
         setIsSearchFocused(false);
+      }
+      if (moreMenuRef.current && !moreMenuRef.current.contains(target)) {
+        setIsMoreMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -79,6 +86,18 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
     if (window.innerWidth < 1024) return;
     event.preventDefault();
     window.location.assign('/');
+  };
+
+  const handleMoreMenuToggle = () => {
+    setIsMoreMenuOpen((value) => !value);
+  };
+
+  const handleMoreCategoryClick = () => {
+    setIsMoreMenuOpen(false);
+  };
+
+  const handleMobileMenuClose = () => {
+    setIsMenuOpen(false);
   };
 
   return (
@@ -138,13 +157,13 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
                     לוח בתנופה
                   </Link>
                 </li>
-                <li className="group relative">
-                  <button type="button" className="inline-flex items-center gap-1 transition hover:text-red-100" aria-haspopup="true">
+                <li ref={moreMenuRef} className="group relative">
+                  <button type="button" className="inline-flex items-center gap-1 transition hover:text-red-100" onClick={handleMoreMenuToggle} aria-haspopup="true" aria-expanded={isMoreMenuOpen}>
                     עוד <ChevronDown size={15} />
                   </button>
-                  <div className="invisible absolute right-0 top-full mt-3 w-56 rounded-2xl border border-gray-100 bg-white py-3 text-gray-800 opacity-0 shadow-2xl transition-all group-hover:visible group-hover:opacity-100">
+                  <div className={`absolute right-0 top-full mt-3 w-56 rounded-2xl border border-gray-100 bg-white py-3 text-gray-800 shadow-2xl transition-all ${isMoreMenuOpen ? 'visible opacity-100' : 'invisible opacity-0 pointer-events-none'} lg:group-hover:visible lg:group-hover:opacity-100 lg:group-hover:pointer-events-auto`}>
                     {Object.values(Category).slice(4).map((cat) => (
-                      <Link key={cat} to={`/category/${cat}`} className="block px-5 py-2.5 text-sm font-bold transition hover:bg-red-50 hover:text-red-700">{cat}</Link>
+                      <Link key={cat} to={`/category/${cat}`} onClick={handleMoreCategoryClick} className="block px-5 py-2.5 text-sm font-bold transition hover:bg-red-50 hover:text-red-700">{cat}</Link>
                     ))}
                   </div>
                 </li>
@@ -234,7 +253,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
                 <p className="mb-2 px-1 text-[11px] font-black tracking-[0.18em] text-gray-400">קטגוריות</p>
                 <div className="grid grid-cols-2 gap-2">
                   {mobileMenuCategories.map((cat) => (
-                    <Link key={cat} to={`/category/${cat}`} className="flex min-h-[3rem] items-center rounded-2xl border border-transparent bg-white/80 px-3 py-2 text-sm font-bold leading-5 text-gray-800 transition hover:border-red-100 hover:bg-red-50 hover:text-red-700">
+                    <Link key={cat} to={`/category/${cat}`} onClick={handleMobileMenuClose} className="flex min-h-[3rem] items-center rounded-2xl border border-transparent bg-white/80 px-3 py-2 text-sm font-bold leading-5 text-gray-800 transition hover:border-red-100 hover:bg-red-50 hover:text-red-700">
                       {cat}
                     </Link>
                   ))}
@@ -244,10 +263,10 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
               <div>
                 <p className="mb-2 px-1 text-[11px] font-black tracking-[0.18em] text-gray-400">תוכן מרכזי</p>
                 <div className="space-y-1.5">
-                  <Link to="/weekly-paper" className="block rounded-2xl bg-white/80 px-3 py-2.5 text-sm font-bold text-gray-800 transition hover:bg-red-50 hover:text-red-700">
+                  <Link to="/weekly-paper" onClick={handleMobileMenuClose} className="block rounded-2xl bg-white/80 px-3 py-2.5 text-sm font-bold text-gray-800 transition hover:bg-red-50 hover:text-red-700">
                     העיתון השבועי
                   </Link>
-                  <Link to="/board" className="block rounded-2xl bg-white/80 px-3 py-2.5 text-sm font-bold text-gray-800 transition hover:bg-red-50 hover:text-red-700">
+                  <Link to="/board" onClick={handleMobileMenuClose} className="block rounded-2xl bg-white/80 px-3 py-2.5 text-sm font-bold text-gray-800 transition hover:bg-red-50 hover:text-red-700">
                     לוח בתנופה
                   </Link>
                 </div>
@@ -257,7 +276,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
                 <div>
                   <p className="mb-2 px-1 text-[11px] font-black tracking-[0.18em] text-gray-400">ניווט מהיר</p>
                   <div className="space-y-1.5">
-                    <Link to="/admin" className="block rounded-2xl px-3 py-2.5 text-sm font-bold text-gray-800 transition hover:bg-red-50 hover:text-red-700">מערכת ניהול</Link>
+                    <Link to="/admin" onClick={handleMobileMenuClose} className="block rounded-2xl px-3 py-2.5 text-sm font-bold text-gray-800 transition hover:bg-red-50 hover:text-red-700">מערכת ניהול</Link>
                   </div>
                 </div>
               )}
@@ -267,7 +286,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
               {user ? (
                 <>
                   {isAdmin && (
-                    <Link to="/admin" className="inline-flex items-center justify-center rounded-full bg-red-700 px-3 py-2.5 text-sm font-black text-white transition hover:bg-red-800">
+                    <Link to="/admin" onClick={handleMobileMenuClose} className="inline-flex items-center justify-center rounded-full bg-red-700 px-3 py-2.5 text-sm font-black text-white transition hover:bg-red-800">
                       ניהול
                     </Link>
                   )}
@@ -277,10 +296,10 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, user }) => {
                 </>
               ) : (
                 <>
-                  <Link to="/login" className="inline-flex items-center justify-center rounded-full bg-red-700 px-3 py-2.5 text-sm font-black text-white transition hover:bg-red-800">
+                  <Link to="/login" onClick={handleMobileMenuClose} className="inline-flex items-center justify-center rounded-full bg-red-700 px-3 py-2.5 text-sm font-black text-white transition hover:bg-red-800">
                     התחברות
                   </Link>
-                  <Link to="/register" className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-3 py-2.5 text-sm font-black text-gray-700 transition hover:border-red-200 hover:text-red-700">
+                  <Link to="/register" onClick={handleMobileMenuClose} className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-3 py-2.5 text-sm font-black text-gray-700 transition hover:border-red-200 hover:text-red-700">
                     הרשמה
                   </Link>
                 </>
