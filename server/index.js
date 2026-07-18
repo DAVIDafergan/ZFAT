@@ -18,6 +18,7 @@ const cache = {
   ads: { data: null, ts: 0 },
 };
 const CACHE_TTL_MS = 60_000;
+const DEFAULT_PUBLIC_SITE_URL = 'https://zfatbitnufa.com';
 
 const getCached = (key) => {
   const entry = cache[key];
@@ -55,7 +56,7 @@ app.locals.invalidateCache = invalidateCache;
 const PORT = Number(process.env.PORT || 3001);
 const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI;
 const JWT_SECRET = (process.env.JWT_SECRET || '').trim();
-const publicSiteUrl = (process.env.PUBLIC_SITE_URL || process.env.FRONTEND_URL || 'https://zfatbitnufa.com').replace(/\/$/, '');
+const publicSiteUrl = (process.env.PUBLIC_SITE_URL || DEFAULT_PUBLIC_SITE_URL).replace(/\/$/, '');
 const distDir = path.join(__dirname, '../dist');
 const distIndexPath = path.join(distDir, 'index.html');
 const hasDistIndex = fs.existsSync(distIndexPath);
@@ -112,14 +113,6 @@ const allowedOrigins = Array.from(new Set([
   ...splitEnvList(process.env.CORS_ALLOWED_ORIGINS),
 ].flatMap(expandOriginVariants).filter(Boolean)));
 
-const getRequestOrigin = (req) => {
-  const forwardedProto = `${req.get('x-forwarded-proto') || ''}`.split(',')[0].trim();
-  const forwardedHost = `${req.get('x-forwarded-host') || ''}`.split(',')[0].trim();
-  const protocol = forwardedProto || req.protocol || 'https';
-  const host = forwardedHost || req.get('host') || '';
-  return host ? `${protocol}://${host}` : publicSiteUrl;
-};
-
 const toAbsoluteUrl = (value, baseUrl) => {
   const raw = `${value || ''}`.trim();
   if (!raw) return '';
@@ -135,13 +128,45 @@ const toAbsoluteUrl = (value, baseUrl) => {
   }
 };
 
-const resolveShareImage = ({ rawImage, postId, req, fallbackImage }) => {
-  const requestOrigin = getRequestOrigin(req);
+const resolveShareImage = ({ rawImage, postId, fallbackImage }) => {
   const cleaned = `${rawImage || ''}`.trim();
   if (!cleaned) return fallbackImage;
-  if (cleaned.startsWith('data:')) return `${requestOrigin}/api/posts/${postId}/og-image`;
-  return toAbsoluteUrl(cleaned, requestOrigin) || fallbackImage;
+  if (cleaned.startsWith('data:')) return `${publicSiteUrl}/api/posts/${postId}/og-image`;
+  return toAbsoluteUrl(cleaned, publicSiteUrl) || fallbackImage;
 };
+
+const sendSimpleHtmlPage = ({ res, statusCode, title, message, redirectUrl, linkLabel }) => {
+  const safeTitle = escapeHtml(title);
+  const safeMessage = escapeHtml(message);
+  const safeRedirectUrl = escapeHtml(redirectUrl);
+  const safeLinkLabel = escapeHtml(linkLabel);
+  res.status(statusCode).setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <title>${safeTitle}</title>
+    <meta http-equiv="refresh" content="3; url=${safeRedirectUrl}" />
+    <style>body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f3f4f6;color:#111827;margin:0;padding:24px;text-align:center}main{max-width:32rem;background:#fff;border:1px solid #e5e7eb;border-radius:24px;padding:32px;box-shadow:0 10px 30px rgba(15,23,42,.08)}h1{margin:0 0 12px;font-size:1.75rem}p{margin:0 0 20px;line-height:1.7}a{display:inline-flex;align-items:center;justify-content:center;padding:12px 20px;border-radius:999px;background:#b91c1c;color:#fff;text-decoration:none;font-weight:700}</style>
+  </head>
+  <body>
+    <main>
+      <h1>${safeTitle}</h1>
+      <p>${safeMessage}</p>
+      <a href="${safeRedirectUrl}">${safeLinkLabel}</a>
+    </main>
+  </body>
+</html>`);
+};
+
+const sendShareErrorPage = (res, statusCode, message) => sendSimpleHtmlPage({
+  res,
+  statusCode,
+  title: 'הקישור אינו זמין',
+  message,
+  redirectUrl: publicSiteUrl,
+  linkLabel: 'חזרה לעמוד הבית',
+});
 
 const shortLinkLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -239,7 +264,7 @@ app.use((req, res, next) => {
   }
 
   if (req.path.startsWith('/p/') || req.path.startsWith('/share/article/')) {
-    return res.status(423).send('האתר ייפתח בקרוב. הגישה לכתבות תתאפשר לאחר ההשקה.');
+    return sendShareErrorPage(res, 423, 'האתר ייפתח בקרוב. הגישה לכתבות תתאפשר לאחר ההשקה.');
   }
 
   return next();
@@ -372,29 +397,32 @@ const resolvePostPrimaryImage = (post) => {
 
 app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
   try {
+    const rawCode = `${req.params.shortCode || ''}`.trim();
     const requestedCode = normalizeShortCode(req.params.shortCode);
-    if (!requestedCode) return res.status(404).json({ message: 'Short link not found' });
+    if (!rawCode) return sendShareErrorPage(res, 404, 'הקישור לכתבה לא נמצא. מעבירים אתכם לעמוד הבית.');
 
-    let post = await Post.findOne({ shortLinkCode: requestedCode }).lean();
-    if (!post) {
+    let post = requestedCode ? await Post.findOne({ shortLinkCode: requestedCode }).lean() : null;
+    if (!post && requestedCode) {
       const candidates = await Post.find({ shortLinkCode: { $exists: true, $ne: '' } })
         .select('title excerpt imageUrl images shortLinkCode createdAt')
         .lean();
       post = candidates.find(candidate => normalizeShortCode(candidate.shortLinkCode, candidate._id?.toString()) === requestedCode);
     }
+    if (!post && mongoose.Types.ObjectId.isValid(rawCode)) {
+      post = await Post.findById(rawCode).lean();
+    }
 
-    if (!post) return res.status(404).json({ message: 'Short link not found' });
+    if (!post) return sendShareErrorPage(res, 404, 'הקישור לכתבה לא נמצא. מעבירים אתכם לעמוד הבית.');
 
     const title = escapeHtml(post.title || 'צפת בתנופה');
     const description = escapeHtml(post.excerpt || 'כתבה מתוך אתר צפת בתנופה');
     const image = escapeHtml(resolveShareImage({
       rawImage: resolvePostPrimaryImage(post),
       postId: post._id,
-      req,
       fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
     }));
     const articleUrl = `${publicSiteUrl}/#/article/${post._id}`;
-    const shortUrl = `${publicSiteUrl}/p/${requestedCode}`;
+    const shortUrl = `${publicSiteUrl}/p/${requestedCode || rawCode}`;
 
     res.send(`<!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -422,21 +450,23 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
   </body>
 </html>`);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    sendShareErrorPage(res, 500, 'אירעה שגיאה בפתיחת הקישור. מעבירים אתכם לעמוד הבית.');
   }
 });
 
 app.get('/share/article/:id', spaFallbackLimiter, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return sendShareErrorPage(res, 404, 'הכתבה לא נמצאה. מעבירים אתכם לעמוד הבית.');
+    }
     const post = await Post.findById(req.params.id).lean();
-    if (!post) return res.status(404).json({ message: 'Post not found' });
+    if (!post) return sendShareErrorPage(res, 404, 'הכתבה לא נמצאה. מעבירים אתכם לעמוד הבית.');
 
     const title = escapeHtml(post.title || 'צפת בתנופה');
     const description = escapeHtml(post.excerpt || 'כתבה מתוך אתר צפת בתנופה');
     const image = escapeHtml(resolveShareImage({
       rawImage: resolvePostPrimaryImage(post),
       postId: post._id,
-      req,
       fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
     }));
     const articleUrl = `${publicSiteUrl}/#/article/${post._id}`;
@@ -474,7 +504,7 @@ app.get('/share/article/:id', spaFallbackLimiter, async (req, res) => {
   </body>
 </html>`);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    sendShareErrorPage(res, 500, 'אירעה שגיאה בטעינת הכתבה. מעבירים אתכם לעמוד הבית.');
   }
 });
 

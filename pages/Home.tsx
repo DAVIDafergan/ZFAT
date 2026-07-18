@@ -30,17 +30,9 @@ export const Home: React.FC = () => {
   const [sunTimes, setSunTimes] = useState<{ sunrise: string; sunset: string } | null>(null);
   const [isSunTimesLoading, setIsSunTimesLoading] = useState(true);
 
-  const SLIDER_WINDOW_MS = 24 * 60 * 60 * 1000;
   const sortedPosts = sortPostsByNewest(posts);
   const featuredPosts = sortedPosts.filter((post) => post.isFeatured);
-  const activeSliderPosts = featuredPosts.filter((post) => {
-    if (!post.isFeatured || !post.featuredAt) return false;
-    return Date.now() - new Date(post.featuredAt).getTime() <= SLIDER_WINDOW_MS;
-  });
-  const newestFeaturedPost = featuredPosts[0];
-  const sliderPosts = activeSliderPosts.length > 0
-    ? activeSliderPosts
-    : (newestFeaturedPost ? [newestFeaturedPost] : sortedPosts.slice(0, 1));
+  const sliderPosts = featuredPosts.length > 0 ? featuredPosts : sortedPosts.slice(0, 1);
   const sliderPostIds = new Set(sliderPosts.map((post) => post.id));
   const homepageFeedPosts = sortedPosts.filter((post) => !sliderPostIds.has(post.id));
   const mainEditionPosts = homepageFeedPosts.slice(0, 10);

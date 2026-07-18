@@ -358,6 +358,22 @@ export const api = {
     };
   },
 
+  fetchPostById: async (id: string): Promise<Post | null> => {
+    if (shouldUseServer()) {
+      try {
+        const found = await fetchJson(`/api/posts/${id}`, { headers: authHeaders() });
+        return found ? normalizePost(found) : null;
+      } catch (error) {
+        if (error instanceof ApiRequestError && error.status === 404) return null;
+        throw error;
+      }
+    }
+
+    const posts = getStorage<Post[]>('zfat_posts', INITIAL_POSTS);
+    const found = posts.find((post) => post.id === id);
+    return found ? normalizePost(found) : null;
+  },
+
   addPost: async (post: Post): Promise<Post> => {
     if (shouldUseServer()) {
       const created = await fetchJson('/api/posts', {
