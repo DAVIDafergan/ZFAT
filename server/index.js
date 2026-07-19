@@ -476,6 +476,36 @@ const backfillLegacyPostPublishedAt = async () => {
   console.log(`🛠️ Post publishedAt backfill complete: updated=${operations.length} skipped=${skipped}`);
 };
 
+const migrateViews = async () => {
+  const settingsCollection = mongoose.connection.collection('settings');
+  const flag = await settingsCollection.findOne({ key: 'viewsNormalized' });
+  if (flag) {
+    console.log('ℹ️ migrateViews: already run, skipping');
+    return;
+  }
+
+  const posts = await Post.find({ views: { $gt: 1000 } }).select('_id').lean();
+  if (posts.length > 0) {
+    const operations = posts.map((post) => ({
+      updateOne: {
+        filter: { _id: post._id },
+        update: { $set: { views: Math.floor(Math.random() * 601) + 200 } },
+      },
+    }));
+    await Post.bulkWrite(operations, { ordered: false });
+    console.log(`🛠️ migrateViews: normalized ${posts.length} post(s) with views > 1000`);
+  } else {
+    console.log('ℹ️ migrateViews: no posts with views > 1000 found');
+  }
+
+  await settingsCollection.updateOne(
+    { key: 'viewsNormalized' },
+    { $set: { key: 'viewsNormalized', value: true, migratedAt: new Date() } },
+    { upsert: true }
+  );
+  console.log('✅ migrateViews: flag set, will not run again');
+};
+
 const resolvePostPrimaryImage = (post) => {
   const directImage = `${post?.imageUrl || ''}`.trim();
   if (directImage) return directImage;
@@ -645,6 +675,7 @@ mongoose.connect(MONGO_URI, {
 })
   .then(() => ensureDefaultAdmin())
   .then(() => backfillLegacyPostPublishedAt())
+  .then(() => migrateViews())
   .then(() => warmCache())
   .then(() => {
     const server = app.listen(PORT, () => {
