@@ -13,7 +13,7 @@ router.post('/', async (req, res) => {
     const existing = await NewsletterSubscriber.findOne({ email });
     if (existing) return res.status(409).json({ message: 'כתובת אימייל כבר רשומה' });
 
-    const subscriber = new NewsletterSubscriber({ email });
+    const subscriber = new NewsletterSubscriber({ email, isActive: true });
     await subscriber.save();
     res.status(201).json({ message: 'נרשמת בהצלחה!' });
   } catch (err) {
