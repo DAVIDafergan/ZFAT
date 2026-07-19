@@ -10,6 +10,8 @@ const validateObjectId = require('../middleware/validateObjectId');
 
 const listLimiter = rateLimit({ windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי בקשות לכתבות' } });
 const mutateLimiter = rateLimit({ windowMs: 60 * 1000, limit: 40, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי פעולות ניהול כתבות' } });
+const VIEW_INCREMENT_WINDOW_MS = 10 * 60 * 1000;
+const recentViewIncrements = new Map();
 
 router.get('/', listLimiter, async (req, res) => {
   try {
@@ -134,7 +136,20 @@ router.delete('/:id', mutateLimiter, auth, adminOnly, validateObjectId(), async 
 router.patch('/:id/views', listLimiter, validateObjectId(), async (req, res) => {
   try {
     const objectId = mongoose.Types.ObjectId.createFromHexString(req.params.id);
+    const now = Date.now();
+    const rateLimitKey = `${req.ip}:${req.params.id}`;
+    const existingExpiry = recentViewIncrements.get(rateLimitKey);
+
+    if (existingExpiry && existingExpiry > now) {
+      return res.json({ views: null });
+    }
+
+    if (existingExpiry) {
+      recentViewIncrements.delete(rateLimitKey);
+    }
+
     const post = await Post.findByIdAndUpdate(objectId, { $inc: { views: 1 } }, { new: true });
+    recentViewIncrements.set(rateLimitKey, now + VIEW_INCREMENT_WINDOW_MS);
 
     res.json({ views: post?.views || 0 });
   } catch (err) {
