@@ -103,6 +103,7 @@ const normalizePost = (post: any): Post => {
     createdAt: toIsoDateString(post.createdAt || post.created_at),
     updatedAt: toIsoDateString(post.updatedAt || post.updated_at),
     imageUrl: fallbackImageUrl,
+    videoUrl: post.videoUrl || '',
     tags: Array.isArray(post.tags) ? post.tags : [],
     isFeatured: Boolean(post.isFeatured),
     featuredAt: toIsoDateString(post.featuredAt) || undefined,

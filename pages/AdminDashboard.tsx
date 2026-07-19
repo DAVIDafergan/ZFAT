@@ -151,6 +151,8 @@ export const AdminDashboard: React.FC = () => {
   const [mainImagePhotographer, setMainImagePhotographer] = useState('');
   const [mainImageFeedback, setMainImageFeedback] = useState<UploadFeedback>({ uploadName: '', uploadState: 'idle' });
   const [additionalPostImages, setAdditionalPostImages] = useState<ArticleImageDraft[]>([]);
+  const [postVideoUrl, setPostVideoUrl] = useState('');
+  const [postVideoFeedback, setPostVideoFeedback] = useState<UploadFeedback>({ uploadName: '', uploadState: 'idle' });
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [isSubmittingPost, setIsSubmittingPost] = useState(false);
   const [postsPage, setPostsPage] = useState(1);
@@ -320,6 +322,16 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const buildVideoUploadName = (value: string) => {
+    if (!value.trim()) return '';
+    try {
+      const fileName = decodeURIComponent(new URL(value).pathname.split('/').pop() || '');
+      return fileName || 'קישור לוידאו';
+    } catch {
+      return 'קישור לוידאו';
+    }
+  };
+
   const handleArticleImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     onUploaded: (url: string) => void,
@@ -357,6 +369,28 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleArticleVideoUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    onUploaded: (url: string) => void,
+    setFeedback: (feedback: UploadFeedback) => void,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.currentTarget.value = '';
+    setFeedback({ uploadName: file.name, uploadState: 'uploading' });
+
+    try {
+      const uploadedUrl = await api.uploadFile(file, 'articles/videos');
+      onUploaded(uploadedUrl);
+      setFeedback({ uploadName: file.name, uploadState: 'ready' });
+      showToast(`הוידאו "${file.name}" הועלה ונשמר בהצלחה`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'העלאת הוידאו נכשלה';
+      setFeedback({ uploadName: file.name, uploadState: 'error', uploadError: message });
+      showToast(`שגיאה בהעלאת הוידאו "${file.name}": ${message}`);
+    }
+  };
+
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmittingPost) return;
@@ -373,6 +407,7 @@ export const AdminDashboard: React.FC = () => {
       ...normalizedAdditionalImages,
     ].filter((image) => Boolean(image.url));
     const nextTags = tagsInput.split(',').map((tag) => tag.trim()).filter(Boolean);
+    const normalizedVideoUrl = postVideoUrl.trim();
 
     setIsSubmittingPost(true);
     try {
@@ -386,6 +421,7 @@ export const AdminDashboard: React.FC = () => {
           category: newPost.category as Category,
           author: current.author || user?.name || 'Admin',
           imageUrl: primaryImageUrl,
+          videoUrl: normalizedVideoUrl,
           images: nextImages,
           tags: nextTags,
           isFeatured: Boolean(newPost.isFeatured),
@@ -407,6 +443,7 @@ export const AdminDashboard: React.FC = () => {
           publishedAt: nowIso,
           createdAt: nowIso,
           imageUrl: primaryImageUrl,
+          videoUrl: normalizedVideoUrl,
           images: nextImages,
           tags: nextTags,
           isFeatured: Boolean(newPost.isFeatured),
@@ -423,6 +460,8 @@ export const AdminDashboard: React.FC = () => {
       setMainImagePhotographer('');
       setMainImageFeedback({ uploadName: '', uploadState: 'idle' });
       setAdditionalPostImages([]);
+      setPostVideoUrl('');
+      setPostVideoFeedback({ uploadName: '', uploadState: 'idle' });
       setEditingPostId(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'הפרסום נכשל. ודאו שיש חיבור תקין לאינטרנט ונסו שוב.';
@@ -455,6 +494,11 @@ export const AdminDashboard: React.FC = () => {
       uploadState: image.url ? 'ready' : 'idle',
       uploadError: '',
     })));
+    const currentVideoUrl = (post.videoUrl || '').trim();
+    setPostVideoUrl(currentVideoUrl);
+    setPostVideoFeedback(currentVideoUrl
+      ? { uploadName: buildVideoUploadName(currentVideoUrl), uploadState: 'ready' }
+      : { uploadName: '', uploadState: 'idle' });
     setTagsInput(post.tags.join(', '));
     setEditingPostId(post.id);
     setActiveTab('posts');
@@ -467,6 +511,8 @@ export const AdminDashboard: React.FC = () => {
     setMainImagePhotographer('');
     setMainImageFeedback({ uploadName: '', uploadState: 'idle' });
     setAdditionalPostImages([]);
+    setPostVideoUrl('');
+    setPostVideoFeedback({ uploadName: '', uploadState: 'idle' });
     setEditingPostId(null);
   };
 
@@ -1023,6 +1069,53 @@ export const AdminDashboard: React.FC = () => {
                     </button>
                   </div>
                 ))}
+              </div>
+
+              <div className="space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <label className="block text-sm font-bold text-gray-700">וידאו לכתבה (אופציונלי)</label>
+                <div className="relative">
+                  <Video size={18} className="absolute right-3 top-3 text-gray-400" />
+                  <input
+                    type="text"
+                    value={postVideoUrl}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setPostVideoUrl(value);
+                      setPostVideoFeedback({
+                        uploadName: buildVideoUploadName(value),
+                        uploadState: value ? 'ready' : 'idle',
+                        uploadError: '',
+                      });
+                    }}
+                    className="w-full rounded-lg border border-gray-300 pl-4 pr-10 py-3 outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="קישור ישיר לוידאו או YouTube/Vimeo"
+                  />
+                </div>
+                <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-100 px-4 py-3 text-sm font-black text-gray-700 transition hover:bg-gray-200">
+                  <Upload size={16} /> העלאת וידאו לשרת
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/ogg"
+                    className="hidden"
+                    onChange={(e) => handleArticleVideoUpload(e, setPostVideoUrl, setPostVideoFeedback)}
+                  />
+                </label>
+                {postVideoUrl && (
+                  <div className={`rounded-2xl border p-3 ${postVideoFeedback.uploadState === 'error' ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50/70'}`}>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className={`text-sm font-black ${postVideoFeedback.uploadState === 'error' ? 'text-red-700' : 'text-emerald-800'}`}>
+                          {postVideoFeedback.uploadState === 'uploading' ? 'מעלה וידאו...' : postVideoFeedback.uploadState === 'error' ? 'העלאת הוידאו נכשלה' : 'הוידאו נקלט במערכת'}
+                        </p>
+                        <p className={`text-xs font-bold ${postVideoFeedback.uploadState === 'error' ? 'text-red-600' : 'text-emerald-700'}`}>
+                          {postVideoFeedback.uploadName || buildVideoUploadName(postVideoUrl)}
+                        </p>
+                        {postVideoFeedback.uploadError && <p className="mt-1 text-xs font-bold text-red-600">{postVideoFeedback.uploadError}</p>}
+                      </div>
+                      {postVideoFeedback.uploadState === 'ready' && <CheckCircle size={20} className="text-emerald-600" />}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-4">

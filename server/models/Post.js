@@ -17,6 +17,7 @@ const postSchema = new mongoose.Schema({
   },
   author: { type: String, default: 'מערכת' },
   imageUrl: { type: String, default: '' },
+  videoUrl: { type: String, default: '' },
   images: [{
     url: { type: String, default: '' },
     photographer: { type: String, default: '' },

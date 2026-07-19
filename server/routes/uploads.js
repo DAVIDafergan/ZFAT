@@ -18,6 +18,13 @@ const uploadLimiter = rateLimit({
 
 const MAX_UPLOAD_BYTES = 80 * 1024 * 1024;
 const PDF_CONTENT_TYPE = 'application/pdf';
+const SUPPORTED_VIDEO_CONTENT_TYPES = new Set([
+  'video/mp4',
+  'video/webm',
+  'video/quicktime',
+  'video/x-msvideo',
+  'video/ogg',
+]);
 
 const resolveUploadContentType = (file) => {
   const normalizedName = (file?.originalname || '').toLowerCase();
@@ -25,6 +32,10 @@ const resolveUploadContentType = (file) => {
   const mimetype = file?.mimetype || '';
 
   if (mimetype.startsWith('image/')) {
+    return mimetype;
+  }
+
+  if (SUPPORTED_VIDEO_CONTENT_TYPES.has(mimetype)) {
     return mimetype;
   }
 

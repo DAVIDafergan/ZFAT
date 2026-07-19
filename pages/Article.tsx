@@ -11,6 +11,44 @@ import { buildShareUrl } from '../services/siteConfig';
 import { formatGregorianDate, formatHebrewDate } from '../services/dateUtils';
 import { sortPostsByNewest } from '../services/postSort';
 
+const getEmbeddedVideoUrl = (rawUrl: string): string | null => {
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return null;
+
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname.toLowerCase();
+    const pathParts = parsed.pathname.split('/').filter(Boolean);
+
+    if (host === 'youtu.be') {
+      const videoId = pathParts[0];
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    }
+
+    if (host.includes('youtube.com')) {
+      const directEmbedId = pathParts[0] === 'embed' ? pathParts[1] : '';
+      const shortsId = pathParts[0] === 'shorts' ? pathParts[1] : '';
+      const watchId = parsed.searchParams.get('v') || '';
+      const videoId = directEmbedId || shortsId || watchId;
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    }
+
+    if (host === 'vimeo.com' || host === 'www.vimeo.com') {
+      const videoId = pathParts.find((part) => /^[0-9]+$/.test(part));
+      return videoId ? `https://player.vimeo.com/video/${videoId}` : null;
+    }
+
+    if (host === 'player.vimeo.com') {
+      const videoId = pathParts[pathParts.length - 1];
+      return videoId && /^[0-9]+$/.test(videoId) ? `https://player.vimeo.com/video/${videoId}` : null;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
 export const Article: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { posts, ads, user, comments, addComment, toggleLikeComment, incrementViews } = useApp();
@@ -128,6 +166,8 @@ export const Article: React.FC = () => {
     : post.imageUrl ? [{ url: post.imageUrl, photographer: '' }] : []);
   const leadImage = postImages[0] || null;
   const galleryImages = postImages.slice(1);
+  const videoUrl = (post.videoUrl || '').trim();
+  const embeddedVideoUrl = getEmbeddedVideoUrl(videoUrl);
 
   const renderEditorialImage = (image: { url: string; photographer?: string }, index: number) => (
     <figure key={`${image.url}-${index}`} className="my-10 border-y border-gray-200 bg-white py-4 sm:py-5">
@@ -229,6 +269,37 @@ export const Article: React.FC = () => {
 
             {leadImage && (
               <div className="mb-8">{renderEditorialImage(leadImage, 0)}</div>
+            )}
+            {videoUrl && (
+              <figure className="my-10 border-y border-gray-200 bg-white py-4 sm:py-5">
+                <div className="overflow-hidden rounded-2xl bg-black">
+                  {embeddedVideoUrl ? (
+                    <div className="relative w-full pt-[56.25%]">
+                      <iframe
+                        src={embeddedVideoUrl}
+                        title={`${post.title} - וידאו`}
+                        loading="lazy"
+                        allow="autoplay; fullscreen"
+                        allowFullScreen
+                        className="absolute inset-0 h-full w-full"
+                      />
+                    </div>
+                  ) : (
+                    <video
+                      controls
+                      preload="none"
+                      playsInline
+                      className="aspect-video w-full"
+                    >
+                      <source src={videoUrl} />
+                    </video>
+                  )}
+                </div>
+                <figcaption className="mt-3 flex flex-wrap items-center gap-3 px-3 text-xs font-bold text-gray-600 sm:px-5">
+                  <span className="h-px w-10 bg-red-600" />
+                  <span>וידאו מצורף לכתבה</span>
+                </figcaption>
+              </figure>
             )}
 
             <div className="mb-8">
