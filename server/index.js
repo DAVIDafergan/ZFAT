@@ -135,6 +135,37 @@ const resolveShareImage = ({ rawImage, postId, fallbackImage }) => {
   return toAbsoluteUrl(cleaned, publicSiteUrl) || fallbackImage;
 };
 
+const imageMimeTypeByExtension = {
+  '.apng': 'image/apng',
+  '.avif': 'image/avif',
+  '.gif': 'image/gif',
+  '.jpeg': 'image/jpeg',
+  '.jpg': 'image/jpeg',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.webp': 'image/webp',
+};
+
+const resolveShareImageType = ({ rawImage, fallbackImage }) => {
+  const cleaned = `${rawImage || ''}`.trim();
+  if (cleaned.startsWith('data:')) {
+    const matches = cleaned.match(/^data:([^;]+);/i);
+    if (matches?.[1]) return matches[1].toLowerCase();
+  }
+
+  const targetImage = cleaned || fallbackImage;
+  const absoluteImage = toAbsoluteUrl(targetImage, publicSiteUrl);
+  if (!absoluteImage) return '';
+
+  try {
+    const parsed = new URL(absoluteImage);
+    const extension = path.extname(parsed.pathname || '').toLowerCase();
+    return imageMimeTypeByExtension[extension] || '';
+  } catch {
+    return '';
+  }
+};
+
 const sendSimpleHtmlPage = ({ res, statusCode, title, message, redirectUrl, linkLabel }) => {
   const safeTitle = escapeHtml(title);
   const safeMessage = escapeHtml(message);
@@ -168,10 +199,11 @@ const sendShareErrorPage = (res, statusCode, message) => sendSimpleHtmlPage({
   linkLabel: 'חזרה לעמוד הבית',
 });
 
-const sendShareRedirectPage = ({ res, title, description, image, pageUrl, redirectUrl }) => {
+const sendShareRedirectPage = ({ res, title, description, image, imageType, pageUrl, redirectUrl }) => {
   const safeTitle = escapeHtml(title);
   const safeDescription = escapeHtml(description);
   const safeImage = escapeHtml(image);
+  const safeImageType = escapeHtml(imageType);
   const safePageUrl = escapeHtml(pageUrl);
   const safeRedirectUrl = escapeHtml(redirectUrl);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -188,10 +220,11 @@ const sendShareRedirectPage = ({ res, title, description, image, pageUrl, redire
     <meta property="og:title" content="${safeTitle}" />
     <meta property="og:description" content="${safeDescription}" />
     <meta property="og:image" content="${safeImage}" />
+    <meta property="og:image:url" content="${safeImage}" />
     <meta property="og:image:secure_url" content="${safeImage}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:type" content="image/jpeg" />
+    ${safeImageType ? `<meta property="og:image:type" content="${safeImageType}" />` : ''}
     <meta property="og:url" content="${safePageUrl}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${safeTitle}" />
@@ -462,9 +495,13 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
       postId: post._id,
       fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
     });
+    const imageType = resolveShareImageType({
+      rawImage: resolvePostPrimaryImage(post),
+      fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
+    });
     const articleUrl = `${publicSiteUrl}/#/article/${post._id}`;
     const shortUrl = `${publicSiteUrl}/p/${requestedCode || rawCode}`;
-    sendShareRedirectPage({ res, title, description, image, pageUrl: shortUrl, redirectUrl: articleUrl });
+    sendShareRedirectPage({ res, title, description, image, imageType, pageUrl: shortUrl, redirectUrl: articleUrl });
   } catch (err) {
     sendShareErrorPage(res, 500, 'אירעה שגיאה בפתיחת הקישור. מעבירים אתכם לעמוד הבית.');
   }
@@ -485,10 +522,14 @@ app.get('/share/article/:id', spaFallbackLimiter, async (req, res) => {
       postId: post._id,
       fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
     });
+    const imageType = resolveShareImageType({
+      rawImage: resolvePostPrimaryImage(post),
+      fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
+    });
     const articleUrl = `${publicSiteUrl}/#/article/${post._id}`;
     const shareUrl = `${publicSiteUrl}/share/article/${post._id}`;
 
-    sendShareRedirectPage({ res, title, description, image, pageUrl: shareUrl, redirectUrl: articleUrl });
+    sendShareRedirectPage({ res, title, description, image, imageType, pageUrl: shareUrl, redirectUrl: articleUrl });
   } catch (err) {
     sendShareErrorPage(res, 500, 'אירעה שגיאה בטעינת הכתבה. מעבירים אתכם לעמוד הבית.');
   }
