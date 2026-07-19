@@ -25,7 +25,8 @@ const getEmbeddedVideoUrl = (rawUrl: string): string | null => {
       return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
     }
 
-    if (host.includes('youtube.com')) {
+    const isYoutubeHost = host === 'youtube.com' || host.endsWith('.youtube.com');
+    if (isYoutubeHost) {
       const directEmbedId = pathParts[0] === 'embed' ? pathParts[1] : '';
       const shortsId = pathParts[0] === 'shorts' ? pathParts[1] : '';
       const watchId = parsed.searchParams.get('v') || '';
