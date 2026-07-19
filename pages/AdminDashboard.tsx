@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Category, Post, PostImage, Ad, AdSlide, AdArea, WeeklyPaper, Agent, BoardListing, BoardListingDealType, BoardListingCategory, DEAL_TYPE_LABELS, BOARD_LISTING_CATEGORY_LABELS, ManagedBoardListingCategory } from '../types';
 import { useNavigate } from 'react-router-dom';
@@ -227,21 +227,38 @@ export const AdminDashboard: React.FC = () => {
     setPostsPage(1);
   }, [normalizedPostSearch]);
 
-  useEffect(() => {
-    if (activeTab === 'site-data' && !siteStats) {
-      setStatsLoading(true);
-      api.getSiteStats()
-        .then(res => {
-          setSiteStats(res);
-          setStatsLoading(false);
-        })
-        .catch(err => {
-          console.error('Error fetching stats:', err);
-          setStatsLoading(false);
-          showToast('שגיאה בטעינת נתוני האתר');
-        });
+  const loadSiteStats = useCallback(async () => {
+    setStatsLoading(true);
+    try {
+      const res = await api.getSiteStats();
+      setSiteStats(res);
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+      showToast('שגיאה בטעינת נתוני האתר');
+    } finally {
+      setStatsLoading(false);
     }
-  }, [activeTab]);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'site-data') {
+      loadSiteStats();
+    }
+  }, [activeTab, loadSiteStats]);
+
+  const handleResetVisits = async () => {
+    const confirmed = window.confirm('האם לאפס את מונה הכניסות? הפעולה תמחק את היסטוריית הכניסות ותתחיל מחדש מהבסיס.');
+    if (!confirmed) return;
+
+    try {
+      await api.resetSiteVisits();
+      showToast('מונה הכניסות אופס בהצלחה');
+      await loadSiteStats();
+    } catch (error) {
+      console.error('Error resetting visits:', error);
+      showToast('שגיאה באיפוס מונה הכניסות');
+    }
+  };
 
 
   const handleLogout = () => {
@@ -703,8 +720,16 @@ export const AdminDashboard: React.FC = () => {
 
         {activeTab === 'site-data' && (
           <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
-            <div className="mb-6">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-xl font-black text-gray-800 sm:text-2xl">נתוני אתר</h2>
+              <button
+                type="button"
+                onClick={handleResetVisits}
+                className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-100"
+              >
+                <Trash2 size={16} />
+                איפוס מונה כניסות
+              </button>
             </div>
             
             {statsLoading ? (
@@ -714,10 +739,10 @@ export const AdminDashboard: React.FC = () => {
             ) : siteStats ? (
               <div className="space-y-8">
                 {/* Metrics Grid */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
                   <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6">
                     <div className="mb-2 flex items-center justify-between">
-                      <span className="text-sm font-bold text-gray-600">סך הכל כניסות לאתר</span>
+                      <span className="text-sm font-bold text-gray-600">כניסות לאתר</span>
                       <Eye size={20} className="text-blue-600" />
                     </div>
                     <p className="text-3xl font-black text-blue-900">{siteStats.totalVisits.toLocaleString('he-IL')}</p>
@@ -725,10 +750,18 @@ export const AdminDashboard: React.FC = () => {
                   
                   <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-green-50 to-green-100 p-6">
                     <div className="mb-2 flex items-center justify-between">
-                      <span className="text-sm font-bold text-gray-600">כתבות פעילות</span>
+                      <span className="text-sm font-bold text-gray-600">סך כתבות</span>
                       <FileText size={20} className="text-green-600" />
                     </div>
-                    <p className="text-3xl font-black text-green-900">{siteStats.activeArticles}</p>
+                    <p className="text-3xl font-black text-green-900">{siteStats.totalArticles}</p>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-cyan-50 to-cyan-100 p-6">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-sm font-bold text-gray-600">סך צפיות</span>
+                      <BarChart3 size={20} className="text-cyan-600" />
+                    </div>
+                    <p className="text-3xl font-black text-cyan-900">{(siteStats.totalViews || 0).toLocaleString('he-IL')}</p>
                   </div>
                   
                   <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-purple-50 to-purple-100 p-6">
@@ -773,7 +806,7 @@ export const AdminDashboard: React.FC = () => {
                   <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-6">
                     <h3 className="mb-4 text-lg font-black text-gray-800">כתבות מובילות לפי צפיות</h3>
                     <div className="space-y-2">
-                      {siteStats.topArticles.map((article: any, idx: number) => (
+                      {siteStats.topArticles.slice(0, 5).map((article: any, idx: number) => (
                         <div key={article._id} className="flex items-center gap-3 rounded-lg bg-white p-3">
                           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-sm font-bold text-white">{idx + 1}</span>
                           <div className="flex-1 truncate">

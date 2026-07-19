@@ -865,4 +865,19 @@ export const api = {
       throw error;
     }
   },
+
+  logSiteVisit: async (): Promise<void> => {
+    if (!shouldUseServer()) return;
+    await fetchJson('/api/stats/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+  },
+
+  resetSiteVisits: async (): Promise<void> => {
+    await fetchJson('/api/stats/reset-visits', {
+      method: 'POST',
+      headers: authHeaders(),
+    });
+  },
 };

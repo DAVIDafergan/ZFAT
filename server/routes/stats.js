@@ -14,22 +14,24 @@ const visitLimiter = rateLimit({ windowMs: 60 * 1000, limit: 120, standardHeader
 // Get site statistics (admin only)
 router.get('/stats', statsLimiter, auth, adminOnly, async (req, res) => {
   try {
-    // Get active articles count (where isFeatured is true)
-    const activeArticles = await Post.countDocuments({ isFeatured: true });
-
     // Get total articles count
     const totalArticles = await Post.countDocuments({});
 
-    // Get total comments count
-    const totalComments = await Comment.countDocuments({});
+    // Get total comments count (only approved when moderation exists)
+    const totalComments = await Comment.countDocuments({ approved: true });
+
+    // Get total post views
+    const viewsAggregation = await Post.aggregate([
+      { $group: { _id: null, totalViews: { $sum: { $ifNull: ['$views', 0] } } } }
+    ]);
+    const totalViews = viewsAggregation[0]?.totalViews || 0;
 
     // Get newsletter subscribers count
     const newsletterSubscribers = await NewsletterSubscriber.countDocuments({ isActive: true });
 
-    // Get total visits with a one-time visible baseline; after baseline, count is real
+    // Get total visits with baseline offset
     const realTotalVisits = await SiteVisit.countDocuments({});
-    const visitsBaseline = 1650;
-    const totalVisits = Math.max(realTotalVisits, visitsBaseline);
+    const totalVisits = realTotalVisits + 1600;
 
     // Get visits by month for the last 12 months
     const now = new Date();
@@ -70,12 +72,12 @@ router.get('/stats', statsLimiter, auth, adminOnly, async (req, res) => {
     const topArticles = await Post.find({})
       .select('title views publishedAt')
       .sort({ views: -1 })
-      .limit(10)
+      .limit(5)
       .lean();
 
     res.json({
-      activeArticles,
       totalArticles,
+      totalViews,
       totalComments,
       newsletterSubscribers,
       totalVisits,
@@ -88,13 +90,10 @@ router.get('/stats', statsLimiter, auth, adminOnly, async (req, res) => {
   }
 });
 
-// Log a visit (called when article is viewed)
-router.post('/visits', visitLimiter, async (req, res) => {
+// Log a site visit (public)
+router.post('/visit', visitLimiter, async (_req, res) => {
   try {
-    const { postId } = req.body;
-
     const visit = new SiteVisit({
-      postId: postId || null,
       visitedAt: new Date()
     });
 
@@ -102,6 +101,29 @@ router.post('/visits', visitLimiter, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Error logging visit:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Backward-compatible legacy route
+router.post('/visits', visitLimiter, async (_req, res) => {
+  try {
+    const visit = new SiteVisit({ visitedAt: new Date() });
+    await visit.save();
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error logging visit:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Reset visits counter (admin only)
+router.post('/reset-visits', statsLimiter, auth, adminOnly, async (_req, res) => {
+  try {
+    await SiteVisit.deleteMany({});
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error resetting visits:', err);
     res.status(500).json({ message: err.message });
   }
 });

@@ -174,6 +174,17 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    try {
+      if (sessionStorage.getItem('zfat_visit_logged')) return;
+      api.logSiteVisit()
+        .then(() => {
+          sessionStorage.setItem('zfat_visit_logged', '1');
+        })
+        .catch(() => {});
+    } catch (_) {}
+  }, []);
+
+  useEffect(() => {
     const init = async () => {
       performance.mark('app-init-start');
 
