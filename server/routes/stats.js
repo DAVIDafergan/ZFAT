@@ -10,6 +10,9 @@ const { adminOnly } = require('../middleware/adminOnly');
 
 const statsLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי בקשות לסטטיסטיקות' } });
 const visitLimiter = rateLimit({ windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false, message: { message: 'יותר מדי בקשות לרישום ביקורים' } });
+const RECENT_POST_DAYS = 30;
+
+const randomIntInRange = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 // Get site statistics (admin only)
 router.get('/stats', statsLimiter, auth, adminOnly, async (req, res) => {
@@ -124,6 +127,52 @@ router.post('/reset-visits', statsLimiter, auth, adminOnly, async (_req, res) =>
     res.json({ success: true });
   } catch (err) {
     console.error('Error resetting visits:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.post('/normalize-views', statsLimiter, auth, adminOnly, async (_req, res) => {
+  try {
+    const posts = await Post.find({})
+      .select('_id views publishedAt createdAt')
+      .sort({ views: -1, publishedAt: -1, createdAt: -1 })
+      .lean();
+
+    if (posts.length === 0) {
+      return res.json({ success: true, matchedCount: 0, modifiedCount: 0 });
+    }
+
+    const recentThreshold = new Date(Date.now() - RECENT_POST_DAYS * 24 * 60 * 60 * 1000);
+    const topPostCount = Math.min(5, posts.length);
+    const topViewValues = Array.from({ length: topPostCount }, () => randomIntInRange(700, 1200)).sort((a, b) => b - a);
+    const operations = posts.map((post, index) => {
+      let nextViews;
+
+      if (index < topPostCount) {
+        nextViews = topViewValues[index];
+      } else {
+        const postDate = post.publishedAt || post.createdAt;
+        const isRecent = postDate && new Date(postDate) >= recentThreshold;
+        nextViews = isRecent ? randomIntInRange(150, 450) : randomIntInRange(300, 900);
+      }
+
+      return {
+        updateOne: {
+          filter: { _id: post._id },
+          update: { $set: { views: nextViews } },
+        },
+      };
+    });
+
+    const result = await Post.bulkWrite(operations, { ordered: false });
+    req.app.locals.invalidateCache?.('posts');
+    res.json({
+      success: true,
+      matchedCount: result.matchedCount || posts.length,
+      modifiedCount: result.modifiedCount || 0,
+    });
+  } catch (err) {
+    console.error('Error normalizing views:', err);
     res.status(500).json({ message: err.message });
   }
 });

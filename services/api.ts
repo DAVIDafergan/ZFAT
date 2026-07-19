@@ -880,4 +880,11 @@ export const api = {
       headers: authHeaders(),
     });
   },
+
+  normalizePostViews: async (): Promise<void> => {
+    await fetchJson('/api/stats/normalize-views', {
+      method: 'POST',
+      headers: authHeaders(),
+    });
+  },
 };

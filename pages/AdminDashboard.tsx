@@ -260,6 +260,20 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleNormalizeViews = async () => {
+    const confirmed = window.confirm('האם לנרמל את מוני הצפיות של כל הכתבות? זו פעולה חד-פעמית ובלתי הפיכה שמחליפה את כל מוני הצפיות הקיימים בערכים חדשים.');
+    if (!confirmed) return;
+
+    try {
+      await api.normalizePostViews();
+      showToast('מוני הצפיות נורמלו בהצלחה');
+      await loadSiteStats();
+    } catch (error) {
+      console.error('Error normalizing views:', error);
+      showToast('שגיאה בנרמול מוני הצפיות');
+    }
+  };
+
 
   const handleLogout = () => {
     logout();
@@ -722,14 +736,24 @@ export const AdminDashboard: React.FC = () => {
           <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-xl font-black text-gray-800 sm:text-2xl">נתוני אתר</h2>
-              <button
-                type="button"
-                onClick={handleResetVisits}
-                className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-100"
-              >
-                <Trash2 size={16} />
-                איפוס מונה כניסות
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleNormalizeViews}
+                  className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-black text-amber-700 transition hover:bg-amber-100"
+                >
+                  <BarChart3 size={16} />
+                  נרמול מוני צפיות
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetVisits}
+                  className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-100"
+                >
+                  <Trash2 size={16} />
+                  איפוס מונה כניסות
+                </button>
+              </div>
             </div>
             
             {statsLoading ? (
