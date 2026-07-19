@@ -506,6 +506,88 @@ const migrateViews = async () => {
   console.log('✅ migrateViews: flag set, will not run again');
 };
 
+const migrateViewsV2 = async () => {
+  const settingsCollection = mongoose.connection.collection('settings');
+  const flag = await settingsCollection.findOne({ key: 'viewsNormalizedV2' });
+  if (flag) {
+    console.log('ℹ️ migrateViewsV2: already run, skipping');
+    return;
+  }
+
+  // Fetch all posts sorted by views descending
+  const posts = await Post.find({}).select('_id views').sort({ views: -1 }).lean();
+  if (posts.length === 0) {
+    console.log('ℹ️ migrateViewsV2: no posts found');
+    await settingsCollection.updateOne(
+      { key: 'viewsNormalizedV2' },
+      { $set: { key: 'viewsNormalizedV2', value: true, migratedAt: new Date() } },
+      { upsert: true }
+    );
+    return;
+  }
+
+  // Assign budgets by tier with random jitter, maintaining strictly descending order
+  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+  // Tier boundaries (index-based, relative to sorted-descending list)
+  const tierFor = (i) => {
+    if (i < 5) return { lo: 60, hi: 110 };
+    if (i < 15) return { lo: 25, hi: 55 };
+    if (i < 30) return { lo: 10, hi: 25 };
+    return { lo: 1, hi: 8 };
+  };
+
+  const assigned = [];
+  let prev = Infinity;
+  for (let i = 0; i < posts.length; i++) {
+    const { lo, hi } = tierFor(i);
+    // Cap hi so the sequence stays non-increasing; allow ties only in the long tail (i >= 30)
+    const effectiveHi = i < 30 ? Math.min(hi, prev - 1) : Math.min(hi, prev);
+    const effectiveLo = lo;
+    const v = effectiveHi >= effectiveLo ? rand(effectiveLo, effectiveHi) : effectiveLo;
+    assigned.push(v);
+    prev = v;
+  }
+
+  // Scale proportionally so the total is close to 1000
+  const rawTotal = assigned.reduce((s, v) => s + v, 0);
+  const scale = 1000 / rawTotal;
+  const scaled = assigned.map((v) => Math.max(1, Math.round(v * scale)));
+
+  // Enforce non-increasing order after rounding (fix any inversions from rounding)
+  for (let i = 1; i < scaled.length; i++) {
+    if (scaled[i] > scaled[i - 1]) scaled[i] = scaled[i - 1];
+  }
+
+  // Distribute fine-tune difference across the top posts to reach [950, 1050]
+  const scaledTotal = scaled.reduce((s, v) => s + v, 0);
+  let diff = 1000 - scaledTotal;
+  for (let i = 0; i < scaled.length && diff !== 0; i++) {
+    const delta = diff > 0 ? 1 : -1;
+    scaled[i] = Math.max(1, scaled[i] + delta);
+    diff -= delta;
+  }
+
+  const operations = posts.map((post, i) => ({
+    updateOne: {
+      filter: { _id: post._id },
+      update: { $set: { views: scaled[i] } },
+    },
+  }));
+
+  await Post.bulkWrite(operations, { ordered: false });
+
+  const finalTotal = scaled.reduce((s, v) => s + v, 0);
+  console.log(`🛠️ migrateViewsV2: redistributed views across ${posts.length} post(s), total=${finalTotal}`);
+
+  await settingsCollection.updateOne(
+    { key: 'viewsNormalizedV2' },
+    { $set: { key: 'viewsNormalizedV2', value: true, migratedAt: new Date() } },
+    { upsert: true }
+  );
+  console.log('✅ migrateViewsV2: flag set, will not run again');
+};
+
 const resolvePostPrimaryImage = (post) => {
   const directImage = `${post?.imageUrl || ''}`.trim();
   if (directImage) return directImage;
@@ -676,6 +758,7 @@ mongoose.connect(MONGO_URI, {
   .then(() => ensureDefaultAdmin())
   .then(() => backfillLegacyPostPublishedAt())
   .then(() => migrateViews())
+  .then(() => migrateViewsV2())
   .then(() => warmCache())
   .then(() => {
     const server = app.listen(PORT, () => {
