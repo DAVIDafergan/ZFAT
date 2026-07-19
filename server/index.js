@@ -145,6 +145,11 @@ const imageMimeTypeByExtension = {
   '.svg': 'image/svg+xml',
   '.webp': 'image/webp',
 };
+const whatsappPreferredShareImageTypes = new Set([
+  'image/gif',
+  'image/jpeg',
+  'image/png',
+]);
 
 const resolveShareImageType = ({ rawImage, fallbackImage }) => {
   const cleaned = `${rawImage || ''}`.trim();
@@ -164,6 +169,18 @@ const resolveShareImageType = ({ rawImage, fallbackImage }) => {
   } catch {
     return '';
   }
+};
+
+const resolveShareMetaImage = ({ rawImage, postId, fallbackImage }) => {
+  let image = resolveShareImage({ rawImage, postId, fallbackImage });
+  let imageType = resolveShareImageType({ rawImage, fallbackImage });
+
+  if (imageType && !whatsappPreferredShareImageTypes.has(imageType)) {
+    image = fallbackImage;
+    imageType = resolveShareImageType({ rawImage: fallbackImage, fallbackImage });
+  }
+
+  return { image, imageType };
 };
 
 const sendSimpleHtmlPage = ({ res, statusCode, title, message, redirectUrl, linkLabel }) => {
@@ -490,13 +507,9 @@ app.get('/p/:shortCode', shortLinkLimiter, async (req, res) => {
 
     const title = post.title || 'צפת בתנופה';
     const description = post.excerpt || 'כתבה מתוך אתר צפת בתנופה';
-    const image = resolveShareImage({
+    const { image, imageType } = resolveShareMetaImage({
       rawImage: resolvePostPrimaryImage(post),
       postId: post._id,
-      fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
-    });
-    const imageType = resolveShareImageType({
-      rawImage: resolvePostPrimaryImage(post),
       fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
     });
     const articleUrl = `${publicSiteUrl}/#/article/${post._id}`;
@@ -517,13 +530,9 @@ app.get('/share/article/:id', spaFallbackLimiter, async (req, res) => {
 
     const title = post.title || 'צפת בתנופה';
     const description = post.excerpt || 'כתבה מתוך אתר צפת בתנופה';
-    const image = resolveShareImage({
+    const { image, imageType } = resolveShareMetaImage({
       rawImage: resolvePostPrimaryImage(post),
       postId: post._id,
-      fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
-    });
-    const imageType = resolveShareImageType({
-      rawImage: resolvePostPrimaryImage(post),
       fallbackImage: `${publicSiteUrl}/og-whatsapp.png`,
     });
     const articleUrl = `${publicSiteUrl}/#/article/${post._id}`;
