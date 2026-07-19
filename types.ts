@@ -36,6 +36,7 @@ export interface Post {
   createdAt?: string;
   updatedAt?: string;
   imageUrl: string;
+  videoUrl?: string;
   tags: string[];
   isFeatured: boolean;
   featuredAt?: string;
