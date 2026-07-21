@@ -188,12 +188,35 @@ const sendSimpleHtmlPage = ({ res, statusCode, title, message, redirectUrl, link
   const safeMessage = escapeHtml(message);
   const safeRedirectUrl = escapeHtml(redirectUrl);
   const safeLinkLabel = escapeHtml(linkLabel);
+  // Always include a fallback OG image here too — WhatsApp/Facebook will hit this
+  // exact page whenever a share link 404s, errors, or is served while the site is
+  // launch-locked. Without an og:image tag here, the preview shows no image at all,
+  // even if the "real" per-article share route below is implemented correctly.
+  const fallbackImage = `${publicSiteUrl}/og-whatsapp.png`;
+  const safeFallbackImage = escapeHtml(fallbackImage);
   res.status(statusCode).setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(`<!DOCTYPE html>
 <html lang="he" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <title>${safeTitle}</title>
+    <meta name="description" content="${safeMessage}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="he_IL" />
+    <meta property="og:site_name" content="צפת בתנופה" />
+    <meta property="og:title" content="${safeTitle}" />
+    <meta property="og:description" content="${safeMessage}" />
+    <meta property="og:image" content="${safeFallbackImage}" />
+    <meta property="og:image:url" content="${safeFallbackImage}" />
+    <meta property="og:image:secure_url" content="${safeFallbackImage}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:url" content="${safeRedirectUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${safeTitle}" />
+    <meta name="twitter:description" content="${safeMessage}" />
+    <meta name="twitter:image" content="${safeFallbackImage}" />
     <meta http-equiv="refresh" content="3; url=${safeRedirectUrl}" />
     <style>body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f3f4f6;color:#111827;margin:0;padding:24px;text-align:center}main{max-width:32rem;background:#fff;border:1px solid #e5e7eb;border-radius:24px;padding:32px;box-shadow:0 10px 30px rgba(15,23,42,.08)}h1{margin:0 0 12px;font-size:1.75rem}p{margin:0 0 20px;line-height:1.7}a{display:inline-flex;align-items:center;justify-content:center;padding:12px 20px;border-radius:999px;background:#b91c1c;color:#fff;text-decoration:none;font-weight:700}</style>
   </head>
